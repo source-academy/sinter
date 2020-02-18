@@ -132,7 +132,7 @@ Otherwise, a fault occurs.
 
 ### `not`: not
 
-Format: `0x10`
+Format: `0x14`
 
 Pops `a` off the stack.
 
@@ -142,7 +142,7 @@ Otherwise, a fault occurs.
 
 ### `lt`: less than
 
-Format: `0x11`
+Format: `0x15`
 
 Pops `b` off the stack, then pops `a` off the stack.
 
@@ -152,7 +152,7 @@ Otherwise, a fault occurs.
 
 ### `gt`: greater than
 
-Format: `0x12`
+Format: `0x16`
 
 Pops `b` off the stack, then pops `a` off the stack.
 
@@ -162,7 +162,7 @@ Otherwise, a fault occurs.
 
 ### `le`: less than or equal to
 
-Format: `0x13`
+Format: `0x17`
 
 Pops `b` off the stack, then pops `a` off the stack.
 
@@ -172,7 +172,7 @@ Otherwise, a fault occurs.
 
 ### `ge`: greater than or equal to
 
-Format: `0x14`
+Format: `0x18`
 
 Pops `b` off the stack, then pops `a` off the stack.
 
@@ -182,7 +182,7 @@ Otherwise, a fault occurs.
 
 ### `eq`: equal
 
-Format: `0x15`
+Format: `0x19`
 
 Pops `b` off the stack, then pops `a` off the stack.
 
