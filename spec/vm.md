@@ -3,8 +3,8 @@
 - A fault is an unrecoverable execution error. The fault handling mechanism is
 implementation-defined; an implementation may print an error to the console,
 for example.
-- For all instructions below, attempting to pop off an empty stack results in a
-fault.
+- For all instructions below: Attempting to pop off an empty stack results in a
+fault. Attempting to push a value to a full stack results in a fault.
 
 *TODO: describe stack, environment, as well as possible values (number, string,
 array, function, undefined, null)*
@@ -18,9 +18,13 @@ alignment e.g. 4-byte alignment.
 
 - All operands are in target device endianness.
 - Instructions are byte-aligned.
-- An `address` is a 32-bit unsigned integer that refers to an offset from the
+- Unless otherwise stated, instructions are one octet long.
+- We use the integer and float type names from Rust to denote operand types below.
+  - E.g. `u8` refers to an 8-bit unsigned integer; `i32` refers to a 32-bit
+  signed integer; `f32` refers to a 32-bit (single-precision) floating point.
+- An `address` is a 32-bit unsigned integer `u32` that refers to an offset from the
 start of the program.
-- An `offset` is a 32-bit signed integer that refers to an offset from the
+- An `offset` is a 32-bit signed integer `u8` that refers to an offset from the
 start of the _next_ instruction.
 
 ### `nop`: no-op
@@ -31,13 +35,13 @@ Does nothing.
 
 ### `ldc.i`: load constant integer
 
-Format: `0x01 <32-bit signed integer>`
+Format: `0x01 <u32>` (5 octets)
 
 Pushes a number, whose value is equal to the operand, onto the stack.
 
 ### `ldc.f`: load constant float
 
-Format: `0x02 <32-bit float>`
+Format: `0x02 <f32>` (5 octets)
 
 Pushes a number, whose value is equal to the operand, onto the stack.
 
@@ -67,7 +71,7 @@ Pushes `null` onto the stack.
 
 ### `ldc.s`: load constant string
 
-Format: `0x07 <address>`
+Format: `0x07 <address>` (5 octets)
 
 Pushes the string at the given address onto the stack.
 
@@ -197,9 +201,48 @@ If `a` and `b` are both functions or both arrays, pushes `true` onto the stack i
 The above cases are exhaustive.
 
 ### `new.f`: create function
+
+Format: `0x20 <maxstack: u8> <framesize: u8> <address>` (7 octets)
+
+Pushes a new function object onto the stack, with the given maximum stack size `maxstack`,
+the given environment frame size `framesize`, and the first instruction at `address`.
+
 ### `new.v`: create array (vector)
-### `ld.e`: load from environment
-### `st.e`: store in environment
+
+Format: `0x21`
+
+Pushes a new empty array onto the stack.
+
+### `ld.e`: load from current environment
+
+Format: `0x22 <index: u8>` (2 octets)
+
+Pushes the value at index `index` in the current environment onto the stack.
+
+### `st.e`: store in current environment
+
+Format: `0x23 <index: u8>` (2 octets)
+
+Pops `a` off the stack, and stores `a` into index `index` in the current environment.
+
+### `ld.e.p`: load from environment
+
+Format: `0x24 <index: u8> <envindex: u8>` (3 octets)
+
+Pushes the value at index `index` in the `envindex`th parent of the current
+environment onto the stack.
+
+If `envindex` is `0`, this is equivalent to `ld.e`.
+
+### `st.e.p`: store in environment
+
+Format: `0x25 <index: u8> <envindex: u8>` (3 octets)
+
+Pops `a` off the stack, and stores `a` into index `index` in the `envindex`th
+parent of the current environment.
+
+If `envindex` is `0`, this is equivalent to `st.e`.
+
 ### `ld.a`: load argument
 ### `st.a`: store argument
 ### `ld.v`: load from array (vector)
