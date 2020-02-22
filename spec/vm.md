@@ -112,6 +112,15 @@ Format: `0x01 <u32>` (5 octets)
 
 Pushes a number, whose value is equal to the operand, onto the stack.
 
+Note that there is no notion of an integer type in this VM. However, an
+implementation may internally distinguish integers from non-integers so that
+operations involving only integers are performed as integer operations. This is
+common when e.g. looping through each element of an array.
+
+This instruction serves to facilitate such an optimisation. Compilers are
+recommended to use this instruction to load integers, where possible, but this
+is not a requirement.
+
 ### `ldc.f`: load constant float
 
 Format: `0x02 <f32>` (5 octets)
