@@ -1,5 +1,13 @@
 # Sinter VM
 
+This document describes the Sinter VM, a VM designed as a compilation target for
+Source and designed to be relatively simple to implement.
+
+This document specifies only behaviour as observed by a program running in the
+VM, as well as other details required for a compiler, such as the format of
+instructions and VM executables; it does not specify how the VM should be
+implemented.
+
 ## General definitions
 
 - A fault is an unrecoverable execution error. The fault handling mechanism is
@@ -57,6 +65,26 @@ The stack is used to pass operands to instructions. Each function call's stack
 is independent of all other function calls' stacks. As mentioned above,
 attempting to pop off an empty stack results in a fault. Attempting to push a
 value to a full stack results in a fault.
+
+## Binary format
+
+Instructions should be concatenated with no padding between instructions, as
+well as their operands. Operands should be encoded in target device endianness.
+For example, the following instructions
+
+```
+ldc.i 123
+pop
+```
+
+should result in the following (hex) bytes, when targetting a little-endian
+device:
+
+`01 7B 00 00 00 08`
+
+There is no stipulation for where data (i.e. strings) should be stored; this is
+up to the compiler. (Of course, strings cannot be placed in the middle of a
+function.)
 
 ## Instructions
 
@@ -119,6 +147,8 @@ Pushes `null` onto the stack.
 Format: `0x07 <address>` (5 octets)
 
 Pushes the string at the given address onto the stack.
+
+The string at the given address should be null-terminated.
 
 ### `pop`: pop from stack
 
@@ -466,3 +496,101 @@ Format: `0x2A`
 
 Makes `undefined` the return value of the current function, and returns
 execution to the caller of the current function.
+
+## Primitive functions
+
+The functions below correspond to the functions defined in the [Source language
+documentation](https://sicp.comp.nus.edu.sg/source/source_4/).
+
+The behaviours of `display` and `error` are implementation-defined.
+
+- 0x00 accumulate
+- 0x01 append
+- 0x02 array_length
+- 0x03 build_list
+- 0x04 build_stream
+- 0x05 display
+- 0x06 draw_data
+- 0x07 enum_list
+- 0x08 enum_stream
+- 0x09 equal
+- 0x0a error
+- 0x0b eval_stream
+- 0x0c filter
+- 0x0d for_each
+- 0x0e head
+- 0x0f integers_from
+- 0x10 is_array
+- 0x11 is_boolean
+- 0x12 is_function
+- 0x13 is_list
+- 0x14 is_null
+- 0x15 is_number
+- 0x16 is_pair
+- 0x17 is_stream
+- 0x18 is_string
+- 0x19 is_undefined
+- 0x1a length
+- 0x1b list
+- 0x1c list_ref
+- 0x1d list_to_stream
+- 0x1e list_to_string
+- 0x1f map
+- 0x20 math_abs
+- 0x21 math_acos
+- 0x22 math_acosh
+- 0x23 math_asin
+- 0x24 math_asinh
+- 0x25 math_atan
+- 0x26 math_atan2
+- 0x27 math_atanh
+- 0x28 math_cbrt
+- 0x29 math_ceil
+- 0x2a math_clz32
+- 0x2b math_cos
+- 0x2c math_cosh
+- 0x2d math_exp
+- 0x2e math_expm1
+- 0x2f math_floor
+- 0x30 math_fround
+- 0x31 math_hypot
+- 0x32 math_imul
+- 0x33 math_log
+- 0x34 math_log1p
+- 0x35 math_log2
+- 0x36 math_log10
+- 0x37 math_max
+- 0x38 math_min
+- 0x39 math_pow
+- 0x3a math_random
+- 0x3b math_round
+- 0x3c math_sign
+- 0x3d math_sin
+- 0x3e math_sinh
+- 0x3f math_sqrt
+- 0x40 math_tan
+- 0x41 math_tanh
+- 0x42 math_trunc
+- 0x43 member
+- 0x44 pair
+- 0x45 parse_int
+- 0x46 remove
+- 0x47 remove_all
+- 0x48 reverse
+- 0x49 runtime
+- 0x4a set_head
+- 0x4b set_tail
+- 0x4c stream
+- 0x4d stream_append
+- 0x4e stream_filter
+- 0x4f stream_for_each
+- 0x50 stream_length
+- 0x51 stream_map
+- 0x52 stream_member
+- 0x53 stream_ref
+- 0x54 stream_remove
+- 0x55 stream_remove_all
+- 0x56 stream_reverse
+- 0x57 stream_tail
+- 0x58 stream_to_list
+- 0x59 tail
