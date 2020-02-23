@@ -61,6 +61,10 @@ The environment stores:
 - The locals
 - The arguments passed to the function
 
+Locals start off with a special "empty" value, representing the time before the
+local is first initialised. Loading the local when it has this "empty" value
+results in a fault.
+
 The stack is used to pass operands to instructions. Each function call's stack
 is independent of all other function calls' stacks. As mentioned above,
 attempting to pop off an empty stack results in a fault. Attempting to push a
