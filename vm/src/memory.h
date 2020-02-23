@@ -39,13 +39,29 @@ enum {
   sinter_type_free = 0xFF
 };
 
+// TODO: this may become a char * instead
+// ESP32 has a limit on statically allocated memory, so in order to use the full
+// memory, perhaps we will replace this with one large malloc() at the start
+// but that adds an extra indirection for every memory access :(
+extern unsigned char sinter_heap[SINTER_HEAP_SIZE];
+
+// If pointer size fits in 4 bytes, we can store direct pointers in our stack
+// entries, to save one level of indirection.
+#if __SIZEOF_POINTER__ <= 4
+typedef unsigned char *heapaddress_t;
+#define SINTER_HEAPREF(addr) (addr)
+#else
+typedef address_t heapaddress_t;
+#define SINTER_HEAPREF(addr) (sinter_heap + addr)
+#endif
+
 #ifdef SINTER_USE_SINGLE
 struct sinter_entry {
   uint32_t type;
   union {
-    // Used for pointers into the heap and/or code, for strings, arrays,
-    // functions, and stackframes
-    address_t pointer_value;
+    // Used for pointers into the heap, for strings, arrays, functions, and
+    // stackframes
+    heapaddress_t pointer_value;
     // Used for actual integers, and booleans
     int32_t integer_value;
     // Used for floats.
@@ -54,7 +70,8 @@ struct sinter_entry {
 };
 
 #define SINTER_ENTRY_TYPE(entry) ((entry).type)
-#define SINTER_ENTRY_PTR(entry) ((entry).pointer_value)
+#define SINTER_ENTRY_PTRVAL(entry) ((entry).pointer_value)
+#define SINTER_ENTRY_HEAPPTR(entry) (SINTER_HEAPREF((entry).pointer_value))
 #define SINTER_ENTRY_INT(entry) ((entry).integer_value)
 #define SINTER_ENTRY_FLOAT(entry) ((entry).float_value)
 #endif
@@ -65,24 +82,25 @@ struct sinter_entry {
 #error SINTER_USE_DOUBLE is currently unimplemented.
 
 #define SINTER_ENTRY_TYPE(entry) (TODO)
-#define SINTER_ENTRY_PTR(entry) (TODO)
+#define SINTER_ENTRY_PTRVAL(entry) (TODO)
+#define SINTER_ENTRY_HEAPPTR(entry) (TODO)
 #define SINTER_ENTRY_INT(entry) (TODO)
 #define SINTER_ENTRY_FLOAT(entry) (TODO)
 #endif
 
 _Static_assert(sizeof(struct sinter_entry) == 8, "struct sinter_entry has wrong size");
 
-// TODO: this may become a char * instead
-// ESP32 has a limit on statically allocated memory, so in order to use the full
-// memory, perhaps we will replace this with one large malloc() at the start
-// but that adds an extra indirection for every memory access :(
-extern unsigned char sinter_heap[SINTER_HEAP_SIZE];
-
 struct sinter_heap_header {
   uint16_t type;
   uint16_t refcount;
-  address_t prev_node;
+  struct sinter_heap_header *prev_node;
   address_t size;
+};
+
+struct sinter_heap_free {
+  struct sinter_heap_header header;
+  struct sinter_heap_free *prev_free;
+  struct sinter_heap_free *next_free;
 };
 
 struct sinter_heap_environment {
