@@ -238,9 +238,9 @@ Format: `0x0F`
 
 Pops `b` off the stack, then pops `a` off the stack.
 
-If `b` and `a` are both numbers or both strings, pushes a boolean equal to `a <
-b` onto the stack, with the obvious meaning if both operands are numbers, and
-comparing the operands by lexicographical order if they are strings.
+If `b` and `a` are both numbers or both strings, pushes a boolean equal to
+`a < b` onto the stack, with the obvious meaning if both operands are numbers,
+and comparing the operands by lexicographical order if they are strings.
 
 Otherwise, a fault occurs.
 
@@ -250,9 +250,9 @@ Format: `0x10`
 
 Pops `b` off the stack, then pops `a` off the stack.
 
-If `b` and `a` are both numbers or both strings, pushes a boolean equal to `a >
-b` onto the stack, with the obvious meaning if both operands are numbers, and
-comparing the operands by lexicographical order if they are strings.
+If `b` and `a` are both numbers or both strings, pushes a boolean equal to
+`a > b` onto the stack, with the obvious meaning if both operands are numbers,
+and comparing the operands by lexicographical order if they are strings.
 
 Otherwise, a fault occurs.
 
@@ -262,8 +262,8 @@ Format: `0x11`
 
 Pops `b` off the stack, then pops `a` off the stack.
 
-If `b` and `a` are both numbers or both strings, pushes a boolean equal to `a
-<= b` onto the stack, with the obvious meaning if both operands are numbers,
+If `b` and `a` are both numbers or both strings, pushes a boolean equal to
+`a <= b` onto the stack, with the obvious meaning if both operands are numbers,
 and comparing the operands by lexicographical order if they are strings.
 
 Otherwise, a fault occurs.
@@ -274,8 +274,8 @@ Format: `0x12`
 
 Pops `b` off the stack, then pops `a` off the stack.
 
-If `b` and `a` are both numbers or both strings, pushes a boolean equal to `a
->= b` onto the stack, with the obvious meaning if both operands are numbers,
+If `b` and `a` are both numbers or both strings, pushes a boolean equal to
+`a >= b` onto the stack, with the obvious meaning if both operands are numbers,
 and comparing the operands by lexicographical order if they are strings.
 
 Otherwise, a fault occurs.
