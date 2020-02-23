@@ -13,12 +13,11 @@ enum sinter_fault {
   sinter_fault_divbyzero = 4,
   sinter_fault_stackoverflow = 5,
   sinter_fault_stackunderflow = 6,
-  sinter_fault_uninitld = 7
+  sinter_fault_uninitld = 7,
+  sinter_fault_invalidld = 8
 };
 
-static inline _Noreturn void sinter_fault(enum sinter_fault reason) {
-  longjmp(sinter_fault_jmp, reason);
-}
+_Noreturn void sinter_fault(enum sinter_fault);
 
 #define SINTER_FAULTED() setjmp(sinter_fault_jmp)
 

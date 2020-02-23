@@ -4,6 +4,8 @@ project(libsinter C)
 
 add_library(sinter
   src/vm.c
+  src/fault.c
+  src/memory.c
 )
 
 target_compile_options(sinter
