@@ -26,16 +26,8 @@
 
 enum {
   sinter_type_empty = 0,
-  sinter_type_undefined = 1,
-  sinter_type_null = 2,
-  sinter_type_boolean = 3,
-  sinter_type_integer = 4,
-  sinter_type_float = 5,
-  sinter_type_string = 6,
-  sinter_type_array = 7,
-  sinter_type_function = 8,
-  sinter_type_stackframe = 9,
-  sinter_type_environment = 10,
+  sinter_type_stackframe = 20,
+  sinter_type_environment = 21,
   sinter_type_free = 0xFF
 };
 
