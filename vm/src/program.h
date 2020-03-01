@@ -32,3 +32,5 @@ struct __attribute__((__packed__)) svm_function {
 }
 
 _Static_assert(sizeof(struct svm_function) == 5, "Wrong struct svm_function size");
+
+#endif
