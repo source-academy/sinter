@@ -1,11 +1,13 @@
 #ifndef SINTER_MEMORY_H
 #define SINTER_MEMORY_H
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
 
 #include "opcode.h"
 #include "fault.h"
+#include "program.h"
 
 #ifndef SINTER_HEAP_SIZE
 // "64 KB ought to be enough for anybody"
@@ -81,12 +83,142 @@ struct siheap_free {
   struct siheap_free *next_free;
 };
 
+extern struct siheap_free *siheap_first_free;
+
+static inline void siheap_free_remove(struct siheap_free *cur) {
+  if (cur->prev_free) {
+    cur->prev_free->next_free = cur->next_free;
+  } else {
+    assert(siheap_first_free == cur);
+    siheap_first_free = cur->next_free;
+  }
+  if (cur->next_free) {
+    cur->next_free->prev_free = cur->prev_free;
+  }
+}
+
 struct siheap_environment {
   struct siheap_header header;
   uint16_t localcount;
   uint16_t argcount;
   struct sientry entry;
 };
+
+static inline void siheap_init(void) {
+  siheap_first_free = (struct siheap_free *) siheap;
+  *siheap_first_free = (struct siheap_free) {
+    .header = {
+      .type = sitype_free,
+      .refcount = 0,
+      .prev_node = NULL,
+      .size = SINTER_HEAP_SIZE
+    },
+    .prev_free = NULL,
+    .next_free = NULL
+  };
+}
+
+#define SIHEAP_INRANGE(ent) (((unsigned char *) (ent)) < siheap + SINTER_HEAP_SIZE)
+
+static inline struct siheap_header *siheap_next(struct siheap_header *ent) {
+  return (struct siheap_header *) (((unsigned char *) ent) + ent->size);
+}
+
+static inline void siheap_ref(void *vent) {
+  ++(((struct siheap_header *) vent)->refcount);
+}
+
+static inline struct siheap_header *siheap_malloc(address_t size, uint16_t type) {
+  if (size < sizeof(struct siheap_free)) {
+    size = sizeof(struct siheap_free);
+  }
+
+  struct siheap_free *cur = siheap_first_free;
+  while (cur) {
+    if (cur->header.size >= size) {
+      break;
+    }
+    cur = cur->next_free;
+  }
+  if (!cur) {
+    return NULL;
+  }
+
+  if (size + sizeof(struct siheap_free) <= cur->header.size) {
+    // enough space for a new free node
+    // create one
+    struct siheap_free *newfree = (struct siheap_free *) (((unsigned char *) cur) + size);
+    *newfree = (struct siheap_free) {
+      .header = {
+        .type = sitype_free,
+        .refcount = 0,
+        .prev_node = &cur->header,
+        .size = cur->header.size - size
+      },
+      .prev_free = cur->prev_free,
+      .next_free = cur->next_free
+    };
+    if (cur->prev_free) {
+      cur->prev_free->next_free = newfree;
+    } else {
+      siheap_first_free = newfree;
+    }
+    if (cur->next_free) {
+      cur->next_free->prev_free = newfree;
+    }
+    struct siheap_header *nextblock = siheap_next(&newfree->header);
+    if (SIHEAP_INRANGE(nextblock)) {
+      nextblock->prev_node = &newfree->header;
+    }
+    cur->header.size = size;
+  } else {
+    // no space for a free header
+    siheap_free_remove(cur);
+  }
+  siheap_ref(cur);
+  cur->header.type = type;
+  return &cur->header;
+}
+
+static inline void siheap_mfree(struct siheap_header *ent) {
+  struct siheap_header *const next = siheap_next(ent);
+  struct siheap_header *const prev = ent->prev_node;
+  const bool next_inrange = SIHEAP_INRANGE(next);
+  const bool next_free = next_inrange && next->type == sitype_free;
+  const bool prev_free = prev && prev->type == sitype_free;
+  if (next_free && prev_free) {
+    // we have        [free][ent][free]
+    // we'll merge to [free           ]
+    struct siheap_free *const nextf = (struct siheap_free *) next;
+    prev->size = prev->size + ent->size + next->size;
+
+    // remove next from the linked list
+    siheap_free_remove(nextf);
+  } else if (next_free) {
+    // we have        [ent][free]
+    // we'll merge to [free     ]
+
+    // TODO
+  } else if (prev_free) {
+    // we have        [free][ent]
+    // we'll merge to [free     ]
+
+    // TODO
+  } else {
+    // create a new free entry
+
+    // TODO
+  }
+}
+
+static inline void siheap_deref(void *vent) {
+  struct siheap_header *ent = vent;
+  if (--(ent->refcount)) {
+    return;
+  }
+
+  siheap_mfree(ent);
+}
 
 static inline struct sientry *sienv_getlocal(
   struct siheap_environment *env,
@@ -116,8 +248,6 @@ static inline struct sientry *sienv_getarg(
 
 struct siheap_function {
   struct siheap_header header;
-  uint16_t maxstack;
-  uint16_t localcount;
   opcode_t *code;
   struct siheap_environment *env;
 };
