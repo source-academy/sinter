@@ -10,47 +10,78 @@ typedef uint32_t offset_t;
 enum __attribute__((__packed__)) sinter_opcode {
   op_nop      = 0x00,
   op_ldc_i    = 0x01,
-  op_ldc_f    = 0x02,
-  op_ldc_b0   = 0x03,
-  op_ldc_b1   = 0x04,
-  op_ldc_u    = 0x05,
-  op_ldc_n    = 0x06,
-  op_ldc_s    = 0x07,
-  op_pop      = 0x08,
-  op_add      = 0x09,
-  op_sub      = 0x0A,
-  op_mul      = 0x0B,
-  op_div      = 0x0C,
-  op_mod      = 0x0D,
-  op_not      = 0x0E,
-  op_lt       = 0x0F,
-  op_gt       = 0x10,
-  op_le       = 0x11,
-  op_ge       = 0x12,
-  op_eq       = 0x13,
-  op_new_f    = 0x14,
-  op_new_v    = 0x15,
-  op_ld_e     = 0x16,
-  op_st_e     = 0x17,
-  op_ld_ep    = 0x18,
-  op_st_ep    = 0x19,
-  op_ld_a     = 0x1A,
-  op_st_a     = 0x1B,
-  op_ld_ap    = 0x1C,
-  op_st_ap    = 0x1D,
-  op_ld_v     = 0x1E,
-  op_st_v     = 0x1F,
-  op_br_t     = 0x20,
-  op_br       = 0x21,
-  op_jmp      = 0x22,
-  op_call     = 0x23,
-  op_call_t   = 0x24,
-  op_call_p   = 0x25,
-  op_call_tp  = 0x26,
-  op_call_v   = 0x27,
-  op_call_tv  = 0x28,
-  op_ret      = 0x29,
-  op_ret_u    = 0x2A
+  op_lgc_i    = 0x02,
+  op_ldc_f32  = 0x03,
+  op_lgc_f32  = 0x04,
+  op_ldc_f64  = 0x05,
+  op_lgc_f64  = 0x06,
+  op_ldc_b_0  = 0x07,
+  op_ldc_b_1  = 0x08,
+  op_lgc_b_0  = 0x09,
+  op_lgc_b_1  = 0x0A,
+  op_lgc_u    = 0x0B,
+  op_lgc_n    = 0x0C,
+  op_lgc_s    = 0x0D,
+  op_pop_g    = 0x0E,
+  op_pop_b    = 0x0F,
+  op_pop_f    = 0x10,
+  op_add_g    = 0x11,
+  op_add_f    = 0x12,
+  op_sub_g    = 0x13,
+  op_sub_f    = 0x14,
+  op_mul_g    = 0x15,
+  op_mul_f    = 0x16,
+  op_div_g    = 0x17,
+  op_div_f    = 0x18,
+  op_mod_g    = 0x19,
+  op_mod_f    = 0x1A,
+  op_not_g    = 0x1B,
+  op_not_b    = 0x1C,
+  op_lt_g     = 0x1D,
+  op_lt_f     = 0x1E,
+  op_gt_g     = 0x1F,
+  op_gt_f     = 0x20,
+  op_le_g     = 0x21,
+  op_le_f     = 0x22,
+  op_ge_g     = 0x23,
+  op_ge_f     = 0x24,
+  op_eq_g     = 0x25,
+  op_eq_f     = 0x26,
+  op_eq_b     = 0x27,
+  op_new_c    = 0x28,
+  op_new_a    = 0x29,
+  op_ldl_g    = 0x2A,
+  op_ldl_f    = 0x2B,
+  op_ldl_b    = 0x2C,
+  op_stl_g    = 0x2D,
+  op_stl_b    = 0x2E,
+  op_stl_f    = 0x2F,
+  op_ldp_g    = 0x30,
+  op_ldp_f    = 0x31,
+  op_ldp_b    = 0x32,
+  op_stp_g    = 0x33,
+  op_stp_b    = 0x34,
+  op_stp_f    = 0x35,
+  op_lda_g    = 0x36,
+  op_lda_b    = 0x37,
+  op_lda_f    = 0x38,
+  op_sta_g    = 0x39,
+  op_sta_b    = 0x3A,
+  op_sta_f    = 0x3B,
+  op_br_t     = 0x3C,
+  op_br       = 0x3D,
+  op_jmp      = 0x3E,
+  op_call     = 0x3F,
+  op_call_t   = 0x40,
+  op_call_p   = 0x41,
+  op_call_t_p = 0x42,
+  op_call_v   = 0x43,
+  op_call_t_v = 0x44,
+  op_ret_g    = 0x45,
+  op_ret_f    = 0x46,
+  op_ret_b    = 0x47,
+  op_ret_u    = 0x48,
+  op_ret_n    = 0x49
 };
 _Static_assert(sizeof(enum sinter_opcode) == 1, "enum sinter_opcode has wrong size");
 
@@ -64,96 +95,40 @@ _Static_assert(sizeof(enum sinter_opcode) == 1, "enum sinter_opcode has wrong si
   }; \
   _Static_assert(sizeof(struct op_ ## __ident__) == __size__ + 1, "struct op_" #__ident__ " has wrong size");
 
-SINTER_OPSTRUCT(ldc_i, 4,
-  uint32_t operand;
+SINTER_OPSTRUCT(i32, 4,
+  int32_t operand;
 )
 
-SINTER_OPSTRUCT(ldc_f, 4,
+SINTER_OPSTRUCT(f32, 4,
   float operand;
 )
 
-SINTER_OPSTRUCT(ldc_s, 4,
+SINTER_OPSTRUCT(f64, 8,
+  double operand;
+)
+
+SINTER_OPSTRUCT(address, 4,
   address_t address;
 )
 
-SINTER_OPSTRUCT(new_f, 6,
-  uint8_t maxstack;
-  uint8_t framesize;
-  address_t code;
-)
-
-SINTER_OPSTRUCT(ld_e, 1,
+SINTER_OPSTRUCT(oneindex, 1,
   uint8_t index;
 )
 
-SINTER_OPSTRUCT(st_e, 1,
-  uint8_t index;
-)
-
-SINTER_OPSTRUCT(ld_ep, 2,
+SINTER_OPSTRUCT(twoindex, 2,
   uint8_t index;
   uint8_t envindex;
 )
 
-SINTER_OPSTRUCT(st_ep, 2,
-  uint8_t index;
-  uint8_t envindex;
-)
-
-SINTER_OPSTRUCT(ld_a, 1,
-  uint8_t index;
-)
-
-SINTER_OPSTRUCT(st_a, 1,
-  uint8_t index;
-)
-
-SINTER_OPSTRUCT(ld_ap, 2,
-  uint8_t index;
-  uint8_t envindex;
-)
-
-SINTER_OPSTRUCT(st_ap, 2,
-  uint8_t index;
-  uint8_t envindex;
-)
-
-SINTER_OPSTRUCT(br_t, 4,
+SINTER_OPSTRUCT(offset, 4,
   offset_t offset;
-)
-
-SINTER_OPSTRUCT(br, 4,
-  offset_t offset;
-)
-
-SINTER_OPSTRUCT(jmp, 4,
-  address_t address;
 )
 
 SINTER_OPSTRUCT(call, 1,
   uint8_t numargs;
 )
 
-SINTER_OPSTRUCT(call_t, 1,
-  uint8_t numargs;
-)
-
-SINTER_OPSTRUCT(call_p, 2,
-  uint8_t id;
-  uint8_t numargs;
-)
-
-SINTER_OPSTRUCT(call_tp, 2,
-  uint8_t id;
-  uint8_t numargs;
-)
-
-SINTER_OPSTRUCT(call_v, 2,
-  uint8_t id;
-  uint8_t numargs;
-)
-
-SINTER_OPSTRUCT(call_tv, 2,
+SINTER_OPSTRUCT(call_internal, 2,
   uint8_t id;
   uint8_t numargs;
 )
