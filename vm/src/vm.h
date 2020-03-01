@@ -7,8 +7,8 @@
 
 struct sistate {
   bool running;
-  size_t pc;
-  const char *program;
+  const opcode_t *pc;
+  const opcode_t *program;
 };
 
 #endif // SINTER_VM_H
