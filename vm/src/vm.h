@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-struct sinter_state {
+struct sistate {
   bool running;
   size_t pc;
   const char *program;

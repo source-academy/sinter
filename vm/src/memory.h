@@ -25,30 +25,23 @@
 #endif
 
 enum {
-  sinter_type_empty = 0,
-  sinter_type_stackframe = 20,
-  sinter_type_environment = 21,
-  sinter_type_free = 0xFF
+  sitype_empty = 0,
+  sitype_stackframe = 20,
+  sitype_environment = 21,
+  sitype_free = 0xFF
 };
 
 // TODO: this may become a char * instead
 // ESP32 has a limit on statically allocated memory, so in order to use the full
 // memory, perhaps we will replace this with one large malloc() at the start
 // but that adds an extra indirection for every memory access :(
-extern unsigned char sinter_heap[SINTER_HEAP_SIZE];
+extern unsigned char siheap[SINTER_HEAP_SIZE];
 
-// If pointer size fits in 4 bytes, we can store direct pointers in our stack
-// entries, to save one level of indirection.
-#if __SIZEOF_POINTER__ <= 4
-typedef unsigned char *heapaddress_t;
-#define SINTER_HEAPREF(addr) (addr)
-#else
 typedef address_t heapaddress_t;
-#define SINTER_HEAPREF(addr) (sinter_heap + addr)
-#endif
+#define SINTER_HEAPREF(addr) (siheap + addr)
 
 #ifdef SINTER_USE_SINGLE
-struct sinter_entry {
+struct sientry {
   uint32_t type;
   union {
     // Used for pointers into the heap, for strings, arrays, functions, and
@@ -69,45 +62,38 @@ struct sinter_entry {
 #endif
 
 #ifdef SINTER_USE_DOUBLE
-// Future extension to use a double instead
-// Then we will probably use NaN-boxing, Webkit JSC-style.
+// Future extension to use a double instead.
 #error SINTER_USE_DOUBLE is currently unimplemented.
-
-#define SINTER_ENTRY_TYPE(entry) (TODO)
-#define SINTER_ENTRY_PTRVAL(entry) (TODO)
-#define SINTER_ENTRY_HEAPPTR(entry) (TODO)
-#define SINTER_ENTRY_INT(entry) (TODO)
-#define SINTER_ENTRY_FLOAT(entry) (TODO)
 #endif
 
-_Static_assert(sizeof(struct sinter_entry) == 8, "struct sinter_entry has wrong size");
+_Static_assert(sizeof(struct sientry) == 8, "struct sientry has wrong size");
 
-struct sinter_heap_header {
+struct siheap_header {
   uint16_t type;
   uint16_t refcount;
-  struct sinter_heap_header *prev_node;
+  struct siheap_header *prev_node;
   address_t size;
 };
 
-struct sinter_heap_free {
-  struct sinter_heap_header header;
-  struct sinter_heap_free *prev_free;
-  struct sinter_heap_free *next_free;
+struct siheap_free {
+  struct siheap_header header;
+  struct siheap_free *prev_free;
+  struct siheap_free *next_free;
 };
 
-struct sinter_heap_environment {
-  struct sinter_heap_header header;
+struct siheap_environment {
+  struct siheap_header header;
   uint16_t localcount;
   uint16_t argcount;
-  struct sinter_entry entry;
+  struct sientry entry;
 };
 
-static inline struct sinter_entry *sinter_env_getlocal(
-  struct sinter_heap_environment *env,
+static inline struct sientry *sienv_getlocal(
+  struct siheap_environment *env,
   uint16_t index) {
 #ifndef SINTER_SEATBELTS_OFF
   if (index >= env->localcount) {
-    sinter_fault(sinter_fault_invalidld);
+    sifault(sinter_fault_invalidld);
     return NULL;
   }
 #endif
@@ -115,12 +101,12 @@ static inline struct sinter_entry *sinter_env_getlocal(
   return &env->entry + index;
 }
 
-static inline struct sinter_entry *sinter_env_getarg(
-  struct sinter_heap_environment *env,
+static inline struct sientry *sienv_getarg(
+  struct siheap_environment *env,
   uint16_t index) {
 #ifndef SINTER_SEATBELTS_OFF
   if (index >= env->argcount) {
-    sinter_fault(sinter_fault_invalidld);
+    sifault(sinter_fault_invalidld);
     return NULL;
   }
 #endif
@@ -128,53 +114,53 @@ static inline struct sinter_entry *sinter_env_getarg(
   return &env->entry + env->localcount + index;
 }
 
-struct sinter_heap_function {
-  struct sinter_heap_header header;
+struct siheap_function {
+  struct siheap_header header;
   uint16_t maxstack;
   uint16_t localcount;
   opcode_t *code;
-  struct sinter_heap_environment *env;
+  struct siheap_environment *env;
 };
 
-struct sinter_heap_stackframe {
-  struct sinter_heap_header header;
-  struct sinter_entry *saved_stack_bottom;
-  struct sinter_entry *saved_stack_limit;
-  struct sinter_entry *saved_stack_top;
-  struct sinter_heap_environment *saved_env;
+struct siheap_stackframe {
+  struct siheap_header header;
+  struct sientry *saved_stack_bottom;
+  struct sientry *saved_stack_limit;
+  struct sientry *saved_stack_top;
+  struct siheap_environment *saved_env;
 };
 
-extern struct sinter_entry sinter_stack[SINTER_STACK_ENTRIES];
+extern struct sientry sistack[SINTER_STACK_ENTRIES];
 
 // (Inclusive) Bottom of the current function's operand stack, as an index into
-// sinter_stack.
-extern struct sinter_entry *sinter_stack_bottom;
+// sistack.
+extern struct sientry *sistack_bottom;
 // (Exclusive) Limit of the current function's operand stack, as an index into
-// sinter_stack.
-extern struct sinter_entry *sinter_stack_limit;
+// sistack.
+extern struct sientry *sistack_limit;
 // Index of the next empty entry of the current function's operand stack.
-extern struct sinter_entry *sinter_stack_top;
+extern struct sientry *sistack_top;
 
-static inline void sinter_stack_push(struct sinter_entry entry) {
+static inline void stack_push(struct sientry entry) {
 #ifndef SINTER_SEATBELTS_OFF
-  if (sinter_stack_top >= sinter_stack_limit) {
-    sinter_fault(sinter_fault_stackoverflow);
+  if (sistack_top >= sistack_limit) {
+    sifault(sinter_fault_stackoverflow);
     return;
   }
 #endif
 
-  *(sinter_stack_top++) = entry;
+  *(sistack_top++) = entry;
 }
 
-static inline struct sinter_entry sinter_stack_pop(void) {
+static inline struct sientry sistack_pop(void) {
 #ifndef SINTER_SEATBELTS_OFF
-  if (sinter_stack_top <= sinter_stack_bottom) {
-    sinter_fault(sinter_fault_stackunderflow);
-    return (struct sinter_entry) { 0 };
+  if (sistack_top <= sistack_bottom) {
+    sifault(sinter_fault_stackunderflow);
+    return (struct sientry) { 0 };
   }
 #endif
 
-  return *(--sinter_stack_top);
+  return *(--sistack_top);
 }
 
 #endif

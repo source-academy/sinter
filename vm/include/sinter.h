@@ -37,8 +37,9 @@ struct sinter_value {
   };
 };
 
-static inline sinter_fault sinter_run(const unsigned char *code, struct sinter_value *result) {
+static inline enum sinter_fault sinter_run(const unsigned char *code, struct sinter_value *result) {
   // stub
+  (void) code;
 
   result->type = sinter_type_integer;
   result->integer_value = 42;
