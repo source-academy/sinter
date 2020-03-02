@@ -1,4 +1,5 @@
-#include "memory.h"
+#include "heap.h"
+#include "stack.h"
 
 unsigned char siheap[SINTER_HEAP_SIZE] = { 0 };
 struct siheap_free *siheap_first_free = (struct siheap_free *) siheap;

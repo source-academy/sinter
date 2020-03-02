@@ -4,6 +4,9 @@
 #include "vm.h"
 #include "fault.h"
 #include "nanbox.h"
+#include "heap.h"
+#include "heap_obj.h"
+#include "stack.h"
 
 struct sistate sistate;
 

@@ -25,7 +25,8 @@ enum sinter_fault {
   sinter_fault_stackoverflow = 5,
   sinter_fault_stackunderflow = 6,
   sinter_fault_uninitld = 7,
-  sinter_fault_invalidld = 8
+  sinter_fault_invalidld = 8,
+  sinter_fault_invalidprogram = 9
 };
 
 struct sinter_value {

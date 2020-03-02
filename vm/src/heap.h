@@ -1,5 +1,5 @@
-#ifndef SINTER_MEMORY_H
-#define SINTER_MEMORY_H
+#ifndef SINTER_HEAP_H
+#define SINTER_HEAP_H
 
 #include <assert.h>
 #include <stdbool.h>
@@ -21,8 +21,8 @@
 
 enum {
   sitype_empty = 0,
-  sitype_stackframe = 20,
-  sitype_environment = 21,
+  sitype_frame = 20,
+  sitype_env = 21,
   sitype_free = 0xFF
 };
 
@@ -35,6 +35,8 @@ extern unsigned char siheap[SINTER_HEAP_SIZE];
 typedef address_t heapaddress_t;
 #define SINTER_HEAPREF(addr) (siheap + addr)
 #define SIHEAP_INRANGE(ent) (((unsigned char *) (ent)) < siheap + SINTER_HEAP_SIZE)
+#define SIHEAP_PTRTONANBOX(ptr) NANBOX_OFPTR((uint32_t) (((unsigned char *) (ptr)) - siheap))
+#define SIHEAP_NANBOXTOPTR(val) ((void *) (siheap + NANBOX_PTR(val)))
 
 struct siheap_header {
   uint16_t type;
@@ -85,13 +87,6 @@ static inline void siheap_free_fix_neighbours(struct siheap_free *cur) {
     cur->next_free->prev_free = cur;
   }
 }
-
-struct siheap_environment {
-  struct siheap_header header;
-  uint16_t localcount;
-  uint16_t argcount;
-  sinanbox_t entry;
-};
 
 static inline void siheap_init(void) {
   siheap_first_free = (struct siheap_free *) siheap;
@@ -208,79 +203,6 @@ static inline void siheap_deref(void *vent) {
   }
 
   siheap_mfree(ent);
-}
-
-static inline sinanbox_t *sienv_getlocal(
-  struct siheap_environment *env,
-  uint16_t index) {
-#ifndef SINTER_SEATBELTS_OFF
-  if (index >= env->localcount) {
-    sifault(sinter_fault_invalidld);
-    return NULL;
-  }
-#endif
-
-  return &env->entry + index;
-}
-
-static inline sinanbox_t *sienv_getarg(
-  struct siheap_environment *env,
-  uint16_t index) {
-#ifndef SINTER_SEATBELTS_OFF
-  if (index >= env->argcount) {
-    sifault(sinter_fault_invalidld);
-    return NULL;
-  }
-#endif
-
-  return &env->entry + env->localcount + index;
-}
-
-struct siheap_function {
-  struct siheap_header header;
-  opcode_t *code;
-  struct siheap_environment *env;
-};
-
-struct siheap_stackframe {
-  struct siheap_header header;
-  sinanbox_t *saved_stack_bottom;
-  sinanbox_t *saved_stack_limit;
-  sinanbox_t *saved_stack_top;
-  struct siheap_environment *saved_env;
-};
-
-extern sinanbox_t sistack[SINTER_STACK_ENTRIES];
-
-// (Inclusive) Bottom of the current function's operand stack, as an index into
-// sistack.
-extern sinanbox_t *sistack_bottom;
-// (Exclusive) Limit of the current function's operand stack, as an index into
-// sistack.
-extern sinanbox_t *sistack_limit;
-// Index of the next empty entry of the current function's operand stack.
-extern sinanbox_t *sistack_top;
-
-static inline void stack_push(sinanbox_t entry) {
-#ifndef SINTER_SEATBELTS_OFF
-  if (sistack_top >= sistack_limit) {
-    sifault(sinter_fault_stackoverflow);
-    return;
-  }
-#endif
-
-  *(sistack_top++) = entry;
-}
-
-static inline sinanbox_t sistack_pop(void) {
-#ifndef SINTER_SEATBELTS_OFF
-  if (sistack_top <= sistack_bottom) {
-    sifault(sinter_fault_stackunderflow);
-    return NANBOX_OFEMPTY();
-  }
-#endif
-
-  return *(--sistack_top);
 }
 
 #endif
