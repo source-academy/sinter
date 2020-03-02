@@ -8,6 +8,7 @@
 #include "opcode.h"
 #include "fault.h"
 #include "program.h"
+#include "nanbox.h"
 
 #ifndef SINTER_HEAP_SIZE
 // "64 KB ought to be enough for anybody"
@@ -16,14 +17,6 @@
 
 #ifndef SINTER_STACK_ENTRIES
 #define SINTER_STACK_ENTRIES 0x200
-#endif
-
-#if !defined(SINTER_USE_SINGLE) && !defined(SINTER_USE_DOUBLE)
-#define SINTER_USE_SINGLE
-#endif
-
-#if defined(SINTER_USE_SINGLE) && defined(SINTER_USE_DOUBLE)
-#error Cannot have both SINTER_USE_SINGLE and SINTER_USE_DOUBLE defined.
 #endif
 
 enum {
@@ -41,34 +34,7 @@ extern unsigned char siheap[SINTER_HEAP_SIZE];
 
 typedef address_t heapaddress_t;
 #define SINTER_HEAPREF(addr) (siheap + addr)
-
-#ifdef SINTER_USE_SINGLE
-struct sientry {
-  uint32_t type;
-  union {
-    // Used for pointers into the heap, for strings, arrays, functions, and
-    // stackframes
-    heapaddress_t pointer_value;
-    // Used for actual integers, and booleans
-    int32_t integer_value;
-    // Used for floats.
-    float float_value;
-  };
-};
-
-#define SINTER_ENTRY_TYPE(entry) ((entry).type)
-#define SINTER_ENTRY_PTRVAL(entry) ((entry).pointer_value)
-#define SINTER_ENTRY_HEAPPTR(entry) (SINTER_HEAPREF((entry).pointer_value))
-#define SINTER_ENTRY_INT(entry) ((entry).integer_value)
-#define SINTER_ENTRY_FLOAT(entry) ((entry).float_value)
-#endif
-
-#ifdef SINTER_USE_DOUBLE
-// Future extension to use a double instead.
-#error SINTER_USE_DOUBLE is currently unimplemented.
-#endif
-
-_Static_assert(sizeof(struct sientry) == 8, "struct sientry has wrong size");
+#define SIHEAP_INRANGE(ent) (((unsigned char *) (ent)) < siheap + SINTER_HEAP_SIZE)
 
 struct siheap_header {
   uint16_t type;
@@ -76,6 +42,17 @@ struct siheap_header {
   struct siheap_header *prev_node;
   address_t size;
 };
+
+static inline struct siheap_header *siheap_next(struct siheap_header *const ent) {
+  return (struct siheap_header *) (((unsigned char *) ent) + ent->size);
+}
+
+static inline void siheap_fix_next(struct siheap_header *const ent) {
+  struct siheap_header *const next = siheap_next(ent);
+  if (SIHEAP_INRANGE(next)) {
+    next->prev_node = ent;
+  }
+}
 
 struct siheap_free {
   struct siheap_header header;
@@ -97,11 +74,23 @@ static inline void siheap_free_remove(struct siheap_free *cur) {
   }
 }
 
+static inline void siheap_free_fix_neighbours(struct siheap_free *cur) {
+  if (cur->prev_free) {
+    cur->prev_free->next_free = cur;
+  } else {
+    assert(siheap_first_free == cur->next_free);
+    siheap_first_free = cur;
+  }
+  if (cur->next_free) {
+    cur->next_free->prev_free = cur;
+  }
+}
+
 struct siheap_environment {
   struct siheap_header header;
   uint16_t localcount;
   uint16_t argcount;
-  struct sientry entry;
+  sinanbox_t entry;
 };
 
 static inline void siheap_init(void) {
@@ -116,12 +105,6 @@ static inline void siheap_init(void) {
     .prev_free = NULL,
     .next_free = NULL
   };
-}
-
-#define SIHEAP_INRANGE(ent) (((unsigned char *) (ent)) < siheap + SINTER_HEAP_SIZE)
-
-static inline struct siheap_header *siheap_next(struct siheap_header *ent) {
-  return (struct siheap_header *) (((unsigned char *) ent) + ent->size);
 }
 
 static inline void siheap_ref(void *vent) {
@@ -158,19 +141,9 @@ static inline struct siheap_header *siheap_malloc(address_t size, uint16_t type)
       .prev_free = cur->prev_free,
       .next_free = cur->next_free
     };
-    if (cur->prev_free) {
-      cur->prev_free->next_free = newfree;
-    } else {
-      siheap_first_free = newfree;
-    }
-    if (cur->next_free) {
-      cur->next_free->prev_free = newfree;
-    }
-    struct siheap_header *nextblock = siheap_next(&newfree->header);
-    if (SIHEAP_INRANGE(nextblock)) {
-      nextblock->prev_node = &newfree->header;
-    }
     cur->header.size = size;
+    siheap_free_fix_neighbours(newfree);
+    siheap_fix_next(&newfree->header);
   } else {
     // no space for a free header
     siheap_free_remove(cur);
@@ -181,6 +154,9 @@ static inline struct siheap_header *siheap_malloc(address_t size, uint16_t type)
 }
 
 static inline void siheap_mfree(struct siheap_header *ent) {
+  assert(ent->size >= sizeof(struct siheap_free));
+  assert(ent->refcount == 0);
+
   struct siheap_header *const next = siheap_next(ent);
   struct siheap_header *const prev = ent->prev_node;
   const bool next_inrange = SIHEAP_INRANGE(next);
@@ -189,26 +165,40 @@ static inline void siheap_mfree(struct siheap_header *ent) {
   if (next_free && prev_free) {
     // we have        [free][ent][free]
     // we'll merge to [free           ]
-    struct siheap_free *const nextf = (struct siheap_free *) next;
     prev->size = prev->size + ent->size + next->size;
-
-    // remove next from the linked list
-    siheap_free_remove(nextf);
+    siheap_fix_next(prev);
+    siheap_free_remove((struct siheap_free *) next);
   } else if (next_free) {
     // we have        [ent][free]
     // we'll merge to [free     ]
 
-    // TODO
+    struct siheap_free *const nextf = (struct siheap_free *) next;
+    struct siheap_free *const entf = (struct siheap_free *) ent;
+
+    ent->size = ent->size + next->size;
+    ent->type = sitype_free;
+    entf->prev_free = nextf->prev_free;
+    entf->next_free = nextf->next_free;
+
+    siheap_free_fix_neighbours(entf);
+    siheap_fix_next(ent);
   } else if (prev_free) {
     // we have        [free][ent]
     // we'll merge to [free     ]
 
-    // TODO
+    prev->size = prev->size + ent->size;
+    siheap_fix_next(prev);
   } else {
     // create a new free entry
+    struct siheap_free *const entf = (struct siheap_free *) ent;
 
-    // TODO
+    ent->type = sitype_free;
+    entf->prev_free = NULL;
+    entf->next_free = siheap_first_free;
+    siheap_free_fix_neighbours(entf);
   }
+
+  // TODO decrease refcount of referents
 }
 
 static inline void siheap_deref(void *vent) {
@@ -220,7 +210,7 @@ static inline void siheap_deref(void *vent) {
   siheap_mfree(ent);
 }
 
-static inline struct sientry *sienv_getlocal(
+static inline sinanbox_t *sienv_getlocal(
   struct siheap_environment *env,
   uint16_t index) {
 #ifndef SINTER_SEATBELTS_OFF
@@ -233,7 +223,7 @@ static inline struct sientry *sienv_getlocal(
   return &env->entry + index;
 }
 
-static inline struct sientry *sienv_getarg(
+static inline sinanbox_t *sienv_getarg(
   struct siheap_environment *env,
   uint16_t index) {
 #ifndef SINTER_SEATBELTS_OFF
@@ -254,24 +244,24 @@ struct siheap_function {
 
 struct siheap_stackframe {
   struct siheap_header header;
-  struct sientry *saved_stack_bottom;
-  struct sientry *saved_stack_limit;
-  struct sientry *saved_stack_top;
+  sinanbox_t *saved_stack_bottom;
+  sinanbox_t *saved_stack_limit;
+  sinanbox_t *saved_stack_top;
   struct siheap_environment *saved_env;
 };
 
-extern struct sientry sistack[SINTER_STACK_ENTRIES];
+extern sinanbox_t sistack[SINTER_STACK_ENTRIES];
 
 // (Inclusive) Bottom of the current function's operand stack, as an index into
 // sistack.
-extern struct sientry *sistack_bottom;
+extern sinanbox_t *sistack_bottom;
 // (Exclusive) Limit of the current function's operand stack, as an index into
 // sistack.
-extern struct sientry *sistack_limit;
+extern sinanbox_t *sistack_limit;
 // Index of the next empty entry of the current function's operand stack.
-extern struct sientry *sistack_top;
+extern sinanbox_t *sistack_top;
 
-static inline void stack_push(struct sientry entry) {
+static inline void stack_push(sinanbox_t entry) {
 #ifndef SINTER_SEATBELTS_OFF
   if (sistack_top >= sistack_limit) {
     sifault(sinter_fault_stackoverflow);
@@ -282,11 +272,11 @@ static inline void stack_push(struct sientry entry) {
   *(sistack_top++) = entry;
 }
 
-static inline struct sientry sistack_pop(void) {
+static inline sinanbox_t sistack_pop(void) {
 #ifndef SINTER_SEATBELTS_OFF
   if (sistack_top <= sistack_bottom) {
     sifault(sinter_fault_stackunderflow);
-    return (struct sientry) { 0 };
+    return NANBOX_OFEMPTY();
   }
 #endif
 

@@ -1,10 +1,6 @@
 #ifndef SINTER_NANBOX_H
 #define SINTER_NANBOX_H
 
-#include <sinter.h>
-
-#include "memory.h"
-
 /*
  * Sinter 32-bit NaN-boxing
  *
@@ -52,13 +48,14 @@ typedef union sinanbox {
   float as_float;
   uint32_t as_i32;
 } sinanbox_t;
+_Static_assert(sizeof(sinanbox_t) == 4, "sinanbox_t has wrong size");
 
 #define NANBOX_TYPEMASK 0xfff00000u
 #define NANBOX_TEMPTY 0x7f900000u
 #define NANBOX_TUNDEF 0x7fa00000u
 #define NANBOX_TNULL 0x7fb00000u
 #define NANBOX_TBOOL 0x7fd00000u
-#define NANBOX_TNUM 0x7fe00000u
+#define NANBOX_TINT 0x7fe00000u
 #define NANBOX_TPTR 0xffc00000u
 #define NANBOX_GETTYPE(val) ((val).as_i32 & NANBOX_TYPEMASK)
 
@@ -67,17 +64,19 @@ typedef union sinanbox {
 #define NANBOX_ISUNDEF(val) (NANBOX_GETTYPE(val) == NANBOX_TUNDEF)
 #define NANBOX_ISNULL(val) (NANBOX_GETTYPE(val) == NANBOX_TNULL)
 #define NANBOX_ISBOOL(val) (NANBOX_GETTYPE(val) == NANBOX_TBOOL)
-#define NANBOX_ISNUM(val) ((val).as_i32 & NANBOX_TNUM == NANBOX_TNUM)
+#define NANBOX_ISINT(val) ((val).as_i32 & NANBOX_TINT == NANBOX_TINT)
 #define NANBOX_ISPTR(val) ((val).as_i32 & NANBOX_TPTR == NANBOX_TPTR)
 
 #define NANBOX_FLOAT(val) ((val).as_float)
 #define NANBOX_BOOL(val) ((val).as_i32 & 1)
-#define NANBOX_NUMBER(val) (nanbox_number(val))
+#define NANBOX_INT(val) (((struct { signed int n : 21; }) { .n = (val).as_i32 }).n)
 #define NANBOX_PTR(val) ((val).as_i32 & 0x3fffffu)
 
-signed int nanbox_number(sinanbox_t val) {
-  struct { signed int n : 21; } s;
-  s.n = val.as_i32;
-  return s.n;
-}
+#define NANBOX_OFFLOAT(val) ((sinanbox_t) { .as_float = (val) })
+#define NANBOX_OFEMPTY() ((sinanbox_t) { .as_i32 = NANBOX_TEMPTY })
+#define NANBOX_OFUNDEF() ((sinanbox_t) { .as_i32 = NANBOX_TUNDEF })
+#define NANBOX_OFNULL() ((sinanbox_t) { .as_i32 = NANBOX_TNULL })
+#define NANBOX_OFBOOL(val) ((sinanbox_t) { .as_i32 = !!(val) | NANBOX_TBOOL })
+#define NANBOX_OFINT(val) ((sinanbox_t) { .as_i32 = ((val) & 0x1fffffu) | NANBOX_TINT })
+#define NANBOX_OFPTR(val) ((sinanbox_t) { .as_i32 = ((val) & 0x3fffffu) | NANBOX_TPTR })
 #endif
