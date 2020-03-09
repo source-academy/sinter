@@ -106,6 +106,12 @@ static inline void siheap_ref(void *vent) {
   ++(((struct siheap_header *) vent)->refcount);
 }
 
+static inline void siheap_refbox(sinanbox_t ent) {
+  if (NANBOX_ISPTR(ent)) {
+    siheap_ref(SIHEAP_NANBOXTOPTR(ent));
+  }
+}
+
 static inline struct siheap_header *siheap_malloc(address_t size, uint16_t type) {
   if (size < sizeof(struct siheap_free)) {
     size = sizeof(struct siheap_free);
@@ -119,6 +125,7 @@ static inline struct siheap_header *siheap_malloc(address_t size, uint16_t type)
     cur = cur->next_free;
   }
   if (!cur) {
+    sifault(sinter_fault_out_of_memory);
     return NULL;
   }
 
@@ -203,6 +210,12 @@ static inline void siheap_deref(void *vent) {
   }
 
   siheap_mfree(ent);
+}
+
+static inline void siheap_derefbox(sinanbox_t ent) {
+  if (NANBOX_ISPTR(ent)) {
+    siheap_deref(SIHEAP_NANBOXTOPTR(ent));
+  }
 }
 
 #endif

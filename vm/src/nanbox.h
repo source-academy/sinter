@@ -1,8 +1,8 @@
 #ifndef SINTER_NANBOX_H
 #define SINTER_NANBOX_H
 
-/*
- * Sinter 32-bit NaN-boxing
+/**
+ * Sinter 32-bit NaN-box
  *
  * In a 32-bit float, a NaN is any value which has the 8 exponent bits set and
  * a nonzero mantissa field. Normal float operations only produce the canonical
@@ -43,7 +43,6 @@
  *
  * Thus to check the type, we can simply check (val & 0xfff00000).
  */
-
 typedef union sinanbox {
   float as_float;
   uint32_t as_i32;
@@ -57,6 +56,10 @@ _Static_assert(sizeof(sinanbox_t) == 4, "sinanbox_t has wrong size");
 #define NANBOX_TBOOL 0x7fd00000u
 #define NANBOX_TINT 0x7fe00000u
 #define NANBOX_TPTR 0xffc00000u
+
+#define NANBOX_CASES_TINT case NANBOX_TINT: case 0x7ff00000u:
+#define NANBOX_CASES_TPTR case NANBOX_TPTR: case 0xffd00000u: \
+  case 0xffe00000u: case 0xfff00000u:
 #define NANBOX_GETTYPE(val) ((val).as_i32 & NANBOX_TYPEMASK)
 
 #define NANBOX_ISFLOAT(val) ((((val).as_i32 & 0x7f800000) != 0x7f800000) || ((val).as_i32 == 0x7fc00000))
@@ -64,8 +67,9 @@ _Static_assert(sizeof(sinanbox_t) == 4, "sinanbox_t has wrong size");
 #define NANBOX_ISUNDEF(val) (NANBOX_GETTYPE(val) == NANBOX_TUNDEF)
 #define NANBOX_ISNULL(val) (NANBOX_GETTYPE(val) == NANBOX_TNULL)
 #define NANBOX_ISBOOL(val) (NANBOX_GETTYPE(val) == NANBOX_TBOOL)
-#define NANBOX_ISINT(val) ((val).as_i32 & NANBOX_TINT == NANBOX_TINT)
-#define NANBOX_ISPTR(val) ((val).as_i32 & NANBOX_TPTR == NANBOX_TPTR)
+#define NANBOX_ISINT(val) (((val).as_i32 & NANBOX_TINT) == NANBOX_TINT)
+#define NANBOX_ISPTR(val) (((val).as_i32 & NANBOX_TPTR) == NANBOX_TPTR)
+#define NANBOX_ISNUMERIC(val) (NANBOX_ISFLOAT(val) || NANBOX_ISINT(val))
 
 #define NANBOX_FLOAT(val) ((val).as_float)
 #define NANBOX_BOOL(val) ((val).as_i32 & 1)
@@ -76,7 +80,13 @@ _Static_assert(sizeof(sinanbox_t) == 4, "sinanbox_t has wrong size");
 #define NANBOX_OFEMPTY() ((sinanbox_t) { .as_i32 = NANBOX_TEMPTY })
 #define NANBOX_OFUNDEF() ((sinanbox_t) { .as_i32 = NANBOX_TUNDEF })
 #define NANBOX_OFNULL() ((sinanbox_t) { .as_i32 = NANBOX_TNULL })
-#define NANBOX_OFBOOL(val) ((sinanbox_t) { .as_i32 = !!(val) | NANBOX_TBOOL })
+#define NANBOX_OFBOOL(val) ((sinanbox_t) { .as_i32 = (!!(val)) | NANBOX_TBOOL })
 #define NANBOX_OFINT(val) ((sinanbox_t) { .as_i32 = ((val) & 0x1fffffu) | NANBOX_TINT })
 #define NANBOX_OFPTR(val) ((sinanbox_t) { .as_i32 = ((val) & 0x3fffffu) | NANBOX_TPTR })
+
+#define NANBOX_INTMAX 0xFFFFF
+#define NANBOX_INTMIN (-0x100000)
+
+#define NANBOX_CANONICAL_NAN ((sinanbox_t) { .as_i32 = 0x7FC00000u })
+#define NANBOX_IDENTICAL(v0, v1) ((v0).as_i32 == (v1).as_i32)
 #endif

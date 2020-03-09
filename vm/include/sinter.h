@@ -17,16 +17,16 @@ enum sinter_type {
 };
 
 enum sinter_fault {
-  // skip 0 (setjmp returns 0 on normal return)
-  sinter_fault_none = 1,
-  sinter_fault_oom = 2,
-  sinter_fault_type = 3,
-  sinter_fault_divbyzero = 4,
-  sinter_fault_stackoverflow = 5,
-  sinter_fault_stackunderflow = 6,
-  sinter_fault_uninitld = 7,
-  sinter_fault_invalidld = 8,
-  sinter_fault_invalidprogram = 9
+  sinter_fault_none = 0,
+  sinter_fault_out_of_memory = 1,
+  sinter_fault_type = 2,
+  sinter_fault_divide_by_zero = 3,
+  sinter_fault_stack_overflow = 4,
+  sinter_fault_stack_underflow = 5,
+  sinter_fault_uninitialised_load = 6,
+  sinter_fault_invalid_load = 7,
+  sinter_fault_invalid_program = 8,
+  sinter_fault_internal_error = 9
 };
 
 struct sinter_value {

@@ -125,12 +125,12 @@ SINTER_OPSTRUCT(offset, 4,
 )
 
 SINTER_OPSTRUCT(call, 1,
-  uint8_t numargs;
+  uint8_t num_args;
 )
 
 SINTER_OPSTRUCT(call_internal, 2,
   uint8_t id;
-  uint8_t numargs;
+  uint8_t num_args;
 )
 
 #undef SINTER_OPSTRUCT

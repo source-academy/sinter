@@ -20,7 +20,7 @@ extern sinanbox_t *sistack_top;
 static inline void sistack_push(sinanbox_t entry) {
 #ifndef SINTER_SEATBELTS_OFF
   if (sistack_top >= sistack_limit) {
-    sifault(sinter_fault_stackoverflow);
+    sifault(sinter_fault_stack_overflow);
     return;
   }
 #endif
@@ -31,18 +31,30 @@ static inline void sistack_push(sinanbox_t entry) {
 static inline sinanbox_t sistack_pop(void) {
 #ifndef SINTER_SEATBELTS_OFF
   if (sistack_top <= sistack_bottom) {
-    sifault(sinter_fault_stackunderflow);
-    return NANBOX_OFEMPTY();
-  }
+    sifault(sinter_fault_stack_underflow);
+  } else
 #endif
-
-  return *(--sistack_top);
+  {
+    return *(--sistack_top);
+  }
 }
 
-static inline void sistack_new(uint8_t size, opcode_t *return_address, struct siheap_env *return_env) {
-  struct siheap_frame *frame = siframe_alloc();
+static inline sinanbox_t sistack_peek(unsigned int index) {
+  sinanbox_t *v = sistack_top - 1 - index;
+#ifndef SINTER_SEATBELTS_OFF
+  if (v < sistack_bottom) {
+    sifault(sinter_fault_stack_underflow);
+  } else
+#endif
+  {
+    return *v;
+  }
+}
+
+static inline void sistack_new(unsigned int size, const opcode_t *return_address, struct siheap_env *return_env) {
+  struct siheap_frame *frame = siframe_new();
   if (!frame) {
-    sifault(sinter_fault_oom);
+    sifault(sinter_fault_out_of_memory);
     return;
   }
   frame->return_address = return_address;
@@ -57,7 +69,7 @@ static inline void sistack_new(uint8_t size, opcode_t *return_address, struct si
   sistack_limit = sistack_bottom + size;
 }
 
-static inline void sistack_destroy(opcode_t **return_address, struct siheap_env **return_env) {
+static inline void sistack_destroy(const opcode_t **return_address, struct siheap_env **return_env) {
   struct siheap_frame *frame = SIHEAP_NANBOXTOPTR(*(sistack_bottom - 1));
   *return_address = frame->return_address;
   *return_env = frame->saved_env;
@@ -66,6 +78,12 @@ static inline void sistack_destroy(opcode_t **return_address, struct siheap_env 
   sistack_top = frame->saved_stack_top;
 
   siheap_deref(frame);
+}
+
+static inline void sistack_init(void) {
+  sistack_bottom = sistack;
+  sistack_limit = sistack;
+  sistack_top = sistack;
 }
 
 #endif
