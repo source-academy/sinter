@@ -80,7 +80,7 @@ static inline void siheap_free_fix_neighbours(struct siheap_free *cur) {
   if (cur->prev_free) {
     cur->prev_free->next_free = cur;
   } else {
-    assert(siheap_first_free == cur->next_free);
+    assert(siheap_first_free == cur->next_free || cur->header.prev_node == &siheap_first_free->header || !cur->next_free);
     siheap_first_free = cur;
   }
   if (cur->next_free) {
