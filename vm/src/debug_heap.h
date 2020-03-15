@@ -61,7 +61,7 @@ static inline void debug_nanbox(sinanbox_t v) {
   }
 }
 #else
-#define SIDEBUG_NANBOX(v) (void) 0
+#define SIDEBUG_NANBOX(v) ((void) 0)
 #endif
 
 #endif

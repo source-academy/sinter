@@ -7,7 +7,7 @@
 #include <stdio.h>
 #define SIDEBUG(...) fprintf(stderr, __VA_ARGS__)
 #else
-#define SIDEBUG(...) (void) 0
+#define SIDEBUG(...) ((void) 0)
 #endif
 
 #define SIBUG() SIDEBUG("BUG at %s at %s:%d\n", __func__, __FILE__, __LINE__);
