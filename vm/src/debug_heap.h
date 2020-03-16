@@ -5,7 +5,7 @@
 #include "heap.h"
 #include "vm.h"
 
-#ifdef SINTER_DEBUG_LOG
+#if SINTER_DEBUG_LEVEL >= 1
 #include <stdio.h>
 #include <inttypes.h>
 

@@ -36,7 +36,20 @@ static inline void validate_header(const struct svm_header *const header) {
 #define ADVANCE_PCI() sistate.pc += sizeof(*instr); continue
 
 static void main_loop(void) {
+#ifdef SINTER_DEBUG
+  const opcode_t *previous_pc = NULL;
+#endif
   while (1) {
+#ifdef SINTER_DEBUG
+    if (sistate.pc >= sistate.program_end) {
+      SIBUGV("Jumped out of bounds to 0x%tx after instruction at address 0x%tx\n", SISTATE_CURADDR, previous_pc - sistate.program);
+      sifault(sinter_fault_internal_error);
+      return;
+    }
+    previous_pc = sistate.pc;
+
+    SITRACE("PC: 0x%tx; opcode: %02x (%s)\n", SISTATE_CURADDR, *sistate.pc, get_opcode_name(*sistate.pc));
+#endif
     const opcode_t this_opcode = *sistate.pc;
     switch (this_opcode) {
     case op_nop:

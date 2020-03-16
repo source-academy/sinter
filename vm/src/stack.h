@@ -5,6 +5,7 @@
 
 #include "nanbox.h"
 #include "heap_obj.h"
+#include "debug_heap.h"
 
 extern sinanbox_t sistack[SINTER_STACK_ENTRIES];
 
@@ -25,6 +26,12 @@ static inline void sistack_push(sinanbox_t entry) {
   }
 #endif
 
+#if SINTER_DEBUG_LEVEL >= 2
+    SIDEBUG("Pushed onto stack: ");
+    SIDEBUG_NANBOX(entry);
+    SIDEBUG("\n");
+#endif
+
   *(sistack_top++) = entry;
 }
 
@@ -35,6 +42,11 @@ static inline sinanbox_t sistack_pop(void) {
   } else
 #endif
   {
+#if SINTER_DEBUG_LEVEL >= 2
+    SIDEBUG("Popped from stack: ");
+    SIDEBUG_NANBOX(*(sistack_top - 1));
+    SIDEBUG("\n");
+#endif
     return *(--sistack_top);
   }
 }
