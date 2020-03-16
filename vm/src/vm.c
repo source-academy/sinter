@@ -579,6 +579,20 @@ static void main_loop(void) {
 
       break;
 
+    case op_newenv: {
+      DECLOPSTRUCT(op_oneindex);
+      struct siheap_env *new_env = sienv_new(sistate.env, instr->index);
+      sistate.env = new_env;
+      ADVANCE_PCI();
+    }
+
+    case op_popenv: {
+      struct siheap_env *old_env = sistate.env;
+      sistate.env = old_env->parent;
+      siheap_deref(old_env);
+      ADVANCE_PCONE();
+    }
+
     default:
       SIBUGV("Invalid instruction %02x at address 0x%tx\n", this_opcode, SISTATE_CURADDR);
       sifault(sinter_fault_invalid_program);
