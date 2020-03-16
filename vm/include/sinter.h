@@ -38,6 +38,6 @@ struct sinter_value {
   };
 };
 
-enum sinter_fault sinter_run(const unsigned char *code, struct sinter_value *result);
+enum sinter_fault sinter_run(const unsigned char *code, const size_t code_size, struct sinter_value *result);
 
 #endif

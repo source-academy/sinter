@@ -641,9 +641,10 @@ static void set_result(struct sinter_value *result) {
   }
 }
 
-enum sinter_fault sinter_run(const unsigned char *const code, struct sinter_value *result) {
+enum sinter_fault sinter_run(const unsigned char *const code, const size_t code_size, struct sinter_value *result) {
   sistate.fault_reason = sinter_fault_none;
   sistate.program = code;
+  sistate.program_end = code + code_size;
   sistate.running = true;
   sistate.pc = NULL;
   sistate.env = NULL;

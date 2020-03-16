@@ -13,6 +13,7 @@ struct sistate {
   enum sinter_fault fault_reason;
   const opcode_t *pc;
   const opcode_t *program;
+  const opcode_t *program_end;
   struct siheap_env *env;
 };
 

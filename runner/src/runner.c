@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   }
 
   struct sinter_value result;
-  enum sinter_fault fault = sinter_run(program, &result);
+  enum sinter_fault fault = sinter_run(program, size, &result);
 
   eprintf("Program exited with fault %d and result type %d (%d, %d, %f)\n", fault, result.type, result.integer_value, result.boolean_value, result.float_value);
 
