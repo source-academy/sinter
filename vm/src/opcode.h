@@ -5,7 +5,7 @@
 
 typedef unsigned char opcode_t;
 typedef uint32_t address_t;
-typedef uint32_t offset_t;
+typedef int32_t offset_t;
 
 enum __attribute__((__packed__)) sinter_opcode {
   op_nop      = 0x00,
