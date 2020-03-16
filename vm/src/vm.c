@@ -454,7 +454,7 @@ static void main_loop(void) {
       break;
 
     case op_br_t:
-    /* case op_br_f: */ {
+    case op_br_f: {
       DECLOPSTRUCT(op_offset);
       sinanbox_t v = sistack_pop();
       if (!NANBOX_ISBOOL(v)) {
