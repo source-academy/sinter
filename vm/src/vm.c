@@ -500,6 +500,7 @@ static void main_loop(void) {
 
       // create the new environment
       struct siheap_env *new_env = sienv_new(fn_obj->env, fn_code->env_size);
+      siheap_ref(new_env);
 
       // pop the arguments off the caller's stack
       // insert them into the callee's environment
@@ -547,6 +548,7 @@ static void main_loop(void) {
       sinanbox_t v = sistack_pop();
 
       // destroy this stack frame, and return to the caller
+      siheap_deref(sistate.env);
       sistack_destroy(&sistate.pc, &sistate.env);
 
       // push the return value onto the caller's stack
@@ -563,6 +565,7 @@ static void main_loop(void) {
     case op_ret_u:
     case op_ret_n:
       // destroy this stack frame, and return to the caller
+      siheap_deref(sistate.env);
       sistack_destroy(&sistate.pc, &sistate.env);
 
       // push the return value onto the caller's stack
