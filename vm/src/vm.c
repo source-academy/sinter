@@ -285,8 +285,8 @@ static void main_loop(void) {
     }
 
 #define COMPARISON_OP(op) { \
-      sinanbox_t v0 = sistack_pop(); \
       sinanbox_t v1 = sistack_pop(); \
+      sinanbox_t v0 = sistack_pop(); \
       sinanbox_t r; \
  \
       if (NANBOX_ISNUMERIC(v0) && NANBOX_ISNUMERIC(v1)) { \
