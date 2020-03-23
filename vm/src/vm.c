@@ -524,8 +524,9 @@ static void main_loop(void) {
         sienv_put(new_env, num_args - 1 - i, v);
       }
 
-      // pop the function off the caller's stack
-      sistack_pop();
+      // pop the function off the caller's stack, and deref it at the same time
+      siheap_derefbox(sistack_pop());
+
 
       // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
       if (this_opcode == op_call_t) {
@@ -536,6 +537,7 @@ static void main_loop(void) {
       }
 
       // create the stack frame for the callee, which stores the return address and environment
+      //TODO : Check whether reference is created to new stack frame. 
       sistack_new(fn_code->stack_size, sistate.pc, sistate.env);
 
       // set the environment
@@ -548,7 +550,7 @@ static void main_loop(void) {
     }
 
     case op_call_p:
-    case op_call_t_p:
+    case op_call_t_p: 
     case op_call_v:
     case op_call_t_v:
       unimpl_instr();
