@@ -512,52 +512,59 @@ static void main_loop(void) {
 
       // get the function object
       sinanbox_t fn_ptr = sistack_peek(instr->num_args);
-      struct siheap_function *fn_obj = SIHEAP_NANBOXTOPTR(fn_ptr);
 
-      // check the type before we dereference further
-      if (!NANBOX_ISPTR(fn_ptr) || fn_obj->header.type != sinter_type_function) {
+      if (NANBOX_ISIFN(fn_ptr)) {
+        unimpl_instr();
+      } else if (NANBOX_ISPTR(fn_ptr)) {
+        struct siheap_function *fn_obj = SIHEAP_NANBOXTOPTR(fn_ptr);
+
+        // check the type before we dereference further
+        if (fn_obj->header.type != sinter_type_function) {
+          sifault(sinter_fault_type);
+          return;
+        }
+
+        // get the code
+        const struct svm_function *fn_code = fn_obj->code;
+
+        // create the new environment
+        struct siheap_env *new_env = sienv_new(fn_obj->env, fn_code->env_size);
+        siheap_ref(new_env);
+
+        // pop the arguments off the caller's stack
+        // insert them into the callee's environment
+        const unsigned int num_args = instr->num_args > fn_code->num_args
+          ? fn_code->num_args : instr->num_args;
+        for (unsigned int i = 0; i < num_args; ++i) {
+          sinanbox_t v = sistack_pop();
+          sienv_put(new_env, num_args - 1 - i, v);
+        }
+
+        // pop the function off the caller's stack, and deref it at the same time
+        siheap_derefbox(sistack_pop());
+
+
+        // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
+        if (this_opcode == op_call_t) {
+          sistack_destroy(&sistate.pc, &sistate.env);
+        } else {
+          // otherwise we advance to the return address
+          sistate.pc += sizeof(*instr);
+        }
+
+        // create the stack frame for the callee, which stores the return address and environment
+        //TODO : Check whether reference is created to new stack frame.
+        sistack_new(fn_code->stack_size, sistate.pc, sistate.env);
+
+        // set the environment
+        sistate.env = new_env;
+
+        // enter the function
+        sistate.pc = &fn_code->code;
+      } else {
         sifault(sinter_fault_type);
         return;
       }
-
-      // get the code
-      const struct svm_function *fn_code = fn_obj->code;
-
-      // create the new environment
-      struct siheap_env *new_env = sienv_new(fn_obj->env, fn_code->env_size);
-      siheap_ref(new_env);
-
-      // pop the arguments off the caller's stack
-      // insert them into the callee's environment
-      const unsigned int num_args = instr->num_args > fn_code->num_args
-        ? fn_code->num_args : instr->num_args;
-      for (unsigned int i = 0; i < num_args; ++i) {
-        sinanbox_t v = sistack_pop();
-        sienv_put(new_env, num_args - 1 - i, v);
-      }
-
-      // pop the function off the caller's stack, and deref it at the same time
-      siheap_derefbox(sistack_pop());
-
-
-      // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
-      if (this_opcode == op_call_t) {
-        sistack_destroy(&sistate.pc, &sistate.env);
-      } else {
-        // otherwise we advance to the return address
-        sistate.pc += sizeof(*instr);
-      }
-
-      // create the stack frame for the callee, which stores the return address and environment
-      //TODO : Check whether reference is created to new stack frame.
-      sistack_new(fn_code->stack_size, sistate.pc, sistate.env);
-
-      // set the environment
-      sistate.env = new_env;
-
-      // enter the function
-      sistate.pc = &fn_code->code;
-
       break;
     }
 
