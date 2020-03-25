@@ -614,6 +614,13 @@ static void main_loop(void) {
 
       break;
 
+    case op_dup: {
+      sinanbox_t v = sistack_peek(0);
+      siheap_refbox(v);
+      sistack_push(v);
+      ADVANCE_PCONE();
+    }
+
     case op_newenv: {
       DECLOPSTRUCT(op_oneindex);
       struct siheap_env *new_env = sienv_new(sistate.env, instr->index);
