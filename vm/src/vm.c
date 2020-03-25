@@ -404,7 +404,19 @@ static void main_loop(void) {
       sistack_push(SIHEAP_PTRTONANBOX(fn_obj));
       ADVANCE_PCI();
     }
-    break;
+
+    case op_new_c_p: {
+      DECLOPSTRUCT(op_oneindex);
+      sistack_push(NANBOX_OFIFN_PRIMITIVE(instr->index));
+      ADVANCE_PCI();
+    }
+
+    case op_new_c_v: {
+      DECLOPSTRUCT(op_oneindex);
+      sistack_push(NANBOX_OFIFN_VM(instr->index));
+      ADVANCE_PCI();
+    }
+
     case op_new_a:
       unimpl_instr();
       ADVANCE_PCONE();
