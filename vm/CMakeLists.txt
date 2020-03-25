@@ -17,6 +17,7 @@ add_library(sinter
   src/vm.c
   src/fault.c
   src/memory.c
+  src/heap_mdestroy.c
 )
 
 target_compile_options(sinter

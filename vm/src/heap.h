@@ -160,6 +160,8 @@ static inline struct siheap_header *siheap_malloc(address_t size, uint16_t type)
   return &cur->header;
 }
 
+void siheap_mdestroy(struct siheap_header *ent);
+
 static inline void siheap_mfree(struct siheap_header *ent) {
   assert(ent->size >= sizeof(struct siheap_free));
   assert(ent->refcount == 0);
@@ -205,7 +207,7 @@ static inline void siheap_mfree(struct siheap_header *ent) {
     siheap_free_fix_neighbours(entf);
   }
 
-  // TODO decrease refcount of referents
+  siheap_mdestroy(ent);
 }
 
 static inline void siheap_deref(void *vent) {
