@@ -549,7 +549,7 @@ static void main_loop(void) {
       }
 
       // create the stack frame for the callee, which stores the return address and environment
-      //TODO : Check whether reference is created to new stack frame. 
+      //TODO : Check whether reference is created to new stack frame.
       sistack_new(fn_code->stack_size, sistate.pc, sistate.env);
 
       // set the environment
@@ -562,7 +562,7 @@ static void main_loop(void) {
     }
 
     case op_call_p:
-    case op_call_t_p: 
+    case op_call_t_p:
     case op_call_v:
     case op_call_t_v:
       unimpl_instr();
