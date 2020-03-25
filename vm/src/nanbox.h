@@ -1,6 +1,8 @@
 #ifndef SINTER_NANBOX_H
 #define SINTER_NANBOX_H
 
+#include <stdint.h>
+
 /**
  * Sinter 32-bit NaN-box
  *
@@ -62,7 +64,7 @@ _Static_assert(sizeof(sinanbox_t) == 4, "sinanbox_t has wrong size");
   case 0xffe00000u: case 0xfff00000u:
 #define NANBOX_GETTYPE(val) ((val).as_i32 & NANBOX_TYPEMASK)
 
-#define NANBOX_ISFLOAT(val) ((((val).as_i32 & 0x7f800000) != 0x7f800000) || ((val).as_i32 == 0x7fc00000))
+#define NANBOX_ISFLOAT(val) (nanbox_isfloat(val))
 #define NANBOX_ISEMPTY(val) (NANBOX_GETTYPE(val) == NANBOX_TEMPTY)
 #define NANBOX_ISUNDEF(val) (NANBOX_GETTYPE(val) == NANBOX_TUNDEF)
 #define NANBOX_ISNULL(val) (NANBOX_GETTYPE(val) == NANBOX_TNULL)
@@ -89,4 +91,9 @@ _Static_assert(sizeof(sinanbox_t) == 4, "sinanbox_t has wrong size");
 
 #define NANBOX_CANONICAL_NAN ((sinanbox_t) { .as_i32 = 0x7FC00000u })
 #define NANBOX_IDENTICAL(v0, v1) ((v0).as_i32 == (v1).as_i32)
+
+static inline _Bool nanbox_isfloat(sinanbox_t v) {
+  uint32_t i = v.as_i32;
+  return ((i & 0x7f800000) != 0x7f800000) || ((i & 0x7fffff) == 0) || i == 0x7fc00000;
+}
 #endif
