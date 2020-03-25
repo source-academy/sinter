@@ -39,13 +39,16 @@ static inline void debug_nanbox(sinanbox_t v) {
     SIDEBUG(("integer, value: %" PRId32), NANBOX_INT(v));
     break;
   case NANBOX_TBOOL:
-  SIDEBUG("boolean, value: %d", NANBOX_BOOL(v));
+    SIDEBUG("boolean, value: %d", NANBOX_BOOL(v));
     break;
   case NANBOX_TUNDEF:
     SIDEBUG("undefined");
     break;
   case NANBOX_TNULL:
     SIDEBUG("null");
+    break;
+  case NANBOX_TIFN:
+    SIDEBUG("internal function, type: %d, number: %d", NANBOX_IFN_TYPE(v), NANBOX_IFN_NUMBER(v));
     break;
   NANBOX_CASES_TPTR
     SIDEBUG("pointer to ");
