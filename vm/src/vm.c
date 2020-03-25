@@ -400,7 +400,6 @@ static void main_loop(void) {
       DECLOPSTRUCT(op_address);
       const struct svm_function *fn_code = (const struct svm_function *) SISTATE_ADDRTOPC(instr->address);
       struct siheap_function *fn_obj = sifunction_new(fn_code, sistate.env);
-      siheap_ref(fn_obj);
       sistack_push(SIHEAP_PTRTONANBOX(fn_obj));
       ADVANCE_PCI();
     }
@@ -529,7 +528,6 @@ static void main_loop(void) {
 
         // create the new environment
         struct siheap_env *new_env = sienv_new(fn_obj->env, fn_code->env_size);
-        siheap_ref(new_env);
 
         // pop the arguments off the caller's stack
         // insert them into the callee's environment

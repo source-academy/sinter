@@ -13,6 +13,11 @@ struct siheap_env {
 
 #define SIENV_SIZE(entry_count) (sizeof(struct siheap_env) + (entry_count)*sizeof(sinanbox_t))
 
+/**
+ * Create a new environment heap object.
+ *
+ * This increments the reference count on the parent environment, if any.
+ */
 static inline struct siheap_env *sienv_new(
   struct siheap_env *parent,
   const uint16_t entry_count) {
@@ -22,14 +27,26 @@ static inline struct siheap_env *sienv_new(
   for (size_t i = 0; i < entry_count; ++i) {
     env->entry[i] = NANBOX_OFEMPTY();
   }
+  if (parent) {
+    siheap_ref(parent);
+  }
 
   return env;
+}
+
+static inline void sienv_destroy(struct siheap_env *const env) {
+  for (size_t i = 0; i < env->entry_count; ++i) {
+    siheap_derefbox(env->entry[i]);
+  }
+  if (env->parent) {
+    siheap_deref(env->parent);
+  }
 }
 
 /**
  * Get a value from the environment.
  *
- * Note: he caller is responsible for incrementing the reference count, if needed.
+ * Note: the caller is responsible for incrementing the reference count, if needed.
  */
 static inline sinanbox_t sienv_get(
   struct siheap_env *const env,
@@ -93,6 +110,12 @@ static inline struct siheap_function *sifunction_new(const struct svm_function *
   return fn;
 }
 
+static inline void sifunction_destroy(struct siheap_function *fn) {
+  if (fn->env) {
+    siheap_deref(fn->env);
+  }
+}
+
 struct siheap_frame {
   struct siheap_header header;
   const opcode_t *return_address;
@@ -103,7 +126,6 @@ struct siheap_frame {
 };
 
 static inline struct siheap_frame *siframe_new(void) {
-  //TODO: Need to assign ref? 
   return (struct siheap_frame *) siheap_malloc(
     sizeof(struct siheap_frame), sitype_frame);
 }

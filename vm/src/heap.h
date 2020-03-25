@@ -112,6 +112,11 @@ static inline void siheap_refbox(sinanbox_t ent) {
   }
 }
 
+/**
+ * Allocate memory.
+ *
+ * The allocation is returned with a reference count of 1.
+ */
 static inline struct siheap_header *siheap_malloc(address_t size, uint16_t type) {
   if (size < sizeof(struct siheap_free)) {
     size = sizeof(struct siheap_free);
