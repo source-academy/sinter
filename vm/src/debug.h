@@ -87,10 +87,12 @@ static inline const char *get_opcode_name(opcode_t op) {
     "ret_n",
     "dup",
     "newenv",
-    "popenv"
+    "popenv",
+    "new_c_p",
+    "new_c_v"
   };
 
-  if (op > op_popenv) {
+  if (op > op_new_c_v) {
     return "invalid_opcode";
   } else {
     return opcode_names[op];
