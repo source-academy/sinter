@@ -1,5 +1,6 @@
 #include <math.h>
 #include <inttypes.h>
+#include <stdbool.h>
 
 #include <sinter.h>
 
@@ -273,6 +274,22 @@ static void main_loop(void) {
       ADVANCE_PCONE();
     }
 
+    case op_neg_g:
+    case op_neg_f: {
+      sinanbox_t v1 = sistack_pop();
+
+      if (NANBOX_ISINT(v1)) {
+        sistack_push(WRAP_INTEGER(-NANBOX_INT(v1)));
+      } else if (NANBOX_ISFLOAT(v1)) {
+        sistack_push(NANBOX_OFFLOAT(-NANBOX_FLOAT(v1)));
+      } else {
+        sifault(sinter_fault_type);
+        return;
+      }
+
+      ADVANCE_PCONE();
+    }
+
     case op_not_g:
     case op_not_b: {
       sinanbox_t v = sistack_pop();
@@ -344,29 +361,32 @@ static void main_loop(void) {
     case op_ge_g:
     case op_ge_f:
       COMPARISON_OP(>=)
+    case op_neq_g:
+    case op_neq_f:
+    case op_neq_b:
     case op_eq_g:
     case op_eq_f:
     case op_eq_b: {
       sinanbox_t v0 = sistack_pop();
       sinanbox_t v1 = sistack_pop();
-      sinanbox_t r;
+      bool r;
 
       if (NANBOX_GETTYPE(v0) == NANBOX_GETTYPE(v1)) {
         // if they are *identical* then they are equal provided they are not NaN
-        r = NANBOX_OFBOOL(NANBOX_IDENTICAL(v0, v1) && !NANBOX_IDENTICAL(v0, NANBOX_CANONICAL_NAN));
+        r = NANBOX_IDENTICAL(v0, v1) && !NANBOX_IDENTICAL(v0, NANBOX_CANONICAL_NAN);
       } else if (NANBOX_ISNUMERIC(v0) && NANBOX_ISNUMERIC(v1)) {
         switch (NANBOX_ISFLOAT(v1) << 1 | NANBOX_ISFLOAT(v0)) {
         case 0: /* neither are floats */
-          r = NANBOX_OFBOOL(NANBOX_INT(v0) == NANBOX_INT(v1));
+          r = NANBOX_INT(v0) == NANBOX_INT(v1);
           break;
         case 1: /* v0 is float */
-          r = NANBOX_OFBOOL(NANBOX_FLOAT(v0) == NANBOX_INT(v1));
+          r = NANBOX_FLOAT(v0) == NANBOX_INT(v1);
           break;
         case 2: /* v1 is float */
-          r = NANBOX_OFBOOL(NANBOX_INT(v0) == NANBOX_FLOAT(v1));
+          r = NANBOX_INT(v0) == NANBOX_FLOAT(v1);
           break;
         case 3: /* both are float */
-          r = NANBOX_OFBOOL(NANBOX_FLOAT(v0) == NANBOX_FLOAT(v1));
+          r = NANBOX_FLOAT(v0) == NANBOX_FLOAT(v1);
           break;
         default:
           SIBUG();
@@ -382,7 +402,7 @@ static void main_loop(void) {
           unimpl_instr();
         } else {
           // for arrays and functions, identical only if they are the SAME object
-          r = NANBOX_OFBOOL(hv0 == hv1);
+          r = hv0 == hv1;
         }
       } else {
         SIBUG();
@@ -390,7 +410,11 @@ static void main_loop(void) {
         return;
       }
 
-      sistack_push(r);
+      if (this_opcode >= op_neq_g) {
+        r = !r;
+      }
+
+      sistack_push(NANBOX_OFBOOL(r));
       siheap_derefbox(v0);
       siheap_derefbox(v1);
       ADVANCE_PCONE();

@@ -86,8 +86,13 @@ enum __attribute__((__packed__)) sinter_opcode {
   op_dup      = 0x4B,
   op_newenv   = 0x4C,
   op_popenv   = 0x4D,
-  op_new_c_p    = 0x4E,
-  op_new_c_v    = 0x4F
+  op_new_c_p  = 0x4E,
+  op_new_c_v  = 0x4F,
+  op_neg_g    = 0x50,
+  op_neg_f    = 0x51,
+  op_neq_g    = 0x52,
+  op_neq_f    = 0x53,
+  op_neq_b    = 0x54
 };
 _Static_assert(sizeof(enum sinter_opcode) == 1, "enum sinter_opcode has wrong size");
 
