@@ -179,8 +179,8 @@ static void main_loop(void) {
         return;
       }
       sistack_push(r);
-      siheap_derefbox(v0);
-      siheap_derefbox(v1);
+      /* No need to deref v0 and v1; they are either numbers (which are not on the heap) */
+      /* or they are not (in which case we would have faulted) */
       ADVANCE_PCONE();
     }
 
@@ -210,8 +210,8 @@ static void main_loop(void) {
         return;
       }
       sistack_push(r);
-      siheap_derefbox(v0);
-      siheap_derefbox(v1);
+      /* No need to deref v0 and v1; they are either numbers (which are not on the heap) */
+      /* or they are not (in which case we would have faulted) */
       ADVANCE_PCONE();
     }
 
@@ -240,8 +240,8 @@ static void main_loop(void) {
         return;
       }
       sistack_push(r);
-      siheap_derefbox(v0);
-      siheap_derefbox(v1);
+      /* No need to deref v0 and v1; they are either numbers (which are not on the heap) */
+      /* or they are not (in which case we would have faulted) */
       ADVANCE_PCONE();
     }
 
@@ -269,8 +269,8 @@ static void main_loop(void) {
         break;
       }
       sistack_push(r);
-      siheap_derefbox(v0);
-      siheap_derefbox(v1);
+      /* No need to deref v0 and v1; they are either numbers (which are not on the heap) */
+      /* or they are not (in which case we would have faulted) */
       ADVANCE_PCONE();
     }
 
