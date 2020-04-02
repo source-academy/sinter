@@ -570,7 +570,6 @@ static void main_loop(void) {
         }
 
         // create the stack frame for the callee, which stores the return address and environment
-        //TODO : Check whether reference is created to new stack frame.
         sistack_new(fn_code->stack_size, sistate.pc, sistate.env);
 
         // set the environment
