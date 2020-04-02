@@ -2,17 +2,7 @@
 
 This is the "main" implementation of the Sinter VM, written in C11.
 
-## Build and configuration
-
-We use the CMake build system. Note: a compiler that supports C11 is _required_. This excludes MSVC.
-
-```
-mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Debug -DSINTER_DEBUG_LEVEL=2
-make -j8
-make test
-runner/runner ../test_programs/display.svm
-```
+## Configuration
 
 Some configuration is available via CMake defines:
 
