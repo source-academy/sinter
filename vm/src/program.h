@@ -10,7 +10,7 @@
 /**
  * The header of an SVM program.
  */
-struct __attribute__((__packed__)) svm_header {
+typedef struct __attribute__((__packed__)) {
   /**
    * The magic. Should be 0x5005ACAD.
    */
@@ -31,23 +31,23 @@ struct __attribute__((__packed__)) svm_header {
    * The number of constants following the header.
    */
   uint32_t constant_count;
-};
-_Static_assert(sizeof(struct svm_header) == 16, "Wrong struct svm_header size");
+} svm_header_t;
+_Static_assert(sizeof(svm_header_t) == 16, "Wrong svm_header_t size");
 
 /**
  * A constant in the constant pool of an SVM program.
  */
-struct __attribute__((__packed__)) svm_constant {
+typedef struct __attribute__((__packed__)) {
   uint16_t type;
   uint32_t length;
   unsigned char data;
-};
-_Static_assert(sizeof(struct svm_constant) == 7, "Wrong struct svm_constant size");
+} svm_constant_t;
+_Static_assert(sizeof(svm_constant_t) == 7, "Wrong svm_constant_t size");
 
 /**
  * A function in an SVM program. All code in an SVM program is in a function.
  */
-struct __attribute__((__packed__)) svm_function {
+typedef struct __attribute__((__packed__)) {
   /**
    * The maximum stack size used by the function.
    */
@@ -65,7 +65,7 @@ struct __attribute__((__packed__)) svm_function {
    * The first instruction.
    */
   opcode_t code;
-};
-_Static_assert(sizeof(struct svm_function) == 5, "Wrong struct svm_function size");
+} svm_function_t;
+_Static_assert(sizeof(svm_function_t) == 5, "Wrong svm_function_t size");
 
 #endif

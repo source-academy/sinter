@@ -63,8 +63,8 @@ static inline sinanbox_t sistack_peek(unsigned int index) {
   }
 }
 
-static inline void sistack_new(unsigned int size, const opcode_t *return_address, struct siheap_env *return_env) {
-  struct siheap_frame *frame = siframe_new();
+static inline void sistack_new(unsigned int size, const opcode_t *return_address, siheap_env_t *return_env) {
+  siheap_frame_t *frame = siframe_new();
   if (!frame) {
     sifault(sinter_fault_out_of_memory);
     return;
@@ -81,8 +81,8 @@ static inline void sistack_new(unsigned int size, const opcode_t *return_address
   sistack_limit = sistack_bottom + size;
 }
 
-static inline void sistack_destroy(const opcode_t **return_address, struct siheap_env **return_env) {
-  struct siheap_frame *frame = SIHEAP_NANBOXTOPTR(*(sistack_bottom - 1));
+static inline void sistack_destroy(const opcode_t **return_address, siheap_env_t **return_env) {
+  siheap_frame_t *frame = SIHEAP_NANBOXTOPTR(*(sistack_bottom - 1));
   *return_address = frame->return_address;
   *return_env = frame->saved_env;
   sistack_bottom = frame->saved_stack_bottom;

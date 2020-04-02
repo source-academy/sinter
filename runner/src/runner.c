@@ -38,8 +38,8 @@ int main(int argc, char *argv[]) {
     check_posix(-1, "mmap failed");
   }
 
-  struct sinter_value result;
-  enum sinter_fault fault = sinter_run(program, size, &result);
+  sinter_value_t result;
+  sinter_fault_t fault = sinter_run(program, size, &result);
 
   printf("Program exited with fault %d and result type %d (%d, %d, %f)\n", fault, result.type, result.integer_value, result.boolean_value, result.float_value);
 

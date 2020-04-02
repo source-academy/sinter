@@ -122,8 +122,8 @@ static void main_loop(void) {
           break;
         }
       } else if (NANBOX_ISPTR(v0) & NANBOX_ISPTR(v1)) {
-        struct siheap_header *hv0 = SIHEAP_NANBOXTOPTR(v0);
-        struct siheap_header *hv1 = SIHEAP_NANBOXTOPTR(v1);
+        siheap_header_t *hv0 = SIHEAP_NANBOXTOPTR(v0);
+        siheap_header_t *hv1 = SIHEAP_NANBOXTOPTR(v1);
         if (hv0->type == sinter_type_string && hv1->type == sinter_type_string) {
           // TODO string concat
           unimpl_instr();
@@ -317,8 +317,8 @@ static void main_loop(void) {
           break; \
         } \
       } else if (NANBOX_ISPTR(v0) & NANBOX_ISPTR(v1)) { \
-        struct siheap_header *hv0 = SIHEAP_NANBOXTOPTR(v0); \
-        struct siheap_header *hv1 = SIHEAP_NANBOXTOPTR(v1); \
+        siheap_header_t *hv0 = SIHEAP_NANBOXTOPTR(v0); \
+        siheap_header_t *hv1 = SIHEAP_NANBOXTOPTR(v1); \
         if (hv0->type == sinter_type_string && hv1->type == sinter_type_string) { \
           /* TODO string comparison */ \
           /* strcmp(hv0->str, hv1->str) op 0 */ \
@@ -386,8 +386,8 @@ static void main_loop(void) {
           return;
         }
       } else if (NANBOX_ISPTR(v0) & NANBOX_ISPTR(v1)) {
-        struct siheap_header *hv0 = SIHEAP_NANBOXTOPTR(v0);
-        struct siheap_header *hv1 = SIHEAP_NANBOXTOPTR(v1);
+        siheap_header_t *hv0 = SIHEAP_NANBOXTOPTR(v0);
+        siheap_header_t *hv1 = SIHEAP_NANBOXTOPTR(v1);
         if (hv0->type == sinter_type_string && hv1->type == sinter_type_string) {
           /* TODO string comparison */
           /* strcmp(hv0->str, hv1->str) op 0 */
@@ -414,8 +414,8 @@ static void main_loop(void) {
 
     case op_new_c: {
       DECLOPSTRUCT(op_address);
-      const struct svm_function *fn_code = (const struct svm_function *) SISTATE_ADDRTOPC(instr->address);
-      struct siheap_function *fn_obj = sifunction_new(fn_code, sistate.env);
+      const svm_function_t *fn_code = (const svm_function_t *) SISTATE_ADDRTOPC(instr->address);
+      siheap_function_t *fn_obj = sifunction_new(fn_code, sistate.env);
       sistack_push(SIHEAP_PTRTONANBOX(fn_obj));
       ADVANCE_PCI();
     }
@@ -459,7 +459,7 @@ static void main_loop(void) {
     case op_ldp_f:
     case op_ldp_b: {
       DECLOPSTRUCT(op_twoindex);
-      struct siheap_env *env = sienv_getparent(sistate.env, instr->envindex);
+      siheap_env_t *env = sienv_getparent(sistate.env, instr->envindex);
       if (!env) {
         sifault(sinter_fault_invalid_load);
         return;
@@ -474,7 +474,7 @@ static void main_loop(void) {
     case op_stp_b:
     case op_stp_f: {
       DECLOPSTRUCT(op_twoindex);
-      struct siheap_env *env = sienv_getparent(sistate.env, instr->envindex);
+      siheap_env_t *env = sienv_getparent(sistate.env, instr->envindex);
       if (!env) {
         sifault(sinter_fault_invalid_load);
         return;
@@ -531,7 +531,7 @@ static void main_loop(void) {
       if (NANBOX_ISIFN(fn_ptr)) {
         unimpl_instr();
       } else if (NANBOX_ISPTR(fn_ptr)) {
-        struct siheap_function *fn_obj = SIHEAP_NANBOXTOPTR(fn_ptr);
+        siheap_function_t *fn_obj = SIHEAP_NANBOXTOPTR(fn_ptr);
 
         // check the type before we dereference further
         if (fn_obj->header.type != sinter_type_function) {
@@ -540,10 +540,10 @@ static void main_loop(void) {
         }
 
         // get the code
-        const struct svm_function *fn_code = fn_obj->code;
+        const svm_function_t *fn_code = fn_obj->code;
 
         // create the new environment
-        struct siheap_env *new_env = sienv_new(fn_obj->env, fn_code->env_size);
+        siheap_env_t *new_env = sienv_new(fn_obj->env, fn_code->env_size);
 
         // pop the arguments off the caller's stack
         // insert them into the callee's environment
@@ -639,13 +639,13 @@ static void main_loop(void) {
 
     case op_newenv: {
       DECLOPSTRUCT(op_oneindex);
-      struct siheap_env *new_env = sienv_new(sistate.env, instr->index);
+      siheap_env_t *new_env = sienv_new(sistate.env, instr->index);
       sistate.env = new_env;
       ADVANCE_PCI();
     }
 
     case op_popenv: {
-      struct siheap_env *old_env = sistate.env;
+      siheap_env_t *old_env = sistate.env;
       sistate.env = old_env->parent;
       siheap_deref(old_env);
       ADVANCE_PCONE();
@@ -660,8 +660,8 @@ static void main_loop(void) {
   }
 }
 
-sinanbox_t siexec(const struct svm_function *fn) {
-  struct siheap_env *old_env = sistate.env;
+sinanbox_t siexec(const svm_function_t *fn) {
+  siheap_env_t *old_env = sistate.env;
   const opcode_t *old_pc = sistate.pc;
 
   sistate.env = sienv_new(NULL, fn->env_size);

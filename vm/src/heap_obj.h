@@ -4,24 +4,24 @@
 #include "opcode.h"
 #include "heap.h"
 
-struct siheap_env {
-  struct siheap_header header;
+typedef struct siheap_env {
+  siheap_header_t header;
   struct siheap_env *parent;
   uint16_t entry_count;
   sinanbox_t entry[];
-};
+} siheap_env_t;
 
-#define SIENV_SIZE(entry_count) (sizeof(struct siheap_env) + (entry_count)*sizeof(sinanbox_t))
+#define SIENV_SIZE(entry_count) (sizeof(siheap_env_t) + (entry_count)*sizeof(sinanbox_t))
 
 /**
  * Create a new environment heap object.
  *
  * This increments the reference count on the parent environment, if any.
  */
-static inline struct siheap_env *sienv_new(
-  struct siheap_env *parent,
+static inline siheap_env_t *sienv_new(
+  siheap_env_t *parent,
   const uint16_t entry_count) {
-  struct siheap_env *env = (struct siheap_env *) siheap_malloc(SIENV_SIZE(entry_count), sitype_env);
+  siheap_env_t *env = (siheap_env_t *) siheap_malloc(SIENV_SIZE(entry_count), sitype_env);
   env->parent = parent;
   env->entry_count = entry_count;
   for (size_t i = 0; i < entry_count; ++i) {
@@ -34,7 +34,7 @@ static inline struct siheap_env *sienv_new(
   return env;
 }
 
-static inline void sienv_destroy(struct siheap_env *const env) {
+static inline void sienv_destroy(siheap_env_t *const env) {
   for (size_t i = 0; i < env->entry_count; ++i) {
     siheap_derefbox(env->entry[i]);
   }
@@ -49,7 +49,7 @@ static inline void sienv_destroy(struct siheap_env *const env) {
  * Note: the caller is responsible for incrementing the reference count, if needed.
  */
 static inline sinanbox_t sienv_get(
-  struct siheap_env *const env,
+  siheap_env_t *const env,
   const uint16_t index) {
 
 #ifndef SINTER_SEATBELTS_OFF
@@ -71,7 +71,7 @@ static inline sinanbox_t sienv_get(
  * count of the heap object (if the value is a pointer) if it is going to continue holding on to the value.
  */
 static inline void sienv_put(
-  struct siheap_env *const env,
+  siheap_env_t *const env,
   const uint16_t index,
   const sinanbox_t val) {
 
@@ -86,8 +86,8 @@ static inline void sienv_put(
   env->entry[index] = val;
 }
 
-static inline struct siheap_env *sienv_getparent(
-  struct siheap_env *env,
+static inline siheap_env_t *sienv_getparent(
+  siheap_env_t *env,
   unsigned int index) {
   while (env && index--) {
     env = env->parent;
@@ -95,14 +95,14 @@ static inline struct siheap_env *sienv_getparent(
   return env;
 }
 
-struct siheap_function {
-  struct siheap_header header;
-  const struct svm_function *code;
-  struct siheap_env *env;
-};
+typedef struct {
+  siheap_header_t header;
+  const svm_function_t *code;
+  siheap_env_t *env;
+} siheap_function_t;
 
-static inline struct siheap_function *sifunction_new(const struct svm_function *code, struct siheap_env *parent_env) {
-  struct siheap_function *fn = (struct siheap_function *) siheap_malloc(sizeof(struct siheap_function), sinter_type_function);
+static inline siheap_function_t *sifunction_new(const svm_function_t *code, siheap_env_t *parent_env) {
+  siheap_function_t *fn = (siheap_function_t *) siheap_malloc(sizeof(siheap_function_t), sinter_type_function);
   fn->code = code;
   fn->env = parent_env;
   siheap_ref(parent_env);
@@ -110,24 +110,24 @@ static inline struct siheap_function *sifunction_new(const struct svm_function *
   return fn;
 }
 
-static inline void sifunction_destroy(struct siheap_function *fn) {
+static inline void sifunction_destroy(siheap_function_t *fn) {
   if (fn->env) {
     siheap_deref(fn->env);
   }
 }
 
-struct siheap_frame {
-  struct siheap_header header;
+typedef struct {
+  siheap_header_t header;
   const opcode_t *return_address;
   sinanbox_t *saved_stack_bottom;
   sinanbox_t *saved_stack_limit;
   sinanbox_t *saved_stack_top;
-  struct siheap_env *saved_env;
-};
+  siheap_env_t *saved_env;
+} siheap_frame_t;
 
-static inline struct siheap_frame *siframe_new(void) {
-  return (struct siheap_frame *) siheap_malloc(
-    sizeof(struct siheap_frame), sitype_frame);
+static inline siheap_frame_t *siframe_new(void) {
+  return (siheap_frame_t *) siheap_malloc(
+    sizeof(siheap_frame_t), sitype_frame);
 }
 
 #endif

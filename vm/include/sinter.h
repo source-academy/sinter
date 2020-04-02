@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-enum sinter_type {
+typedef enum {
   sinter_type_undefined = 1,
   sinter_type_null = 2,
   sinter_type_boolean = 3,
@@ -14,9 +14,9 @@ enum sinter_type {
   sinter_type_string = 6,
   sinter_type_array = 7,
   sinter_type_function = 8
-};
+} sinter_type_t;
 
-enum sinter_fault {
+typedef enum {
   sinter_fault_none = 0,
   sinter_fault_out_of_memory = 1,
   sinter_fault_type = 2,
@@ -27,17 +27,17 @@ enum sinter_fault {
   sinter_fault_invalid_load = 7,
   sinter_fault_invalid_program = 8,
   sinter_fault_internal_error = 9
-};
+} sinter_fault_t;
 
-struct sinter_value {
-  enum sinter_type type;
+typedef struct {
+  sinter_type_t type;
   union {
     bool boolean_value;
     int32_t integer_value;
     float float_value;
   };
-};
+} sinter_value_t;
 
-enum sinter_fault sinter_run(const unsigned char *code, const size_t code_size, struct sinter_value *result);
+sinter_fault_t sinter_run(const unsigned char *code, const size_t code_size, sinter_value_t *result);
 
 #endif

@@ -47,7 +47,7 @@
  *
  * Thus to check the type, we can simply check (val & 0xfff00000).
  */
-typedef union sinanbox {
+typedef union {
   float as_float;
   uint32_t as_i32;
 } sinanbox_t;

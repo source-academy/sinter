@@ -11,21 +11,21 @@
 
 #define SIDEBUG_NANBOX(v) debug_nanbox(v)
 
-static inline void debug_heap_obj(struct siheap_header *o) {
+static inline void debug_heap_obj(siheap_header_t *o) {
   switch (o->type) {
   case sitype_env: {
-    struct siheap_env *env = (struct siheap_env *) o;
+    siheap_env_t *env = (siheap_env_t *) o;
     SIDEBUG("environment with %d entries; parent at %p", env->entry_count, (void *) env->parent);
     break;
   }
   case sitype_frame: {
-    struct siheap_frame *fr = (struct siheap_frame *) o;
+    siheap_frame_t *fr = (siheap_frame_t *) o;
     SIDEBUG("frame; return address %tx, stack bottom %p, limit %p, top %p, saved environment %p", fr->return_address - sistate.program,
       (void *) fr->saved_stack_bottom, (void *) fr->saved_stack_limit, (void *) fr->saved_stack_top, (void *) fr->saved_env);
     break;
   }
   case sinter_type_function: {
-    struct siheap_function *f = (struct siheap_function *) o;
+    siheap_function_t *f = (siheap_function_t *) o;
     SIDEBUG("function; code address %tx, environment %p",
       (const opcode_t *) f->code - sistate.program, (void *) f->env);
     break;

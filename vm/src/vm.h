@@ -10,16 +10,16 @@
 
 struct sistate {
   bool running;
-  enum sinter_fault fault_reason;
+  sinter_fault_t fault_reason;
   const opcode_t *pc;
   const opcode_t *program;
   const opcode_t *program_end;
-  struct siheap_env *env;
+  siheap_env_t *env;
 };
 
 extern struct sistate sistate;
 
-sinanbox_t siexec(const struct svm_function *fn);
+sinanbox_t siexec(const svm_function_t *fn);
 
 #define SISTATE_CURADDR (sistate.pc - sistate.program)
 #define SISTATE_ADDRTOPC(addr) (sistate.program + (addr))

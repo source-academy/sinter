@@ -7,7 +7,7 @@ typedef unsigned char opcode_t;
 typedef uint32_t address_t;
 typedef int32_t offset_t;
 
-enum __attribute__((__packed__)) sinter_opcode {
+typedef enum __attribute__((__packed__)) {
   op_nop      = 0x00,
   op_ldc_i    = 0x01,
   op_lgc_i    = 0x02,
@@ -93,8 +93,8 @@ enum __attribute__((__packed__)) sinter_opcode {
   op_neq_g    = 0x52,
   op_neq_f    = 0x53,
   op_neq_b    = 0x54
-};
-_Static_assert(sizeof(enum sinter_opcode) == 1, "enum sinter_opcode has wrong size");
+} sinter_opcode_t;
+_Static_assert(sizeof(sinter_opcode_t) == 1, "enum sinter_opcode has wrong size");
 
 #ifdef SINTER_OPSTRUCT
 #error Conflicting SINTER_OPSTRUCT defined.
