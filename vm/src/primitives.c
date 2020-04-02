@@ -15,6 +15,7 @@ static void unimpl(void) {
 }
 
 static void display_argv(unsigned int argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
   for (unsigned int i = 0; i < argc; ++i) {
     SIDEBUG("%d: ", i);
     SIDEBUG_NANBOX(argv[i]);
