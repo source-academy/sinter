@@ -1,0 +1,21 @@
+Pushed onto stack: pointer to frame; return address MEMADDR, stack bottom 0xMEMADDR, limit 0xMEMADDR, top 0xMEMADDR, saved environment (nil)
+PC: 0x14; opcode: 0c (lgc_n)
+Pushed onto stack: null
+PC: 0x15; opcode: 0b (lgc_u)
+Pushed onto stack: undefined
+PC: 0x16; opcode: 02 (lgc_i)
+Pushed onto stack: integer, value: 12345
+PC: 0x1b; opcode: 42 (call_p)
+Program called display with 3 arguments:
+0: null
+1: undefined
+2: integer, value: 12345
+Popped from stack: integer, value: 12345
+Popped from stack: undefined
+Popped from stack: null
+Pushed onto stack: null
+PC: 0x1e; opcode: 46 (ret_g)
+Popped from stack: null
+Pushed onto stack: null
+Return value: null
+Program exited with fault 0 and result type 2 (0, 0, 0.000000)
