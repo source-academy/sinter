@@ -542,16 +542,19 @@ static void main_loop(void) {
         // get the code
         const svm_function_t *fn_code = fn_obj->code;
 
+        if (instr->num_args != fn_code->num_args) {
+          sifault(sinter_fault_function_arity);
+          return;
+        }
+
         // create the new environment
         siheap_env_t *new_env = sienv_new(fn_obj->env, fn_code->env_size);
 
         // pop the arguments off the caller's stack
         // insert them into the callee's environment
-        const unsigned int num_args = instr->num_args > fn_code->num_args
-          ? fn_code->num_args : instr->num_args;
-        for (unsigned int i = 0; i < num_args; ++i) {
+        for (unsigned int i = 0; i < fn_code->num_args; ++i) {
           sinanbox_t v = sistack_pop();
-          sienv_put(new_env, num_args - 1 - i, v);
+          sienv_put(new_env, fn_code->num_args - 1 - i, v);
         }
 
         // pop the function off the caller's stack, and deref it at the same time
