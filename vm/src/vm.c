@@ -22,14 +22,6 @@ static inline void unimpl_instr() {
   sifault(sinter_fault_invalid_program);
 }
 
-static inline void validate_header(const struct svm_header *const header) {
-  if (header->magic != SVM_MAGIC) {
-    SIDEBUG("Invalid magic: %x\n", header->magic);
-    sifault(sinter_fault_invalid_program);
-    return;
-  }
-}
-
 #define WRAP_INTEGER(v) (((v) >= NANBOX_INTMIN && (v) <= NANBOX_INTMAX) ? \
   NANBOX_OFINT(v) : NANBOX_OFFLOAT(v))
 #define DECLOPSTRUCT(type) const struct type *instr = (const struct type *) sistate.pc
@@ -668,73 +660,19 @@ static void main_loop(void) {
   }
 }
 
-static void set_result(struct sinter_value *result) {
-  if (sistack_top == sistack_bottom) {
-    SIDEBUG("Program did not return value from toplevel\n");
-    return;
-  }
+sinanbox_t siexec(const struct svm_function *fn) {
+  struct siheap_env *old_env = sistate.env;
+  const opcode_t *old_pc = sistate.pc;
 
-  sinanbox_t v = *sistack_bottom;
-  SIDEBUG("Return value: ");
-  SIDEBUG_NANBOX(v);
-  SIDEBUG("\n");
-  switch (NANBOX_GETTYPE(v)) {
-  NANBOX_CASES_TINT
-    result->type = sinter_type_integer;
-    result->integer_value = NANBOX_INT(v);
-    break;
-  case NANBOX_TBOOL:
-    result->type = sinter_type_boolean;
-    result->boolean_value = NANBOX_BOOL(v);
-    break;
-  case NANBOX_TUNDEF:
-    result->type = sinter_type_undefined;
-    break;
-  case NANBOX_TNULL:
-    result->type = sinter_type_null;
-    break;
-  default:
-    if (NANBOX_ISFLOAT(v)) {
-      result->type = sinter_type_float;
-      result->float_value = NANBOX_FLOAT(v);
-    } else {
-      SIBUGM("Unexpected return type\n");
-    }
-    break;
-  }
-}
-
-enum sinter_fault sinter_run(const unsigned char *const code, const size_t code_size, struct sinter_value *result) {
-  sistate.fault_reason = sinter_fault_none;
-  sistate.program = code;
-  sistate.program_end = code + code_size;
-  sistate.running = true;
-  sistate.pc = NULL;
-  sistate.env = NULL;
-
-  if (SINTER_FAULTED()) {
-    *result = (struct sinter_value) { 0 };
-    return sistate.fault_reason;
-  }
-
-  // Reset the heap and stack
-  siheap_init();
-  sistack_init();
-
-  // Create one entry for the return value of the entrypoint
-  sistack_limit++;
-
-  const struct svm_header *header = (const struct svm_header *) code;
-  validate_header(header);
-
-  const struct svm_function *entry_fn = (const struct svm_function *) SISTATE_ADDRTOPC(header->entry);
-  sistate.env = sienv_new(NULL, entry_fn->env_size);
-  sistack_new(entry_fn->stack_size, NULL, NULL);
-  sistate.pc = &entry_fn->code;
+  sistate.env = sienv_new(NULL, fn->env_size);
+  sistack_new(fn->stack_size, NULL, NULL);
+  sistate.pc = &fn->code;
 
   main_loop();
 
-  set_result(result);
+  sinanbox_t ret = sistack_top == sistack_bottom ? NANBOX_OFEMPTY() : *sistack_bottom;
+  sistate.env = old_env;
+  sistate.pc = old_pc;
 
-  return sinter_fault_none;
+  return ret;
 }

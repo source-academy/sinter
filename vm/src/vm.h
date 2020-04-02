@@ -19,6 +19,8 @@ struct sistate {
 
 extern struct sistate sistate;
 
+sinanbox_t siexec(const struct svm_function *fn);
+
 #define SISTATE_CURADDR (sistate.pc - sistate.program)
 #define SISTATE_ADDRTOPC(addr) (sistate.program + (addr))
 
