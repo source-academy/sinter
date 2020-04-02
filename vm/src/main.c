@@ -4,6 +4,9 @@
 #include <sinter/program.h>
 #include <sinter/vm.h>
 
+/**
+ * Validates the program header. Faults if it is invalid.
+ */
 static inline void validate_header(const svm_header_t *const header) {
   if (header->magic != SVM_MAGIC) {
     SIDEBUG("Invalid magic: %x\n", header->magic);
@@ -12,6 +15,10 @@ static inline void validate_header(const svm_header_t *const header) {
   }
 }
 
+/**
+ * Expands our sinanbox_t result into a friendlier structure for external
+ * consumers to use.
+ */
 static void set_result(sinanbox_t exec_result, sinter_value_t *result) {
   if (NANBOX_ISEMPTY(exec_result)) {
     SIDEBUG("Program did not return value from toplevel\n");
@@ -47,6 +54,11 @@ static void set_result(sinanbox_t exec_result, sinter_value_t *result) {
   }
 }
 
+/**
+ * Runs a program.
+ *
+ * This is the main entrypoint for programs using the Sinter VM as a library.
+ */
 sinter_fault_t sinter_run(const unsigned char *const code, const size_t code_size, sinter_value_t *result) {
   sistate.fault_reason = sinter_fault_none;
   sistate.program = code;

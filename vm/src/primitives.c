@@ -9,6 +9,11 @@
 #include <sinter/debug_heap.h>
 #include <sinter/vm.h>
 
+/**
+ * This file contains the implementations (in C) of all 92 functions in the Source
+ * standard library.
+ */
+
 static void unimpl(void) {
   SIBUGV("Unimplemented primitive function %02x at address 0x%tx\n", *(sistate.pc + 1), SISTATE_CURADDR);
   sifault(sinter_fault_invalid_program);

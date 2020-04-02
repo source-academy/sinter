@@ -28,6 +28,9 @@ static inline void unimpl_instr() {
 #define ADVANCE_PCONE() sistate.pc += sizeof(opcode_t); continue
 #define ADVANCE_PCI() sistate.pc += sizeof(*instr); continue
 
+/**
+ * Runs the main interpreter loop.
+ */
 static void main_loop(void) {
 #ifdef SINTER_DEBUG
   const opcode_t *previous_pc = NULL;
@@ -700,6 +703,12 @@ static void main_loop(void) {
   }
 }
 
+/**
+ * Executes an SVM function.
+ *
+ * This is used by the main entrypoint in main.c, as well as by primitive
+ * functions that need to execute functions given to it (e.g. map).
+ */
 sinanbox_t siexec(const svm_function_t *fn) {
   siheap_env_t *old_env = sistate.env;
   const opcode_t *old_pc = sistate.pc;

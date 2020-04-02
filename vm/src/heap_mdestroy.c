@@ -1,6 +1,12 @@
 #include <sinter/heap.h>
 #include <sinter/heap_obj.h>
 
+/**
+ * Runs the destructor for the given heap object.
+ *
+ * The destructor typically just decrements the reference counts
+ * of objects referred to by the given object.
+ */
 void siheap_mdestroy(siheap_header_t *ent) {
   switch (ent->type) {
   case sitype_env:
