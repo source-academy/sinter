@@ -27,7 +27,8 @@ typedef enum {
   sinter_fault_invalid_load = 7,
   sinter_fault_invalid_program = 8,
   sinter_fault_internal_error = 9,
-  sinter_fault_function_arity = 10
+  sinter_fault_function_arity = 10,
+  sinter_fault_program_error = 11
 } sinter_fault_t;
 
 typedef struct {

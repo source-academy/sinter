@@ -21,6 +21,7 @@ add_library(sinter
   src/main.c
   src/debug.c
   src/inline.c
+  src/primitives.c
 )
 
 target_compile_options(sinter

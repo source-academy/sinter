@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "inline.h"
+#include "nanbox.h"
 #include "heap_obj.h"
 #include "opcode.h"
 
@@ -19,6 +20,17 @@ struct sistate {
 };
 
 extern struct sistate sistate;
+
+/**
+ * The type of a VM-internal function.
+ *
+ * A VM-internal function should not modify the stack.
+ */
+typedef sinanbox_t (*sivmfnptr_t)(uint8_t argc, sinanbox_t *argv);
+
+extern const sivmfnptr_t sivmfn_primitives[];
+
+#define SIVMFN_PRIMITIVE_COUNT (92)
 
 sinanbox_t siexec(const svm_function_t *fn);
 

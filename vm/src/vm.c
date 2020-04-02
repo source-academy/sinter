@@ -586,7 +586,45 @@ static void main_loop(void) {
     }
 
     case op_call_p:
-    case op_call_t_p:
+    case op_call_t_p: {
+      DECLOPSTRUCT(op_call_internal);
+      if (instr->id >= SIVMFN_PRIMITIVE_COUNT) {
+        SIDEBUG("Invalid primitive function index %d\n", instr->id);
+        sifault(sinter_fault_invalid_program);
+        return;
+      }
+
+      // check that there are enough items on the stack
+      if (instr->num_args > 0) {
+        sistack_peek(instr->num_args - 1);
+      }
+
+      // call the function
+      sinanbox_t retv = sivmfn_primitives[instr->id](instr->num_args, sistack_top - instr->num_args);
+
+      // pop the arguments off the stack
+      for (unsigned int i = 0; i < instr->num_args; ++i) {
+        siheap_derefbox(sistack_pop());
+      }
+
+      // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
+      if (this_opcode == op_call_t_p) {
+        sistack_destroy(&sistate.pc, &sistate.env);
+      } else {
+        // otherwise we advance to the return address
+        sistate.pc += sizeof(*instr);
+      }
+
+      sistack_push(retv);
+
+      // tail call from main
+      if (this_opcode == op_call_t_p && !sistate.pc) {
+        return;
+      }
+
+      break;
+    }
+
     case op_call_v:
     case op_call_t_v:
       unimpl_instr();
