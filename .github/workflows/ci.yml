@@ -23,4 +23,5 @@ jobs:
       working-directory: build
       run: make -j4
     - name: test
+      working-directory: build
       run: make test
