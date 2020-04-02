@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cmake-args: [-DCMAKE_BUILD_TYPE=Debug -DSINTER_DEBUG_LEVEL=2, -DCMAKE_BUILD_TYPE=Release]
+    steps:
+    - uses: actions/checkout@v2
+    - name: mkdir
+      run: mkdir build
+    - name: cmake
+      working-directory: build
+      run: cmake .. ${{ matrix.cmake-args }}
+    - name: make
+      working-directory: build
+      run: make -j4
+    - name: test
+      run: make test
