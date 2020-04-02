@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(vm_test C)
+
+macro(add_run_test name)
+  add_test(NAME "run_${name}" COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/run_test.sh" "${runner_BINARY_DIR}/runner" "${CMAKE_CURRENT_SOURCE_DIR}/../test_programs/${name}")
+endmacro()
+
+add_run_test(return_1)
+add_run_test(multiply_21_and_2)
+add_run_test(fact_recursive)
+add_run_test(fact_iterative)
+add_run_test(fact_iterative_34)
