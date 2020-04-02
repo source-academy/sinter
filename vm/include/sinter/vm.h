@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "inline.h"
 #include "heap_obj.h"
 #include "opcode.h"
 

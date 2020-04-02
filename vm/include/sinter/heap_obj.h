@@ -1,6 +1,7 @@
 #ifndef SINTER_HEAP_OBJ_H
 #define SINTER_HEAP_OBJ_H
 
+#include "inline.h"
 #include "opcode.h"
 #include "heap.h"
 
@@ -18,7 +19,7 @@ typedef struct siheap_env {
  *
  * This increments the reference count on the parent environment, if any.
  */
-static inline siheap_env_t *sienv_new(
+SINTER_INLINE siheap_env_t *sienv_new(
   siheap_env_t *parent,
   const uint16_t entry_count) {
   siheap_env_t *env = (siheap_env_t *) siheap_malloc(SIENV_SIZE(entry_count), sitype_env);
@@ -34,7 +35,7 @@ static inline siheap_env_t *sienv_new(
   return env;
 }
 
-static inline void sienv_destroy(siheap_env_t *const env) {
+SINTER_INLINE void sienv_destroy(siheap_env_t *const env) {
   for (size_t i = 0; i < env->entry_count; ++i) {
     siheap_derefbox(env->entry[i]);
   }
@@ -48,7 +49,7 @@ static inline void sienv_destroy(siheap_env_t *const env) {
  *
  * Note: the caller is responsible for incrementing the reference count, if needed.
  */
-static inline sinanbox_t sienv_get(
+SINTER_INLINE sinanbox_t sienv_get(
   siheap_env_t *const env,
   const uint16_t index) {
 
@@ -70,7 +71,7 @@ static inline sinanbox_t sienv_get(
  * Note: the caller "passes" its reference to the environment. That is, the caller should increment the reference
  * count of the heap object (if the value is a pointer) if it is going to continue holding on to the value.
  */
-static inline void sienv_put(
+SINTER_INLINE void sienv_put(
   siheap_env_t *const env,
   const uint16_t index,
   const sinanbox_t val) {
@@ -86,7 +87,7 @@ static inline void sienv_put(
   env->entry[index] = val;
 }
 
-static inline siheap_env_t *sienv_getparent(
+SINTER_INLINE siheap_env_t *sienv_getparent(
   siheap_env_t *env,
   unsigned int index) {
   while (env && index--) {
@@ -101,7 +102,7 @@ typedef struct {
   siheap_env_t *env;
 } siheap_function_t;
 
-static inline siheap_function_t *sifunction_new(const svm_function_t *code, siheap_env_t *parent_env) {
+SINTER_INLINE siheap_function_t *sifunction_new(const svm_function_t *code, siheap_env_t *parent_env) {
   siheap_function_t *fn = (siheap_function_t *) siheap_malloc(sizeof(siheap_function_t), sinter_type_function);
   fn->code = code;
   fn->env = parent_env;
@@ -110,7 +111,7 @@ static inline siheap_function_t *sifunction_new(const svm_function_t *code, sihe
   return fn;
 }
 
-static inline void sifunction_destroy(siheap_function_t *fn) {
+SINTER_INLINE void sifunction_destroy(siheap_function_t *fn) {
   if (fn->env) {
     siheap_deref(fn->env);
   }
@@ -125,7 +126,7 @@ typedef struct {
   siheap_env_t *saved_env;
 } siheap_frame_t;
 
-static inline siheap_frame_t *siframe_new(void) {
+SINTER_INLINE siheap_frame_t *siframe_new(void) {
   return (siheap_frame_t *) siheap_malloc(
     sizeof(siheap_frame_t), sitype_frame);
 }

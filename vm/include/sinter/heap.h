@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "inline.h"
 #include "opcode.h"
 #include "fault.h"
 #include "program.h"
@@ -45,11 +46,11 @@ typedef struct siheap_header {
   address_t size;
 } siheap_header_t;
 
-static inline siheap_header_t *siheap_next(siheap_header_t *const ent) {
+SINTER_INLINE siheap_header_t *siheap_next(siheap_header_t *const ent) {
   return (siheap_header_t *) (((unsigned char *) ent) + ent->size);
 }
 
-static inline void siheap_fix_next(siheap_header_t *const ent) {
+SINTER_INLINE void siheap_fix_next(siheap_header_t *const ent) {
   siheap_header_t *const next = siheap_next(ent);
   if (SIHEAP_INRANGE(next)) {
     next->prev_node = ent;
@@ -64,7 +65,7 @@ typedef struct siheap_free {
 
 extern siheap_free_t *siheap_first_free;
 
-static inline void siheap_free_remove(siheap_free_t *cur) {
+SINTER_INLINE void siheap_free_remove(siheap_free_t *cur) {
   if (cur->prev_free) {
     cur->prev_free->next_free = cur->next_free;
   } else {
@@ -76,7 +77,7 @@ static inline void siheap_free_remove(siheap_free_t *cur) {
   }
 }
 
-static inline void siheap_free_fix_neighbours(siheap_free_t *cur) {
+SINTER_INLINE void siheap_free_fix_neighbours(siheap_free_t *cur) {
   if (cur->prev_free) {
     cur->prev_free->next_free = cur;
   } else {
@@ -88,7 +89,7 @@ static inline void siheap_free_fix_neighbours(siheap_free_t *cur) {
   }
 }
 
-static inline void siheap_init(void) {
+SINTER_INLINE void siheap_init(void) {
   siheap_first_free = (siheap_free_t *) siheap;
   *siheap_first_free = (siheap_free_t) {
     .header = {
@@ -102,11 +103,11 @@ static inline void siheap_init(void) {
   };
 }
 
-static inline void siheap_ref(void *vent) {
+SINTER_INLINE void siheap_ref(void *vent) {
   ++(((siheap_header_t *) vent)->refcount);
 }
 
-static inline void siheap_refbox(sinanbox_t ent) {
+SINTER_INLINE void siheap_refbox(sinanbox_t ent) {
   if (NANBOX_ISPTR(ent)) {
     siheap_ref(SIHEAP_NANBOXTOPTR(ent));
   }
@@ -117,7 +118,7 @@ static inline void siheap_refbox(sinanbox_t ent) {
  *
  * The allocation is returned with a reference count of 1.
  */
-static inline siheap_header_t *siheap_malloc(address_t size, uint16_t type) {
+SINTER_INLINE siheap_header_t *siheap_malloc(address_t size, uint16_t type) {
   if (size < sizeof(siheap_free_t)) {
     size = sizeof(siheap_free_t);
   }
@@ -162,7 +163,7 @@ static inline siheap_header_t *siheap_malloc(address_t size, uint16_t type) {
 
 void siheap_mdestroy(siheap_header_t *ent);
 
-static inline void siheap_mfree(siheap_header_t *ent) {
+SINTER_INLINE void siheap_mfree(siheap_header_t *ent) {
   assert(ent->size >= sizeof(siheap_free_t));
   assert(ent->refcount == 0);
 
@@ -210,7 +211,7 @@ static inline void siheap_mfree(siheap_header_t *ent) {
   siheap_mdestroy(ent);
 }
 
-static inline void siheap_deref(void *vent) {
+SINTER_INLINE void siheap_deref(void *vent) {
   siheap_header_t *ent = vent;
   if (--(ent->refcount)) {
     return;
@@ -219,7 +220,7 @@ static inline void siheap_deref(void *vent) {
   siheap_mfree(ent);
 }
 
-static inline void siheap_derefbox(sinanbox_t ent) {
+SINTER_INLINE void siheap_derefbox(sinanbox_t ent) {
   if (NANBOX_ISPTR(ent)) {
     siheap_deref(SIHEAP_NANBOXTOPTR(ent));
   }
