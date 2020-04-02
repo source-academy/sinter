@@ -83,6 +83,11 @@ SINTER_INLINE void sistack_new(unsigned int size, const opcode_t *return_address
 }
 
 SINTER_INLINE void sistack_destroy(const opcode_t **return_address, siheap_env_t **return_env) {
+  while (sistack_top > sistack_bottom) {
+    sinanbox_t v = sistack_pop();
+    siheap_derefbox(v);
+  }
+
   siheap_frame_t *frame = SIHEAP_NANBOXTOPTR(*(sistack_bottom - 1));
   *return_address = frame->return_address;
   *return_env = frame->saved_env;
