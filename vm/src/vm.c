@@ -4,16 +4,16 @@
 
 #include <sinter.h>
 
-#include "opcode.h"
-#include "fault.h"
-#include "nanbox.h"
-#include "heap.h"
-#include "heap_obj.h"
-#include "vm.h"
-#include "stack.h"
-#include "debug.h"
-#include "debug_heap.h"
-#include "program.h"
+#include <sinter/opcode.h>
+#include <sinter/fault.h>
+#include <sinter/nanbox.h>
+#include <sinter/heap.h>
+#include <sinter/heap_obj.h>
+#include <sinter/vm.h>
+#include <sinter/stack.h>
+#include <sinter/debug.h>
+#include <sinter/debug_heap.h>
+#include <sinter/program.h>
 
 struct sistate sistate;
 

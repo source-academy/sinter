@@ -1,7 +1,7 @@
 #include <assert.h>
 
-#include "fault.h"
-#include "vm.h"
+#include <sinter/fault.h>
+#include <sinter/vm.h>
 
 jmp_buf sinter_fault_jmp = { 0 };
 

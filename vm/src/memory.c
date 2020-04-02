@@ -1,5 +1,5 @@
-#include "heap.h"
-#include "stack.h"
+#include <sinter/heap.h>
+#include <sinter/stack.h>
 
 unsigned char siheap[SINTER_HEAP_SIZE] = { 0 };
 siheap_free_t *siheap_first_free = (siheap_free_t *) siheap;

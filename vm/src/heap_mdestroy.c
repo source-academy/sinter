@@ -1,5 +1,5 @@
-#include "heap.h"
-#include "heap_obj.h"
+#include <sinter/heap.h>
+#include <sinter/heap_obj.h>
 
 void siheap_mdestroy(siheap_header_t *ent) {
   switch (ent->type) {

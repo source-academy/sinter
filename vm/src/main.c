@@ -1,8 +1,8 @@
 #include <sinter.h>
 
-#include "stack.h"
-#include "program.h"
-#include "vm.h"
+#include <sinter/stack.h>
+#include <sinter/program.h>
+#include <sinter/vm.h>
 
 static inline void validate_header(const svm_header_t *const header) {
   if (header->magic != SVM_MAGIC) {
