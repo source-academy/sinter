@@ -81,7 +81,7 @@ _Static_assert(sizeof(sinanbox_t) == 4, "sinanbox_t has wrong size");
 
 #define NANBOX_FLOAT(val) ((val).as_float)
 #define NANBOX_BOOL(val) ((val).as_i32 & 1)
-#define NANBOX_INT(val) (((struct { signed int n : 21; }) { .n = (val).as_i32 }).n)
+#define NANBOX_INT(val) (((struct { int32_t n : 21; }) { .n = (val).as_i32 }).n)
 #define NANBOX_PTR(val) ((val).as_i32 & 0x3fffffu)
 
 #define NANBOX_IFN_TYPE(val) (((val).as_i32 & 0x100) >> 8)
