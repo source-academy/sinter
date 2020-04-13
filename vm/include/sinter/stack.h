@@ -6,9 +6,15 @@
 #include "inline.h"
 #include "nanbox.h"
 #include "heap_obj.h"
-#include "debug_heap.h"
+#include "debug.h"
 
-extern sinanbox_t sistack[SINTER_STACK_ENTRIES];
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef SINTER_STACK_ENTRIES
+#define SINTER_STACK_ENTRIES 0x200
+#endif
 
 // (Inclusive) Bottom of the current function's operand stack, as an index into
 // sistack.
@@ -98,10 +104,10 @@ SINTER_INLINE void sistack_destroy(const opcode_t **return_address, siheap_env_t
   siheap_deref(frame);
 }
 
-SINTER_INLINE void sistack_init(void) {
-  sistack_bottom = sistack;
-  sistack_limit = sistack;
-  sistack_top = sistack;
+void sistack_init(void);
+
+#ifdef __cplusplus
 }
+#endif
 
 #endif

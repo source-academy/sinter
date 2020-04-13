@@ -1,5 +1,6 @@
 #include <sinter.h>
 
+#include <sinter/heap_extern.h>
 #include <sinter/stack.h>
 #include <sinter/program.h>
 #include <sinter/vm.h>
@@ -60,6 +61,13 @@ static void set_result(sinanbox_t exec_result, sinter_value_t *result) {
  * This is the main entrypoint for programs using the Sinter VM as a library.
  */
 sinter_fault_t sinter_run(const unsigned char *const code, const size_t code_size, sinter_value_t *result) {
+#ifndef SINTER_STATIC_HEAP
+  if (!siheap) {
+    SIDEBUG("Heap not yet initialised!\n");
+    return sinter_fault_uninitialised_heap;
+  }
+#endif
+
   sistate.fault_reason = sinter_fault_none;
   sistate.program = code;
   sistate.program_end = code + code_size;
@@ -87,4 +95,14 @@ sinter_fault_t sinter_run(const unsigned char *const code, const size_t code_siz
   set_result(exec_result, result);
 
   return sinter_fault_none;
+}
+
+void sinter_setup_heap(void *heap, size_t size) {
+#ifdef SINTER_STATIC_HEAP
+(void) heap; (void) size;
+return;
+#else
+  siheap = heap;
+  siheap_size = size;
+#endif
 }

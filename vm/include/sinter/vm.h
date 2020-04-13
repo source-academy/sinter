@@ -10,6 +10,10 @@
 #include "heap_obj.h"
 #include "opcode.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct sistate {
   bool running;
   sinter_fault_t fault_reason;
@@ -36,5 +40,9 @@ sinanbox_t siexec(const svm_function_t *fn);
 
 #define SISTATE_CURADDR (sistate.pc - sistate.program)
 #define SISTATE_ADDRTOPC(addr) (sistate.program + (addr))
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // SINTER_VM_H

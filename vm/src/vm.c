@@ -12,7 +12,6 @@
 #include <sinter/vm.h>
 #include <sinter/stack.h>
 #include <sinter/debug.h>
-#include <sinter/debug_heap.h>
 #include <sinter/program.h>
 
 struct sistate sistate;

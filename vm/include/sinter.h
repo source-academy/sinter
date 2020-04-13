@@ -5,6 +5,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
   sinter_type_undefined = 1,
   sinter_type_null = 2,
@@ -28,7 +32,8 @@ typedef enum {
   sinter_fault_invalid_program = 8,
   sinter_fault_internal_error = 9,
   sinter_fault_function_arity = 10,
-  sinter_fault_program_error = 11
+  sinter_fault_program_error = 11,
+  sinter_fault_uninitialised_heap = 12
 } sinter_fault_t;
 
 typedef struct {
@@ -41,5 +46,11 @@ typedef struct {
 } sinter_value_t;
 
 sinter_fault_t sinter_run(const unsigned char *code, const size_t code_size, sinter_value_t *result);
+
+void sinter_setup_heap(void *heap, size_t size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

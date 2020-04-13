@@ -16,7 +16,6 @@ add_library(sinter
   src/vm.c
   src/fault.c
   src/memory.c
-  src/heap_mdestroy.c
   src/main.c
   src/debug.c
   src/inline.c
@@ -25,6 +24,7 @@ add_library(sinter
 
 target_compile_options(sinter
   PRIVATE -Wall -Wextra -Wswitch-enum -std=c11 -pedantic -Werror -fwrapv -g
+  PRIVATE -DSINTER_STATIC_HEAP
   PRIVATE -DSINTER_DEBUG_LEVEL=${SINTER_DEBUG_LEVEL} $<$<BOOL:${SINTER_ABORT_ON_FAULT}>:-DSINTER_ABORT_ON_FAULT>
   PRIVATE $<$<CONFIG:Debug>:-Og -DSINTER_DEBUG>
   PRIVATE $<$<CONFIG:Release>:-O2 -DNDEBUG>

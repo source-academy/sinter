@@ -1,4 +1,6 @@
+#ifdef SINTER_ABORT_ON_FAULT
 #include <assert.h>
+#endif
 
 #include <sinter/fault.h>
 #include <sinter/vm.h>

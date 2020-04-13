@@ -5,6 +5,10 @@
 #include "opcode.h"
 #include "heap.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct siheap_env {
   siheap_header_t header;
   struct siheap_env *parent;
@@ -111,12 +115,6 @@ SINTER_INLINE siheap_function_t *sifunction_new(const svm_function_t *code, sihe
   return fn;
 }
 
-SINTER_INLINE void sifunction_destroy(siheap_function_t *fn) {
-  if (fn->env) {
-    siheap_deref(fn->env);
-  }
-}
-
 typedef struct {
   siheap_header_t header;
   const opcode_t *return_address;
@@ -130,5 +128,9 @@ SINTER_INLINE siheap_frame_t *siframe_new(void) {
   return (siheap_frame_t *) siheap_malloc(
     sizeof(siheap_frame_t), sitype_frame);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

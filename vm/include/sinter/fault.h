@@ -5,6 +5,10 @@
 
 #include <sinter.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern jmp_buf sinter_fault_jmp;
 
 /**
@@ -15,5 +19,9 @@ extern jmp_buf sinter_fault_jmp;
 _Noreturn void sifault(sinter_fault_t);
 
 #define SINTER_FAULTED() setjmp(sinter_fault_jmp)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

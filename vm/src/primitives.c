@@ -6,7 +6,6 @@
 #include <sinter/heap.h>
 #include <sinter/stack.h>
 #include <sinter/debug.h>
-#include <sinter/debug_heap.h>
 #include <sinter/vm.h>
 
 /**

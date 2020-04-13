@@ -104,8 +104,17 @@ _Static_assert(sizeof(sinanbox_t) == 4, "sinanbox_t has wrong size");
 #define NANBOX_CANONICAL_NAN ((sinanbox_t) { .as_i32 = 0x7FC00000u })
 #define NANBOX_IDENTICAL(v0, v1) ((v0).as_i32 == (v1).as_i32)
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 SINTER_INLINE _Bool nanbox_isfloat(sinanbox_t v) {
   uint32_t i = v.as_i32;
   return ((i & 0x7f800000) != 0x7f800000) || ((i & 0x7fffff) == 0) || i == 0x7fc00000;
 }
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif

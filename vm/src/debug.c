@@ -3,7 +3,6 @@
 
 #include <sinter/nanbox.h>
 #include <sinter/debug.h>
-#include <sinter/debug_heap.h>
 
 #if SINTER_DEBUG_LEVEL >= 1
 void debug_nanbox(sinanbox_t v) {
