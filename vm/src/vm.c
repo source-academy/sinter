@@ -34,6 +34,7 @@ static inline void unimpl_instr() {
 static void main_loop(void) {
 #ifdef SINTER_DEBUG
   const opcode_t *previous_pc = NULL;
+  (void) previous_pc;
 #endif
   while (1) {
 #ifdef SINTER_DEBUG

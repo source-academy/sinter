@@ -4,8 +4,7 @@ set(SINTER_DEBUG_LEVEL 0 CACHE STRING "Debug level")
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Defaulting to Debug build.")
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY VALUE "Debug")
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
+  set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
