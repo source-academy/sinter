@@ -62,7 +62,7 @@ SINTER_INLINE void siheap_refbox(sinanbox_t ent) {
 }
 
 SINTER_INLINE void siheap_deref(void *vent) {
-  siheap_header_t *ent = vent;
+  siheap_header_t *ent = (siheap_header_t *) vent;
   if (--(ent->refcount)) {
     return;
   }

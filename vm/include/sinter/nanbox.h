@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#include "fix_cpp.h"
 #include "inline.h"
 
 /**

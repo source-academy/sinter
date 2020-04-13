@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "fix_cpp.h"
+
 typedef unsigned char opcode_t;
 typedef uint32_t address_t;
 typedef int32_t offset_t;

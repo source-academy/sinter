@@ -94,7 +94,7 @@ SINTER_INLINE void sistack_destroy(const opcode_t **return_address, siheap_env_t
     siheap_derefbox(v);
   }
 
-  siheap_frame_t *frame = SIHEAP_NANBOXTOPTR(*(sistack_bottom - 1));
+  siheap_frame_t *frame = (siheap_frame_t *) SIHEAP_NANBOXTOPTR(*(sistack_bottom - 1));
   *return_address = frame->return_address;
   *return_env = frame->saved_env;
   sistack_bottom = frame->saved_stack_bottom;
