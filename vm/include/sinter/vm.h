@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "inline.h"
+#include "config.h"
 #include "nanbox.h"
 #include "heap_obj.h"
 #include "opcode.h"

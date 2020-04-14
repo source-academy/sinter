@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "fix_cpp.h"
+#include "config.h"
 #include "opcode.h"
 
 #define SVM_MAGIC 0x5005ACADu

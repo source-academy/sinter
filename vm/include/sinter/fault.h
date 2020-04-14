@@ -4,7 +4,7 @@
 #include <setjmp.h>
 
 #include <sinter.h>
-#include "fix_cpp.h"
+#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {

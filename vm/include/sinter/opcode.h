@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "fix_cpp.h"
+#include "config.h"
 
 typedef unsigned char opcode_t;
 typedef uint32_t address_t;

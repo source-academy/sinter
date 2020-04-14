@@ -1,7 +1,7 @@
 #ifndef SINTER_HEAP_OBJ_H
 #define SINTER_HEAP_OBJ_H
 
-#include "inline.h"
+#include "config.h"
 #include "opcode.h"
 #include "heap.h"
 
@@ -9,12 +9,17 @@
 extern "C" {
 #endif
 
+#ifdef __cplusplus
+struct siheap_env;
+typedef siheap_env siheap_env_t;
+#else
 typedef struct siheap_env {
   siheap_header_t header;
   struct siheap_env *parent;
   uint16_t entry_count;
   sinanbox_t entry[];
 } siheap_env_t;
+#endif
 
 #define SIENV_SIZE(entry_count) (sizeof(siheap_env_t) + (entry_count)*sizeof(sinanbox_t))
 
@@ -23,9 +28,9 @@ typedef struct siheap_env {
  *
  * This increments the reference count on the parent environment, if any.
  */
-SINTER_INLINE siheap_env_t *sienv_new(
+SINTER_INLINEIFC siheap_env_t *sienv_new(
   siheap_env_t *parent,
-  const uint16_t entry_count) {
+  const uint16_t entry_count) SINTER_BODYIFC(
   siheap_env_t *env = (siheap_env_t *) siheap_malloc(SIENV_SIZE(entry_count), sitype_env);
   env->parent = parent;
   env->entry_count = entry_count;
@@ -37,35 +42,35 @@ SINTER_INLINE siheap_env_t *sienv_new(
   }
 
   return env;
-}
+)
 
-SINTER_INLINE void sienv_destroy(siheap_env_t *const env) {
+SINTER_INLINEIFC void sienv_destroy(siheap_env_t *const env) SINTER_BODYIFC(
   for (size_t i = 0; i < env->entry_count; ++i) {
     siheap_derefbox(env->entry[i]);
   }
   if (env->parent) {
     siheap_deref(env->parent);
   }
-}
+)
 
 /**
  * Get a value from the environment.
  *
  * Note: the caller is responsible for incrementing the reference count, if needed.
  */
-SINTER_INLINE sinanbox_t sienv_get(
+SINTER_INLINEIFC sinanbox_t sienv_get(
   siheap_env_t *const env,
-  const uint16_t index) {
+  const uint16_t index) SINTER_BODYIFC(
 
-#ifndef SINTER_SEATBELTS_OFF
+SINTER_BODYIFSB(
   if (index >= env->entry_count) {
     sifault(sinter_fault_invalid_load);
     return NANBOX_OFEMPTY();
   }
-#endif
+)
 
   return env->entry[index];
-}
+)
 
 /**
  * Put a value into the environment.
@@ -75,30 +80,30 @@ SINTER_INLINE sinanbox_t sienv_get(
  * Note: the caller "passes" its reference to the environment. That is, the caller should increment the reference
  * count of the heap object (if the value is a pointer) if it is going to continue holding on to the value.
  */
-SINTER_INLINE void sienv_put(
+SINTER_INLINEIFC void sienv_put(
   siheap_env_t *const env,
   const uint16_t index,
-  const sinanbox_t val) {
+  const sinanbox_t val) SINTER_BODYIFC(
 
-#ifndef SINTER_SEATBELTS_OFF
+SINTER_BODYIFSB(
   if (index >= env->entry_count) {
     sifault(sinter_fault_invalid_load);
     return;
   }
-#endif
+)
 
   siheap_derefbox(env->entry[index]);
   env->entry[index] = val;
-}
+)
 
-SINTER_INLINE siheap_env_t *sienv_getparent(
+SINTER_INLINEIFC siheap_env_t *sienv_getparent(
   siheap_env_t *env,
-  unsigned int index) {
+  unsigned int index) SINTER_BODYIFC(
   while (env && index--) {
     env = env->parent;
   }
   return env;
-}
+)
 
 typedef struct {
   siheap_header_t header;
@@ -113,6 +118,12 @@ SINTER_INLINE siheap_function_t *sifunction_new(const svm_function_t *code, sihe
   siheap_ref(parent_env);
 
   return fn;
+}
+
+SINTER_INLINE void sifunction_destroy(siheap_function_t *fn) {
+  if (fn->env) {
+    siheap_deref(fn->env);
+  }
 }
 
 typedef struct {

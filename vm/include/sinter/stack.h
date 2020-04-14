@@ -3,17 +3,13 @@
 
 #include <stdint.h>
 
-#include "inline.h"
+#include "config.h"
 #include "nanbox.h"
 #include "heap_obj.h"
 #include "debug.h"
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifndef SINTER_STACK_ENTRIES
-#define SINTER_STACK_ENTRIES 0x200
 #endif
 
 // (Inclusive) Bottom of the current function's operand stack, as an index into

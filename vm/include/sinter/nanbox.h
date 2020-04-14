@@ -3,8 +3,7 @@
 
 #include <stdint.h>
 
-#include "fix_cpp.h"
-#include "inline.h"
+#include "config.h"
 
 /**
  * Sinter 32-bit NaN-box
@@ -50,10 +49,28 @@
  *
  * Thus to check the type, we can simply check (val & 0xfff00000).
  */
-typedef union {
+#ifndef __cplusplus
+typedef
+#endif
+union
+#ifdef __cplusplus
+sinanbox_t
+#endif
+{
   float as_float;
   uint32_t as_i32;
-} sinanbox_t;
+
+#ifdef __cplusplus
+  // The dummy 2nd argument is to avoid any type-promotion shenanigans
+  constexpr sinanbox_t(uint32_t i, uint32_t) : as_i32(i) {}
+
+  constexpr sinanbox_t(float f) : as_float(f) {}
+#endif
+}
+#ifndef __cplusplus
+sinanbox_t
+#endif
+;
 _Static_assert(sizeof(sinanbox_t) == 4, "sinanbox_t has wrong size");
 
 #define NANBOX_TYPEMASK 0xfff00000u
@@ -82,27 +99,42 @@ _Static_assert(sizeof(sinanbox_t) == 4, "sinanbox_t has wrong size");
 
 #define NANBOX_FLOAT(val) ((val).as_float)
 #define NANBOX_BOOL(val) ((val).as_i32 & 1)
+#ifdef __cplusplus
+inline int32_t nanbox_int(sinanbox_t val) {
+  struct { int32_t n : 21; } v = { static_cast<int32_t>(val.as_i32) };
+  return v.n;
+}
+#define NANBOX_INT(val) (nanbox_int(val))
+#else
 #define NANBOX_INT(val) (((struct { int32_t n : 21; }) { .n = (val).as_i32 }).n)
+#endif
 #define NANBOX_PTR(val) ((val).as_i32 & 0x3fffffu)
 
 #define NANBOX_IFN_TYPE(val) (((val).as_i32 & 0x100) >> 8)
 #define NANBOX_IFN_NUMBER(val) ((val).as_i32 & 0xff)
 
+#ifdef __cplusplus
+#define NANBOX_WITH_I32(i) (sinanbox_t(i, 0u))
+#define NANBOX_OFFLOAT(f) (sinanbox_t(f))
+#else
+#define NANBOX_WITH_I32(i) ((sinanbox_t) { .as_i32 = (i) })
 #define NANBOX_OFFLOAT(val) ((sinanbox_t) { .as_float = (val) })
-#define NANBOX_OFEMPTY() ((sinanbox_t) { .as_i32 = NANBOX_TEMPTY })
-#define NANBOX_OFUNDEF() ((sinanbox_t) { .as_i32 = NANBOX_TUNDEF })
-#define NANBOX_OFNULL() ((sinanbox_t) { .as_i32 = NANBOX_TNULL })
-#define NANBOX_OFBOOL(val) ((sinanbox_t) { .as_i32 = (!!(val)) | NANBOX_TBOOL })
-#define NANBOX_OFINT(val) ((sinanbox_t) { .as_i32 = ((val) & 0x1fffffu) | NANBOX_TINT })
-#define NANBOX_OFPTR(val) ((sinanbox_t) { .as_i32 = ((val) & 0x3fffffu) | NANBOX_TPTR })
+#endif
 
-#define NANBOX_OFIFN_PRIMITIVE(number) ((sinanbox_t) { .as_i32 = NANBOX_TIFN | number })
-#define NANBOX_OFIFN_VM(number) ((sinanbox_t) { .as_i32 = NANBOX_TIFN | 0x100 | number })
+#define NANBOX_OFEMPTY() (NANBOX_WITH_I32(NANBOX_TEMPTY))
+#define NANBOX_OFUNDEF() (NANBOX_WITH_I32(NANBOX_TUNDEF))
+#define NANBOX_OFNULL() (NANBOX_WITH_I32(NANBOX_TNULL))
+#define NANBOX_OFBOOL(val) (NANBOX_WITH_I32((!!(val)) | NANBOX_TBOOL))
+#define NANBOX_OFINT(val) (NANBOX_WITH_I32(((val) & 0x1fffffu) | NANBOX_TINT))
+#define NANBOX_OFPTR(val) (NANBOX_WITH_I32(((val) & 0x3fffffu) | NANBOX_TPTR))
+
+#define NANBOX_OFIFN_PRIMITIVE(number) (NANBOX_WITH_I32(NANBOX_TIFN | number))
+#define NANBOX_OFIFN_VM(number) (NANBOX_WITH_I32(NANBOX_TIFN | 0x100 | number))
 
 #define NANBOX_INTMAX 0xFFFFF
 #define NANBOX_INTMIN (-0x100000)
 
-#define NANBOX_CANONICAL_NAN ((sinanbox_t) { .as_i32 = 0x7FC00000u })
+#define NANBOX_CANONICAL_NAN (NANBOX_WITH_I32(0x7FC00000u))
 #define NANBOX_IDENTICAL(v0, v1) ((v0).as_i32 == (v1).as_i32)
 
 #ifdef __cplusplus

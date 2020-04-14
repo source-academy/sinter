@@ -1,6 +1,6 @@
 #include <sinter.h>
 
-#include <sinter/heap_extern.h>
+#include <sinter/heap.h>
 #include <sinter/stack.h>
 #include <sinter/program.h>
 #include <sinter/vm.h>

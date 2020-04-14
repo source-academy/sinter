@@ -1,15 +1,11 @@
 #ifndef SINTER_DEBUG_H
 #define SINTER_DEBUG_H
 
+#include "config.h"
 #include "opcode.h"
-#include "inline.h"
 #include "debug.h"
 #include "heap.h"
 #include "vm.h"
-
-#ifndef SINTER_DEBUG_LEVEL
-#define SINTER_DEBUG_LEVEL 0
-#endif
 
 #if SINTER_DEBUG_LEVEL >= 1
 #include <stdio.h>
