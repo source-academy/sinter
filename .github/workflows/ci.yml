@@ -25,3 +25,6 @@ jobs:
     - name: test
       working-directory: build
       run: make CTEST_OUTPUT_ON_FAILURE=1 test
+    - name: check if headers work in C++
+      working-directory: vm/include
+      run: g++ -std=c++11 -fsyntax-only sinter/*.h sinter.h -I. -Wall -Wextra -pedantic
