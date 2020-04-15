@@ -18,4 +18,5 @@ PC: 0x1e; opcode: 46 (ret_g)
 Popped from stack: null
 Pushed onto stack: null
 Return value: null
-undefined nullProgram exited with fault 0 and result type 2 (0, 0, 0.000000)
+undefined null
+Program exited with fault 0 and result type 2 (0, 0, 0.000000)
