@@ -2,7 +2,10 @@
 #include <inttypes.h>
 
 #include <sinter/nanbox.h>
+#include <sinter/heap.h>
+#include <sinter/vm.h>
 #include <sinter/debug.h>
+#include <sinter/heap_obj.h>
 
 #if SINTER_DEBUG_LEVEL >= 1
 void debug_nanbox(sinanbox_t v) {
@@ -150,6 +153,24 @@ void debug_heap_obj(siheap_header_t *o) {
     SIDEBUG("function; code address %tx, environment %p",
       (const opcode_t *) f->code - sistate.program, (void *) f->env);
     break;
+  }
+  case sitype_strpair: {
+    siheap_strpair_t *s = (siheap_strpair_t *) o;
+    SIDEBUG("string pair; left %p, right %p", (void *) s->left, (void *) s->right);
+    break;
+  }
+  case sitype_strconst: {
+    siheap_strconst_t *s = (siheap_strconst_t *) o;
+    SIDEBUG("string constant; address %tx; value \"%s\"", (const opcode_t *) s->string - sistate.program, s->string->data);
+    break;
+  }
+  case sitype_string: {
+    siheap_string_t *s = (siheap_string_t *) o;
+    SIDEBUG("string; address %p; value \"%s\"", (void *) s, s->string);
+    break;
+  }
+  default: {
+    SIDEBUG("unknown heap object type %d at address %p", o->type, (void *) o);
   }
   }
 }

@@ -4,6 +4,7 @@
 #include "config.h"
 #include "opcode.h"
 #include "heap.h"
+#include "debug.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -138,6 +139,87 @@ typedef struct {
 SINTER_INLINE siheap_frame_t *siframe_new(void) {
   return (siheap_frame_t *) siheap_malloc(
     sizeof(siheap_frame_t), sitype_frame);
+}
+
+typedef struct {
+  siheap_header_t header;
+  const svm_constant_t *string;
+} siheap_strconst_t;
+
+SINTER_INLINE siheap_strconst_t *sistrconst_new(const svm_constant_t *string) {
+  siheap_strconst_t *obj = (siheap_strconst_t *) siheap_malloc(sizeof(siheap_strconst_t), sitype_strconst);
+  obj->string = string;
+
+  return obj;
+}
+
+typedef struct {
+  siheap_header_t header;
+  siheap_header_t *left;
+  siheap_header_t *right;
+} siheap_strpair_t;
+
+/**
+ * Creates a new string pair, representing concatenation.
+ *
+ * The refcount of left and right are incremented.
+ */
+SINTER_INLINE siheap_strpair_t *sistrpair_new(siheap_header_t *left, siheap_header_t *right) {
+  siheap_strpair_t *obj = (siheap_strpair_t *) siheap_malloc(sizeof(siheap_strpair_t), sitype_strpair);
+  obj->left = left;
+  obj->right = right;
+
+  siheap_ref(left);
+  siheap_ref(right);
+
+  return obj;
+}
+
+SINTER_INLINE void sistrpair_destroy(siheap_strpair_t *obj) {
+  siheap_deref(obj->left);
+  siheap_deref(obj->right);
+}
+
+#ifdef __cplusplus
+struct siheap_string;
+typedef struct siheap_string siheap_string_t;
+#else
+typedef struct siheap_string {
+  siheap_header_t header;
+  char string[];
+} siheap_string_t;
+#endif
+
+SINTER_INLINEIFC siheap_string_t *sistring_new(address_t size) SINTER_BODYIFC(
+  siheap_string_t *obj = (siheap_string_t *) siheap_malloc(sizeof(siheap_string_t) + size, sitype_string);
+  return obj;
+)
+
+siheap_string_t *sistrpair_flatten(siheap_strpair_t *obj);
+
+SINTER_INLINE const char *sistrobj_tocharptr(siheap_header_t *obj) {
+  switch (obj->type) {
+  case sitype_strconst: {
+    siheap_strconst_t *v = (siheap_strconst_t *) obj;
+    return (const char *) v->string->data;
+  }
+
+  case sitype_strpair: {
+    siheap_strpair_t *v = (siheap_strpair_t *) obj;
+    siheap_string_t *str = sistrpair_flatten(v);
+    return str->string;
+  }
+
+  case sitype_string: {
+    siheap_string_t *v = (siheap_string_t *) obj;
+    return v->string;
+  }
+
+  default:
+    SIBUGM("Unknown string type\n");
+    sifault(sinter_fault_internal_error);
+    break;
+  }
 }
 
 #ifdef __cplusplus

@@ -41,9 +41,11 @@ _Static_assert(sizeof(svm_header_t) == 16, "Wrong svm_header_t size");
 typedef struct __attribute__((__packed__)) {
   uint16_t type;
   uint32_t length;
-  unsigned char data;
+#ifndef __cplusplus
+  unsigned char data[];
+#endif
 } svm_constant_t;
-_Static_assert(sizeof(svm_constant_t) == 7, "Wrong svm_constant_t size");
+_Static_assert(sizeof(svm_constant_t) == 6, "Wrong svm_constant_t size");
 
 /**
  * A function in an SVM program. All code in an SVM program is in a function.

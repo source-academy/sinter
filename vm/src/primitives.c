@@ -27,6 +27,20 @@ static void debug_display_argv(unsigned int argc, sinanbox_t *argv) {
   }
 }
 
+static void display_strobj(siheap_header_t *obj, bool is_error) {
+  switch (obj->type) {
+  case sitype_strconst:
+    SIVMFN_PRINT((const char *) ((siheap_strconst_t *) obj)->string->data, is_error);
+    break;
+  case sitype_strpair: {
+    siheap_strpair_t *pair = (siheap_strpair_t *) obj;
+    display_strobj(pair->left, is_error);
+    display_strobj(pair->right, is_error);
+    break;
+  }
+  }
+}
+
 static void display_nanbox(sinanbox_t v, bool is_error) {
   switch (NANBOX_GETTYPE(v)) {
   NANBOX_CASES_TINT
@@ -41,11 +55,24 @@ static void display_nanbox(sinanbox_t v, bool is_error) {
   case NANBOX_TNULL:
     SIVMFN_PRINT("null", is_error);
     break;
+  NANBOX_CASES_TPTR {
+    siheap_header_t *obj = SIHEAP_NANBOXTOPTR(v);
+    switch (obj->type) {
+    case sitype_strconst:
+    case sitype_strpair:
+      display_strobj(obj, is_error);
+      break;
+    default:
+      SIBUGM("Unexpected object type\n");
+      break;
+    }
+    break;
+  }
   default:
     if (NANBOX_ISFLOAT(v)) {
       SIVMFN_PRINT(NANBOX_FLOAT(v), is_error);
     } else {
-      SIBUGM("Unexpected type in display_nanbox\n");
+      SIBUGM("Unexpected type\n");
     }
     break;
   }

@@ -2,4 +2,4 @@ null
 undefined
 true
 false
-Program exited with fault 0 and result type 3 (0, 0, 0.000000)
+Program exited with fault no fault and result type boolean: false

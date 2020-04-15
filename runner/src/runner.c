@@ -12,6 +12,34 @@
 
 #define eprintf(...) fprintf(stderr, __VA_ARGS__)
 
+static const char *fault_names[] = {
+  "no fault",
+  "out of memory",
+  "type error",
+  "divide by zero",
+  "stack overflow",
+  "stack underflow",
+  "uninitialised load",
+  "invalid load",
+  "invalid program",
+  "internal error",
+  "incorrect function arity",
+  "program called error()",
+  "uninitialised heap"
+};
+
+static const char *type_names[] = {
+  "unknown",
+  "undefined",
+  "null",
+  "boolean",
+  "integer",
+  "float",
+  "string",
+  "array",
+  "function"
+};
+
 ssize_t check_posix(ssize_t result, const char *msg) {
   if (result == -1 && errno) {
     perror(msg);
@@ -61,7 +89,37 @@ int main(int argc, char *argv[]) {
   sinter_value_t result = { 0 };
   sinter_fault_t fault = sinter_run(program, size, &result);
 
-  printf("Program exited with fault %d and result type %d (%d, %d, %f)\n", fault, result.type, result.integer_value, result.boolean_value, result.float_value);
+  printf("Program exited with fault %s and result type %s: ",
+    fault >= (sizeof(fault_names)/sizeof(fault_names[0])) ? "(unknown fault)" : fault_names[fault],
+    result.type >= (sizeof(type_names)/sizeof(type_names[0])) ? "(unknown type)" : type_names[result.type]);
+
+  switch (result.type) {
+  case sinter_type_undefined:
+    printf("undefined");
+    break;
+  case sinter_type_null:
+    printf("null");
+    break;
+  case sinter_type_boolean:
+    printf("%s", result.boolean_value ? "true" : "false");
+    break;
+  case sinter_type_integer:
+    printf("%d", result.integer_value);
+    break;
+  case sinter_type_float:
+    printf("%f", result.float_value);
+    break;
+  case sinter_type_string:
+    printf("%s", result.string_value);
+    break;
+  case sinter_type_array:
+  case sinter_type_function:
+  default:
+    printf("(unable to print value)");
+    break;
+  }
+
+  printf("\n");
 
   return 0;
 }

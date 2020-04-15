@@ -42,6 +42,7 @@ typedef struct {
     bool boolean_value;
     int32_t integer_value;
     float float_value;
+    const char *string_value;
   };
 } sinter_value_t;
 

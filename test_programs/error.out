@@ -11,4 +11,4 @@ Program called error with 3 arguments:
 1: undefined
 2: integer, value: 12345
 undefined null
-Program exited with fault 11 and result type 0 (0, 0, 0.000000)
+Program exited with fault program called error() and result type unknown: (unable to print value)

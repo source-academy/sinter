@@ -47,6 +47,7 @@ sinanbox_t siexec(const svm_function_t *fn);
 #ifndef __cplusplus
 #define SIVMFN_PRINTFN(v) (_Generic((v), \
   char *: sinter_printer_string, \
+  const char *: sinter_printer_string, \
   float: sinter_printer_float, \
   int32_t: sinter_printer_integer))
 #define SIVMFN_PRINT(v, is_error) do { \

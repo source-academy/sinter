@@ -3,9 +3,7 @@
 
 #include "config.h"
 #include "opcode.h"
-#include "debug.h"
 #include "heap.h"
-#include "vm.h"
 
 #if SINTER_DEBUG_LEVEL >= 1
 #include <stdio.h>

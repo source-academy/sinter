@@ -19,6 +19,9 @@ enum {
   sitype_empty = 0,
   sitype_frame = 20,
   sitype_env = 21,
+  sitype_strconst = 22,
+  sitype_strpair = 23,
+  sitype_string = 24,
   sitype_free = 0xFF
 };
 
@@ -35,10 +38,16 @@ typedef address_t heapaddress_t;
 #define SIHEAP_PTRTONANBOX(ptr) NANBOX_OFPTR((uint32_t) (((unsigned char *) (ptr)) - siheap))
 #define SIHEAP_NANBOXTOPTR(val) ((void *) (siheap + NANBOX_PTR(val)))
 
+/**
+ * The header of a heap allocation.
+ */
 typedef struct siheap_header {
   uint16_t type;
   uint16_t refcount;
   struct siheap_header *prev_node;
+  /**
+   * The size of the allocation, including the header.
+   */
   address_t size;
 } siheap_header_t;
 

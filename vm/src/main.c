@@ -44,12 +44,33 @@ static void set_result(sinanbox_t exec_result, sinter_value_t *result) {
   case NANBOX_TNULL:
     result->type = sinter_type_null;
     break;
+  case NANBOX_TIFN:
+    result->type = sinter_type_function;
+    break;
+  NANBOX_CASES_TPTR {
+    siheap_header_t *obj = SIHEAP_NANBOXTOPTR(exec_result);
+    switch (obj->type) {
+    case sitype_strconst:
+    case sitype_string:
+    case sitype_strpair:
+      result->type = sinter_type_string;
+      result->string_value = sistrobj_tocharptr(obj);
+      break;
+    case sinter_type_function:
+      result->type = sinter_type_function;
+      break;
+    default:
+      SIBUGV("Unexpected return object type %d\n", obj->type);
+      break;
+    }
+    break;
+  }
   default:
     if (NANBOX_ISFLOAT(exec_result)) {
       result->type = sinter_type_float;
       result->float_value = NANBOX_FLOAT(exec_result);
     } else {
-      SIBUGM("Unexpected return type\n");
+      SIBUGV("Unexpected NaNbox: %08x\n", exec_result.as_i32);
     }
     break;
   }

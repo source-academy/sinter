@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include <sinter/config.h>
 #include <sinter/heap.h>
 #include <sinter/heap_obj.h>
@@ -29,6 +31,9 @@ void siheap_mdestroy(siheap_header_t *ent) {
   case sitype_env:
     sienv_destroy((siheap_env_t *) ent);
     break;
+  case sitype_strpair:
+    sistrpair_destroy((siheap_strpair_t *) ent);
+    break;
   case sinter_type_function:
     sifunction_destroy((siheap_function_t *) ent);
     break;
@@ -39,4 +44,76 @@ void sistack_init(void) {
   sistack_bottom = sistack;
   sistack_limit = sistack;
   sistack_top = sistack;
+}
+
+static address_t sizeof_strobj(siheap_header_t *obj) {
+  switch (obj->type) {
+  case sitype_strconst: {
+    siheap_strconst_t *v = (siheap_strconst_t *) obj;
+    return v->string->length - 1;
+  }
+
+  case sitype_strpair: {
+    siheap_strpair_t *v = (siheap_strpair_t *) obj;
+    return sizeof_strobj(v->left) + sizeof_strobj(v->right);
+  }
+
+  case sitype_string: {
+    siheap_string_t *v = (siheap_string_t *) obj;
+    return v->header.size - sizeof(siheap_string_t) - 1;
+  }
+
+  default:
+    SIBUGM("Unknown string type\n");
+    sifault(sinter_fault_internal_error);
+    break;
+  }
+}
+
+static void write_strobj(siheap_header_t *obj, char **to) {
+  switch (obj->type) {
+  case sitype_strconst: {
+    siheap_strconst_t *v = (siheap_strconst_t *) obj;
+    memcpy(*to, v->string->data, v->string->length - 1);
+    *to += v->string->length - 1;
+    return;
+  }
+
+  case sitype_strpair: {
+    siheap_strpair_t *v = (siheap_strpair_t *) obj;
+    write_strobj(v->left, to);
+    write_strobj(v->right, to);
+    return;
+  }
+
+  case sitype_string: {
+    siheap_string_t *v = (siheap_string_t *) obj;
+    const address_t size = v->header.size - sizeof(siheap_string_t) - 1;
+    memcpy(*to, v->string, size);
+    *to += size;
+    return;
+  }
+
+  default:
+    SIBUGM("Unknown string type\n");
+    sifault(sinter_fault_internal_error);
+    break;
+  }
+}
+
+siheap_string_t *sistrpair_flatten(siheap_strpair_t *obj) {
+  if (!obj->right) {
+    return (siheap_string_t *) obj->left;
+  }
+
+  address_t strsize = sizeof_strobj(&obj->header);
+  siheap_string_t *string = sistring_new(strsize + 1);
+  char *to = string->string;
+  write_strobj(&obj->header, &to);
+  to[strsize] = '\0';
+
+  siheap_ref(string);
+  obj->left = &string->header;
+  obj->right = NULL;
+  return string;
 }

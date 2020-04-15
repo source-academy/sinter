@@ -89,11 +89,13 @@ static void main_loop(void) {
     case op_lgc_n:
       sistack_push(NANBOX_OFNULL());
       ADVANCE_PCONE();
-    case op_lgc_s:
-      // TODO
-      unimpl_instr();
+    case op_lgc_s: {
       DECLOPSTRUCT(op_address);
+      const svm_constant_t *string = (const svm_constant_t *) (sistate.program + instr->address);
+      siheap_strconst_t *obj = sistrconst_new(string);
+      sistack_push(SIHEAP_PTRTONANBOX(obj));
       ADVANCE_PCI();
+    }
     case op_pop_g:
     case op_pop_b:
     case op_pop_f:
@@ -134,9 +136,11 @@ static void main_loop(void) {
       } else if (NANBOX_ISPTR(v0) & NANBOX_ISPTR(v1)) {
         siheap_header_t *hv0 = SIHEAP_NANBOXTOPTR(v0);
         siheap_header_t *hv1 = SIHEAP_NANBOXTOPTR(v1);
-        if (hv0->type == sinter_type_string && hv1->type == sinter_type_string) {
-          // TODO string concat
-          unimpl_instr();
+
+        if ((hv0->type == sitype_strconst || hv0->type == sitype_strpair)
+          && (hv1->type == sitype_strconst || hv1->type == sitype_strpair)) {
+          siheap_strpair_t *obj = sistrpair_new(hv0, hv1);
+          r = SIHEAP_PTRTONANBOX(obj);
           break;
         } else {
           SIDEBUG("Invalid operands to add.\n");
@@ -618,7 +622,11 @@ static void main_loop(void) {
 
       // pop the arguments off the stack
       for (unsigned int i = 0; i < instr->num_args; ++i) {
-        siheap_derefbox(sistack_pop());
+        sinanbox_t arg = sistack_pop();
+        // if the function returns one of the arguments, we don't want to deref it!
+        if (arg.as_i32 != retv.as_i32) {
+          siheap_derefbox(arg);
+        }
       }
 
       // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
