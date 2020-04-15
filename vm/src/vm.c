@@ -16,6 +16,13 @@
 
 struct sistate sistate;
 
+const sivmfnptr_t *sivmfn_vminternals = NULL;
+size_t sivmfn_vminternal_count = 0;
+
+sinter_printfn_string sinter_printer_string = NULL;
+sinter_printfn_integer sinter_printer_integer = NULL;
+sinter_printfn_float sinter_printer_float = NULL;
+
 static inline void unimpl_instr() {
   SIBUGV("Unimplemented instruction %02x at address 0x%tx\n", *sistate.pc, SISTATE_CURADDR);
   sifault(sinter_fault_invalid_program);
@@ -587,11 +594,16 @@ static void main_loop(void) {
       break;
     }
 
+    case op_call_v:
+    case op_call_t_v:
     case op_call_p:
     case op_call_t_p: {
       DECLOPSTRUCT(op_call_internal);
-      if (instr->id >= SIVMFN_PRIMITIVE_COUNT) {
-        SIDEBUG("Invalid primitive function index %d\n", instr->id);
+      const bool is_primitive = this_opcode == op_call_p || this_opcode == op_call_t_p;
+      const bool is_tailcall = this_opcode == op_call_t_v || this_opcode == op_call_t_p;
+
+      if ((is_primitive && instr->id >= SIVMFN_PRIMITIVE_COUNT) || (!is_primitive && instr->id >= sivmfn_vminternal_count)) {
+        SIDEBUG("Invalid %s function index %d\n", is_primitive ? "primitive" : "VM-internal", instr->id);
         sifault(sinter_fault_invalid_program);
         return;
       }
@@ -602,7 +614,7 @@ static void main_loop(void) {
       }
 
       // call the function
-      sinanbox_t retv = sivmfn_primitives[instr->id](instr->num_args, sistack_top - instr->num_args);
+      sinanbox_t retv = (is_primitive ? sivmfn_primitives : sivmfn_vminternals)[instr->id](instr->num_args, sistack_top - instr->num_args);
 
       // pop the arguments off the stack
       for (unsigned int i = 0; i < instr->num_args; ++i) {
@@ -610,7 +622,7 @@ static void main_loop(void) {
       }
 
       // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
-      if (this_opcode == op_call_t_p) {
+      if (is_tailcall) {
         sistack_destroy(&sistate.pc, &sistate.env);
       } else {
         // otherwise we advance to the return address
@@ -620,17 +632,12 @@ static void main_loop(void) {
       sistack_push(retv);
 
       // tail call from main
-      if (this_opcode == op_call_t_p && !sistate.pc) {
+      if (is_tailcall && !sistate.pc) {
         return;
       }
 
       break;
     }
-
-    case op_call_v:
-    case op_call_t_v:
-      unimpl_instr();
-      break;
 
     case op_ret_g:
     case op_ret_f:

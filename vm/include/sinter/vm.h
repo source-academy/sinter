@@ -9,6 +9,7 @@
 #include "nanbox.h"
 #include "heap_obj.h"
 #include "opcode.h"
+#include "../sinter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,13 +34,25 @@ extern struct sistate sistate;
 typedef sinanbox_t (*sivmfnptr_t)(uint8_t argc, sinanbox_t *argv);
 
 extern const sivmfnptr_t sivmfn_primitives[];
-
 #define SIVMFN_PRIMITIVE_COUNT (92)
+
+extern const sivmfnptr_t *sivmfn_vminternals;
+extern size_t sivmfn_vminternal_count;
 
 sinanbox_t siexec(const svm_function_t *fn);
 
 #define SISTATE_CURADDR (sistate.pc - sistate.program)
 #define SISTATE_ADDRTOPC(addr) (sistate.program + (addr))
+
+#ifndef __cplusplus
+#define SIVMFN_PRINTFN(v) (_Generic((v), \
+  char *: sinter_printer_string, \
+  float: sinter_printer_float, \
+  int32_t: sinter_printer_integer))
+#define SIVMFN_PRINT(v, is_error) do { \
+  if (SIVMFN_PRINTFN(v)) SIVMFN_PRINTFN(v)((v), (is_error)); \
+} while (0)
+#endif
 
 #ifdef __cplusplus
 }

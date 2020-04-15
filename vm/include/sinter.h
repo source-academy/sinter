@@ -49,6 +49,31 @@ sinter_fault_t sinter_run(const unsigned char *code, const size_t code_size, sin
 
 void sinter_setup_heap(void *heap, size_t size);
 
+/**
+ * The type of a string printer function.
+ *
+ * A newline should not be appended by the function.
+ */
+typedef void (*sinter_printfn_string)(const char *str, bool is_error);
+
+/**
+ * The type of an integer printer function.
+ *
+ * A newline should not be appended by the function.
+ */
+typedef void (*sinter_printfn_integer)(int32_t value, bool is_error);
+
+/**
+ * The type of a float printer function.
+ *
+ * A newline should not be appended by the function.
+ */
+typedef void (*sinter_printfn_float)(float value, bool is_error);
+
+extern sinter_printfn_string sinter_printer_string;
+extern sinter_printfn_integer sinter_printer_integer;
+extern sinter_printfn_float sinter_printer_float;
+
 #ifdef __cplusplus
 }
 #endif

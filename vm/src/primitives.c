@@ -18,13 +18,50 @@ static void unimpl(void) {
   sifault(sinter_fault_invalid_program);
 }
 
-static void display_argv(unsigned int argc, sinanbox_t *argv) {
+static void debug_display_argv(unsigned int argc, sinanbox_t *argv) {
   (void) argc; (void) argv;
   for (unsigned int i = 0; i < argc; ++i) {
     SIDEBUG("%d: ", i);
     SIDEBUG_NANBOX(argv[i]);
     SIDEBUG("\n");
   }
+}
+
+static void display_nanbox(sinanbox_t v, bool is_error) {
+  switch (NANBOX_GETTYPE(v)) {
+  NANBOX_CASES_TINT
+    SIVMFN_PRINT((int32_t) NANBOX_INT(v), is_error);
+    break;
+  case NANBOX_TBOOL:
+    SIVMFN_PRINT(NANBOX_BOOL(v) ? "true" : "false", is_error);
+    break;
+  case NANBOX_TUNDEF:
+    SIVMFN_PRINT("undefined", is_error);
+    break;
+  case NANBOX_TNULL:
+    SIVMFN_PRINT("null", is_error);
+    break;
+  default:
+    if (NANBOX_ISFLOAT(v)) {
+      SIVMFN_PRINT(NANBOX_FLOAT(v), is_error);
+    } else {
+      SIBUGM("Unexpected type in display_nanbox\n");
+    }
+    break;
+  }
+}
+
+static void handle_display(unsigned int argc, sinanbox_t *argv, bool is_error) {
+  if (argc < 1) {
+    return;
+  }
+
+  if (argc > 1) {
+    display_nanbox(argv[1], is_error);
+    SIVMFN_PRINT(" ", is_error);
+  }
+
+  display_nanbox(argv[0], is_error);
 }
 
 #define CHECK_ARGC(n) do { \
@@ -66,7 +103,8 @@ static sinanbox_t sivmfn_prim_build_stream(uint8_t argc, sinanbox_t *argv) {
 
 static sinanbox_t sivmfn_prim_display(uint8_t argc, sinanbox_t *argv) {
   SIDEBUG("Program called display with %d arguments:\n", argc);
-  display_argv(argc, argv);
+  debug_display_argv(argc, argv);
+  handle_display(argc, argv, false);
   return argc ? argv[0] : NANBOX_OFUNDEF();
 }
 
@@ -96,7 +134,8 @@ static sinanbox_t sivmfn_prim_equal(uint8_t argc, sinanbox_t *argv) {
 
 static sinanbox_t sivmfn_prim_error(uint8_t argc, sinanbox_t *argv) {
   SIDEBUG("Program called error with %d arguments:\n", argc);
-  display_argv(argc, argv);
+  debug_display_argv(argc, argv);
+  handle_display(argc, argv, true);
   sifault(sinter_fault_program_error);
   return NANBOX_OFEMPTY();
 }
