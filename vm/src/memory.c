@@ -108,9 +108,10 @@ siheap_string_t *sistrpair_flatten(siheap_strpair_t *obj) {
 
   address_t strsize = sizeof_strobj(&obj->header);
   siheap_string_t *string = sistring_new(strsize + 1);
+
   char *to = string->string;
   write_strobj(&obj->header, &to);
-  to[strsize] = '\0';
+  *to = '\0';
 
   siheap_ref(string);
   obj->left = &string->header;

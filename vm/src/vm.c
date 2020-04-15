@@ -1,6 +1,7 @@
 #include <math.h>
 #include <inttypes.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <sinter.h>
 
@@ -26,6 +27,17 @@ sinter_printfn_float sinter_printer_float = NULL;
 static inline void unimpl_instr() {
   SIBUGV("Unimplemented instruction %02x at address 0x%tx\n", *sistate.pc, SISTATE_CURADDR);
   sifault(sinter_fault_invalid_program);
+}
+
+static inline bool is_string_type(int type) {
+  switch (type) {
+  case sitype_strconst:
+  case sitype_strpair:
+  case sitype_string:
+    return true;
+  default:
+    return false;
+  }
 }
 
 #define WRAP_INTEGER(v) (((v) >= NANBOX_INTMIN && (v) <= NANBOX_INTMAX) ? \
@@ -137,11 +149,18 @@ static void main_loop(void) {
         siheap_header_t *hv0 = SIHEAP_NANBOXTOPTR(v0);
         siheap_header_t *hv1 = SIHEAP_NANBOXTOPTR(v1);
 
-        if ((hv0->type == sitype_strconst || hv0->type == sitype_strpair)
-          && (hv1->type == sitype_strconst || hv1->type == sitype_strpair)) {
-          siheap_strpair_t *obj = sistrpair_new(hv0, hv1);
-          r = SIHEAP_PTRTONANBOX(obj);
-          break;
+        if (is_string_type(hv0->type) && is_string_type(hv1->type)) {
+          // if either are empty string, no-op
+          if (hv0->type == sitype_strconst && *(((siheap_strconst_t *) hv0)->string->data) == '\0') {
+            siheap_ref(hv1);
+            r = v1;
+          } else if (hv1->type == sitype_strconst && *(((siheap_strconst_t *) hv1)->string->data) == '\0') {
+            siheap_ref(hv0);
+            r = v0;
+          } else {
+            siheap_strpair_t *obj = sistrpair_new(hv0, hv1);
+            r = SIHEAP_PTRTONANBOX(obj);
+          }
         } else {
           SIDEBUG("Invalid operands to add.\n");
           sifault(sinter_fault_type);
@@ -333,11 +352,8 @@ static void main_loop(void) {
       } else if (NANBOX_ISPTR(v0) & NANBOX_ISPTR(v1)) { \
         siheap_header_t *hv0 = SIHEAP_NANBOXTOPTR(v0); \
         siheap_header_t *hv1 = SIHEAP_NANBOXTOPTR(v1); \
-        if (hv0->type == sinter_type_string && hv1->type == sinter_type_string) { \
-          /* TODO string comparison */ \
-          /* strcmp(hv0->str, hv1->str) op 0 */ \
-          unimpl_instr(); \
-          break; \
+        if (is_string_type(hv0->type) && is_string_type(hv1->type)) { \
+          r = NANBOX_OFBOOL(strcmp(sistrobj_tocharptr(hv0), sistrobj_tocharptr(hv1)) op 0); \
         } else { \
           SIDEBUG("Invalid operands to comparison.\n"); \
           sifault(sinter_fault_type); \
@@ -377,9 +393,9 @@ static void main_loop(void) {
       sinanbox_t v1 = sistack_pop();
       bool r;
 
-      if (NANBOX_GETTYPE(v0) == NANBOX_GETTYPE(v1)) {
+      if (NANBOX_GETTYPE(v0) == NANBOX_GETTYPE(v1) && NANBOX_IDENTICAL(v0, v1)) {
         // if they are *identical* then they are equal provided they are not NaN
-        r = NANBOX_IDENTICAL(v0, v1) && !NANBOX_IDENTICAL(v0, NANBOX_CANONICAL_NAN);
+        r = !NANBOX_IDENTICAL(v0, NANBOX_CANONICAL_NAN);
       } else if (NANBOX_ISNUMERIC(v0) && NANBOX_ISNUMERIC(v1)) {
         switch (NANBOX_ISFLOAT(v1) << 1 | NANBOX_ISFLOAT(v0)) {
         case 0: /* neither are floats */
@@ -402,10 +418,8 @@ static void main_loop(void) {
       } else if (NANBOX_ISPTR(v0) & NANBOX_ISPTR(v1)) {
         siheap_header_t *hv0 = SIHEAP_NANBOXTOPTR(v0);
         siheap_header_t *hv1 = SIHEAP_NANBOXTOPTR(v1);
-        if (hv0->type == sinter_type_string && hv1->type == sinter_type_string) {
-          /* TODO string comparison */
-          /* strcmp(hv0->str, hv1->str) op 0 */
-          unimpl_instr();
+        if (is_string_type(hv0->type) && is_string_type(hv1->type)) {
+          r = strcmp(sistrobj_tocharptr(hv0), sistrobj_tocharptr(hv1)) == 0;
         } else {
           // for arrays and functions, identical only if they are the SAME object
           r = hv0 == hv1;
