@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include <fcntl.h>
@@ -20,6 +21,21 @@ ssize_t check_posix(ssize_t result, const char *msg) {
   return result;
 }
 
+static void print_string(const char *s, bool is_error) {
+  (void) is_error;
+  printf("%s", s);
+}
+
+static void print_integer(int32_t v, bool is_error) {
+  (void) is_error;
+  printf("%d", v);
+}
+
+static void print_float(float v, bool is_error) {
+  (void) is_error;
+  printf("%f", v);
+}
+
 int main(int argc, char *argv[]) {
   if (argc < 2) {
     eprintf("Usage: %s <program>\n", argv[0]);
@@ -37,6 +53,10 @@ int main(int argc, char *argv[]) {
   if (program == MAP_FAILED) {
     check_posix(-1, "mmap failed");
   }
+
+  sinter_printer_float = print_float;
+  sinter_printer_string = print_string;
+  sinter_printer_integer = print_integer;
 
   sinter_value_t result = { 0 };
   sinter_fault_t fault = sinter_run(program, size, &result);

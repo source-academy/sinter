@@ -10,4 +10,4 @@ Program called error with 3 arguments:
 0: null
 1: undefined
 2: integer, value: 12345
-Program exited with fault 11 and result type 0 (0, 0, 0.000000)
+undefined nullProgram exited with fault 11 and result type 0 (0, 0, 0.000000)
