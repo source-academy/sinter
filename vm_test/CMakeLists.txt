@@ -15,6 +15,8 @@ add_run_test(multiply_21_and_2)
 add_run_test(fact_recursive)
 add_run_test(fact_iterative)
 add_run_test(fact_iterative_34)
+add_run_test(display_number)
+add_run_test(display_float)
 
 if(${SINTER_DEBUG_LEVEL} EQUAL 2)
   add_run_stderr_test(display)
