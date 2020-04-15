@@ -197,7 +197,7 @@ SINTER_INLINEIFC siheap_string_t *sistring_new(address_t size) SINTER_BODYIFC(
 
 siheap_string_t *sistrpair_flatten(siheap_strpair_t *obj);
 
-SINTER_INLINE const char *sistrobj_tocharptr(siheap_header_t *obj) {
+SINTER_INLINEIFC const char *sistrobj_tocharptr(siheap_header_t *obj) SINTER_BODYIFC(
   switch (obj->type) {
   case sitype_strconst: {
     siheap_strconst_t *v = (siheap_strconst_t *) obj;
@@ -220,7 +220,7 @@ SINTER_INLINE const char *sistrobj_tocharptr(siheap_header_t *obj) {
     sifault(sinter_fault_internal_error);
     break;
   }
-}
+)
 
 #ifdef __cplusplus
 }
