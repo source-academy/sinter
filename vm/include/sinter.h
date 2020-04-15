@@ -45,8 +45,18 @@ typedef struct {
   };
 } sinter_value_t;
 
+/**
+ * Runs a program.
+ *
+ * This is the main entrypoint for programs using the Sinter VM as a library.
+ */
 sinter_fault_t sinter_run(const unsigned char *code, const size_t code_size, sinter_value_t *result);
 
+/**
+ * Set up the heap.
+ *
+ * This function is a no-op if SINTER_STATIC_HEAP is defined.
+ */
 void sinter_setup_heap(void *heap, size_t size);
 
 /**

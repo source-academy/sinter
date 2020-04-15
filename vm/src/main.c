@@ -55,11 +55,6 @@ static void set_result(sinanbox_t exec_result, sinter_value_t *result) {
   }
 }
 
-/**
- * Runs a program.
- *
- * This is the main entrypoint for programs using the Sinter VM as a library.
- */
 sinter_fault_t sinter_run(const unsigned char *const code, const size_t code_size, sinter_value_t *result) {
 #ifndef SINTER_STATIC_HEAP
   if (!siheap) {
