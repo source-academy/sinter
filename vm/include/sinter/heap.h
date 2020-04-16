@@ -85,24 +85,34 @@ SINTER_INLINE void siheap_fix_next(siheap_header_t *const ent) {
 
 SINTER_INLINE void siheap_free_remove(siheap_free_t *cur) {
   if (cur->prev_free) {
+    assert(cur->prev_free != cur->next_free);
+    assert(cur->prev_free->prev_free != cur->next_free || cur->next_free == NULL);
+    assert(cur->prev_free->next_free == cur);
     cur->prev_free->next_free = cur->next_free;
   } else {
     assert(siheap_first_free == cur);
     siheap_first_free = cur->next_free;
   }
   if (cur->next_free) {
+    assert(cur->next_free != cur->prev_free);
+    assert(cur->next_free->next_free != cur->prev_free || cur->prev_free == NULL);
+    assert(cur->next_free->prev_free == cur);
     cur->next_free->prev_free = cur->prev_free;
   }
 }
 
 SINTER_INLINE void siheap_free_fix_neighbours(siheap_free_t *cur) {
   if (cur->prev_free) {
+    assert(cur->prev_free != cur);
+    assert(cur->prev_free->prev_free != cur);
     cur->prev_free->next_free = cur;
   } else {
     assert(siheap_first_free == cur->next_free || cur->header.prev_node == &siheap_first_free->header || !cur->next_free);
     siheap_first_free = cur;
   }
   if (cur->next_free) {
+    assert(cur->next_free != cur);
+    assert(cur->next_free->next_free != cur);
     cur->next_free->prev_free = cur;
   }
 }
@@ -164,6 +174,9 @@ SINTER_INLINEIFC siheap_header_t *siheap_malloc_split(siheap_free_t *cur, addres
       .prev_free = cur->prev_free,
       .next_free = cur->next_free
     };
+    assert(cur->prev_free != cur);
+    assert(cur->next_free != cur);
+    assert(cur->prev_free != cur->next_free || cur->prev_free == NULL);
     cur->header.size = size;
     siheap_free_fix_neighbours(newfree);
     siheap_fix_next(&newfree->header);
@@ -216,10 +229,14 @@ SINTER_INLINE void siheap_mfree_inner(siheap_header_t *ent) {
     siheap_free_t *const nextf = (siheap_free_t *) next;
     siheap_free_t *const entf = (siheap_free_t *) ent;
 
+    assert(entf + 1 <= nextf);
     ent->size = ent->size + next->size;
     ent->type = sitype_free;
     entf->prev_free = nextf->prev_free;
     entf->next_free = nextf->next_free;
+    assert(entf->prev_free != entf);
+    assert(entf->next_free != entf);
+    assert(entf->prev_free != entf->next_free || entf->prev_free == NULL);
 
     siheap_free_fix_neighbours(entf);
     siheap_fix_next(ent);
@@ -236,6 +253,7 @@ SINTER_INLINE void siheap_mfree_inner(siheap_header_t *ent) {
     ent->type = sitype_free;
     entf->prev_free = NULL;
     entf->next_free = siheap_first_free;
+    assert(entf->next_free != entf);
     siheap_free_fix_neighbours(entf);
   }
 }
