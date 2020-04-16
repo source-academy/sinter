@@ -1,4 +1,4 @@
-Pushed onto stack: pointer to frame; return address MEMADDR, stack bottom 0xMEMADDR, limit 0xMEMADDR, top 0xMEMADDR, saved environment (nil)
+Pushed onto stack: pointer to (address 0xMEMADDR) frame; return address MEMADDR, stack bottom 0xMEMADDR, limit 0xMEMADDR, top 0xMEMADDR, saved environment (nil)
 PC: 0x14; opcode: 0c (lgc_n)
 Pushed onto stack: null
 PC: 0x15; opcode: 0b (lgc_u)
