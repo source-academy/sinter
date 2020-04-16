@@ -10,6 +10,7 @@
 #include "fault.h"
 #include "program.h"
 #include "nanbox.h"
+#include "debug.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -120,20 +121,32 @@ SINTER_INLINEIFC void siheap_init(void) SINTER_BODYIFC(
   };
 )
 
-SINTER_INLINEIFC siheap_free_t *siheap_malloc_find(address_t size) SINTER_BODYIFC(
-  siheap_free_t *cur = siheap_first_free;
-  while (cur) {
-    if (cur->header.size >= size) {
-      break;
-    }
-    cur = cur->next_free;
-  }
-  if (!cur) {
-    sifault(sinter_fault_out_of_memory);
-    return NULL;
-  }
+void siheap_mark_sweep(void);
 
-  return cur;
+SINTER_INLINEIFC siheap_free_t *siheap_malloc_find(address_t size) SINTER_BODYIFC(
+  bool sweeped = false;
+  while (1) {
+    siheap_free_t *cur = siheap_first_free;
+    while (cur) {
+      if (cur->header.size >= size) {
+        break;
+      }
+      cur = cur->next_free;
+    }
+
+    if (!cur) {
+      if (sweeped) {
+        sifault(sinter_fault_out_of_memory);
+        return NULL;
+      } else {
+        sweeped = true;
+        siheap_mark_sweep();
+        continue;
+      }
+    }
+
+    return cur;
+  }
 )
 
 SINTER_INLINEIFC siheap_header_t *siheap_malloc_split(siheap_free_t *cur, address_t size, uint16_t type) SINTER_BODYIFC(
@@ -181,6 +194,9 @@ void siheap_mdestroy(siheap_header_t *ent);
 
 SINTER_INLINE void siheap_mfree_inner(siheap_header_t *ent) {
   assert(ent->size >= sizeof(siheap_free_t));
+  if (ent->type & 0x8000) {
+    SIBUGM("Freeing marked object\n");
+  }
 
   siheap_header_t *const next = siheap_next(ent);
   siheap_header_t *const prev = ent->prev_node;

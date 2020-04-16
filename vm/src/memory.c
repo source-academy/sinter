@@ -4,6 +4,8 @@
 #include <sinter/heap.h>
 #include <sinter/heap_obj.h>
 #include <sinter/stack.h>
+#include <sinter/vm.h>
+#include <sinter/nanbox.h>
 
 #ifdef SINTER_STATIC_HEAP
 unsigned char siheap[SINTER_HEAP_SIZE] = { 0 };
@@ -41,6 +43,90 @@ void siheap_mdestroy(siheap_header_t *ent) {
     sifunction_destroy((siheap_function_t *) ent);
     break;
   }
+}
+
+static void siheap_mark(siheap_header_t *vent);
+
+static inline void siheap_markbox(sinanbox_t ent) {
+  if (NANBOX_ISPTR(ent)) {
+    siheap_mark(SIHEAP_NANBOXTOPTR(ent));
+  }
+}
+
+static void siheap_mark(siheap_header_t *vent) {
+  if (!SIHEAP_INRANGE(vent) || ((unsigned char *) vent) < siheap) {
+    return;
+  }
+
+  if (!(vent->type & 0x8000)) {
+#if SINTER_DEBUG_LEVEL >= 2
+    SIDEBUG("Marking object ");
+    debug_heap_obj(vent);
+    SIDEBUG("\n");
+#endif
+
+    // object is unmarked; mark it
+    vent->type |= 0x8000;
+
+    // mark any children
+    switch (vent->type & 0x7FFF) {
+    case sinter_type_function:
+      siheap_mark(&((siheap_function_t *) vent)->env->header);
+      break;
+    case sitype_frame:
+      siheap_mark(&((siheap_frame_t *) vent)->saved_env->header);
+      break;
+    case sitype_env: {
+      siheap_env_t *env = (siheap_env_t *) vent;
+      for (size_t i = 0; i < env->entry_count; i++) {
+        siheap_markbox(env->entry[i]);
+      }
+      siheap_mark(&env->parent->header);
+      break;
+    }
+    case sitype_array: {
+      siheap_array_t *a = (siheap_array_t *) vent;
+      for (address_t i = 0; i < a->count; ++i) {
+        siheap_markbox(a->data->data[i]);
+      }
+      break;
+    }
+    case sitype_strconst:
+    case sitype_string:
+      // These types have no children, no need to do anything
+      break;
+    default:
+      SIBUGV("Unknown type %d", vent->type & 0x7FFF);
+      break;
+    }
+  }
+}
+
+static inline void siheap_sweep(void) {
+  siheap_header_t *curr = (siheap_header_t *) siheap;
+  while (SIHEAP_INRANGE(curr)) {
+    if (!(curr->type & 0x8000)) {
+      curr->refcount = 0;
+#if SINTER_DEBUG_LEVEL >= 2
+      SIDEBUG("Sweeping object ");
+      debug_heap_obj(curr);
+      SIDEBUG("\n");
+#endif
+      siheap_mfree(curr);
+    } else {
+      curr->type &= 0x7FFF;
+    }
+    curr = siheap_next(curr);
+  }
+}
+
+void siheap_mark_sweep(void) {
+   sinanbox_t *curr = sistack_top - 1;
+   while (curr >= sistack) {
+      siheap_markbox(*(curr--));
+   }
+   siheap_mark(&sistate.env->header);
+   siheap_sweep();
 }
 
 void sistack_init(void) {
