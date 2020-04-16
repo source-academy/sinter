@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  message(STATUS "Defaulting to DebugLog build.")
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY VALUE "DebugLog")
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "DebugLog" "ReleaseLog")
+  message(STATUS "Defaulting to Debug build.")
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY VALUE "Debug")
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
@@ -17,8 +17,8 @@ add_executable(runner
 
 target_compile_options(runner
   PRIVATE -Wall -Wextra -Wswitch-enum -std=c11 -pedantic -Werror -fwrapv -g
-  PRIVATE $<$<CONFIG:DebugLog>:-Og>
-  PRIVATE $<$<CONFIG:ReleaseLog>:-O2>
+  PRIVATE $<$<CONFIG:Debug>:-Og>
+  PRIVATE $<$<CONFIG:Release>:-O2>
 )
 
 target_link_libraries(runner sinter)
