@@ -34,6 +34,9 @@ void siheap_mdestroy(siheap_header_t *ent) {
   case sitype_strpair:
     sistrpair_destroy((siheap_strpair_t *) ent);
     break;
+  case sitype_array:
+    siarray_destroy((siheap_array_t *) ent);
+    break;
   case sinter_type_function:
     sifunction_destroy((siheap_function_t *) ent);
     break;
@@ -117,4 +120,45 @@ siheap_string_t *sistrpair_flatten(siheap_strpair_t *obj) {
   obj->left = &string->header;
   obj->right = NULL;
   return string;
+}
+
+siheap_header_t *siheap_mrealloc(siheap_header_t *ent, address_t newsize) {
+  if (ent->size >= newsize) {
+    // we don't support shrinking currently
+    return ent;
+  }
+
+  siheap_header_t *next = siheap_next(ent);
+  if (SIHEAP_INRANGE(next) && next->type == sitype_free && ent->size + next->size >= newsize) {
+    // the next block is free and large enough
+
+    // do the allocation on the block
+    siheap_malloc_split((siheap_free_t *) next, newsize - ent->size, ent->type);
+
+    // now merge our two heap blocks
+    ent->size += next->size;
+    siheap_fix_next(ent);
+
+    return ent;
+  }
+
+  // the next block is not free and/or not large enough
+
+  // store the type, refcount and size of the current block
+  uint16_t orig_type = ent->type;
+  uint16_t orig_refcount = ent->refcount;
+  address_t orig_size = ent->size;
+
+  // *FREE* the current block
+  siheap_mfree_inner(ent);
+
+  // now allocate a new block with the new size and original type
+  siheap_header_t *new_alloc = siheap_malloc(newsize, orig_type);
+  // restore the refcount
+  new_alloc->refcount = orig_refcount;
+
+  // move the contents over from the old block
+  memmove(new_alloc + 1, ent + 1, orig_size);
+
+  return new_alloc;
 }

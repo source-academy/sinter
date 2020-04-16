@@ -223,6 +223,71 @@ SINTER_INLINEIFC const char *sistrobj_tocharptr(siheap_header_t *obj) SINTER_BOD
 )
 
 #ifdef __cplusplus
+struct siheap_array_data;
+typedef struct siheap_array_data siheap_array_data_t;
+#else
+typedef struct siheap_array_data {
+  siheap_header_t header;
+  sinanbox_t data[];
+} siheap_array_data_t;
+#endif
+
+typedef struct {
+  siheap_header_t header;
+  address_t alloc_size;
+  address_t count;
+  siheap_array_data_t *data;
+} siheap_array_t;
+
+SINTER_INLINEIFC siheap_array_t *siarray_new(address_t alloc_size) SINTER_BODYIFC(
+  siheap_array_t *array = (siheap_array_t *) siheap_malloc(sizeof(siheap_array_t), sitype_array);
+  array->count = 0;
+  array->alloc_size = alloc_size;
+  array->data = (siheap_array_data_t *) siheap_malloc(sizeof(siheap_array_data_t) + alloc_size*sizeof(sinanbox_t), sitype_array_data);
+
+  for (address_t i = 0; i < alloc_size; ++i) {
+    array->data->data[i] = NANBOX_OFUNDEF();
+  }
+
+  return array;
+)
+
+SINTER_INLINEIFC sinanbox_t siarray_get(siheap_array_t *array, address_t index) SINTER_BODYIFC(
+  if (index >= array->count) {
+    return NANBOX_OFUNDEF();
+  }
+
+  return array->data->data[index];
+)
+
+SINTER_INLINEIFC void siarray_put(siheap_array_t *array, address_t index, sinanbox_t v) SINTER_BODYIFC(
+  if (index >= array->alloc_size) {
+    address_t new_size = array->alloc_size;
+    while (new_size && new_size <= index) {
+      new_size <<= 1;
+    }
+    if (!new_size) {
+      new_size = UINT32_MAX;
+    }
+    array->data = (siheap_array_data_t *) siheap_mrealloc(&array->data->header,
+      sizeof(siheap_array_data_t) + new_size*sizeof(sinanbox_t));
+    array->alloc_size = new_size;
+  }
+
+  array->data->data[index] = v;
+  if (array->count <= index) {
+    array->count = index + 1;
+  }
+)
+
+SINTER_INLINEIFC void siarray_destroy(siheap_array_t *array) SINTER_BODYIFC(
+  for (address_t i = 0; i < array->alloc_size; ++i) {
+    siheap_derefbox(array->data->data[i]);
+  }
+  siheap_deref(array->data);
+)
+
+#ifdef __cplusplus
 }
 #endif
 

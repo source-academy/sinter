@@ -169,6 +169,11 @@ void debug_heap_obj(siheap_header_t *o) {
     SIDEBUG("string; address %p; value \"%s\"", (void *) s, s->string);
     break;
   }
+  case sitype_array: {
+    siheap_array_t *a = (siheap_array_t *) o;
+    SIDEBUG("array; address %p; data address %p; count %d; allocated %d", (void *) a, (void *) a->data, a->count, a->alloc_size);
+    break;
+  }
   default: {
     SIDEBUG("unknown heap object type %d at address %p", o->type, (void *) o);
   }

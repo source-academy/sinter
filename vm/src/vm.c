@@ -40,6 +40,34 @@ static inline bool is_string_type(int type) {
   }
 }
 
+static inline void pop_array_args(siheap_array_t **array, address_t *index) {
+  sinanbox_t indexv = sistack_pop();
+  sinanbox_t arrayv = sistack_pop();
+  *array = SIHEAP_NANBOXTOPTR(arrayv);
+
+  if (!NANBOX_ISPTR(arrayv) || (*array)->header.type != sitype_array) {
+    sifault(sinter_fault_type);
+    return;
+  }
+
+  if (NANBOX_ISINT(indexv)) {
+    int32_t t = NANBOX_INT(indexv);
+    if (t < 0) {
+      sifault(sinter_fault_invalid_load);
+      return;
+    }
+    *index = (address_t) t;
+  } else if (NANBOX_ISFLOAT(indexv)) {
+    // TODO check if float is integral
+    float t = (address_t) NANBOX_FLOAT(indexv);
+    if (t < 0) {
+      sifault(sinter_fault_invalid_load);
+      return;
+    }
+    *index = (address_t) t;
+  }
+}
+
 #define WRAP_INTEGER(v) (((v) >= NANBOX_INTMIN && (v) <= NANBOX_INTMAX) ? \
   NANBOX_OFINT(v) : NANBOX_OFFLOAT(v))
 #define DECLOPSTRUCT(type) const struct type *instr = (const struct type *) sistate.pc
@@ -460,9 +488,11 @@ static void main_loop(void) {
       ADVANCE_PCI();
     }
 
-    case op_new_a:
-      unimpl_instr();
+    case op_new_a: {
+      siheap_array_t *array = siarray_new(8);
+      sistack_push(SIHEAP_PTRTONANBOX(array));
       ADVANCE_PCONE();
+    }
 
     case op_ldl_g:
     case op_ldl_f:
@@ -514,12 +544,33 @@ static void main_loop(void) {
 
     case op_lda_g:
     case op_lda_b:
-    case op_lda_f:
+    case op_lda_f: {
+      siheap_array_t *array = NULL;
+      address_t index = 0;
+      pop_array_args(&array, &index);
+
+      sinanbox_t loadv = siarray_get(array, index);
+      siheap_refbox(loadv);
+      siheap_deref(array);
+
+      sistack_push(loadv);
+
+      ADVANCE_PCONE();
+    }
+
     case op_sta_g:
     case op_sta_b:
-    case op_sta_f:
-      unimpl_instr();
-      break;
+    case op_sta_f: {
+      sinanbox_t storev = sistack_pop();
+      siheap_array_t *array = NULL;
+      address_t index = 0;
+      pop_array_args(&array, &index);
+
+      siarray_put(array, index, storev);
+      siheap_deref(array);
+
+      ADVANCE_PCONE();
+    }
 
     case op_br_t:
     case op_br_f: {
