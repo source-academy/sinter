@@ -244,7 +244,7 @@ siheap_header_t *siheap_mrealloc(siheap_header_t *ent, address_t newsize) {
   new_alloc->refcount = orig_refcount;
 
   // move the contents over from the old block
-  memmove(new_alloc + 1, ent + 1, orig_size);
+  memmove(new_alloc + 1, ent + 1, orig_size - sizeof(siheap_header_t));
 
   return new_alloc;
 }
