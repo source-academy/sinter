@@ -7,6 +7,7 @@
 #include "nanbox.h"
 #include "heap_obj.h"
 #include "debug.h"
+#include "debug_heap.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -5,6 +5,7 @@
 #include <sinter/heap.h>
 #include <sinter/vm.h>
 #include <sinter/debug.h>
+#include <sinter/debug_heap.h>
 #include <sinter/heap_obj.h>
 
 #if SINTER_DEBUG_LEVEL >= 1
@@ -136,6 +137,7 @@ const char *get_opcode_name(opcode_t op) {
 }
 
 void debug_heap_obj(siheap_header_t *o) {
+  SIDEBUG("(address %p) ", (void *) o);
   switch (o->type) {
   case sitype_env: {
     siheap_env_t *env = (siheap_env_t *) o;
