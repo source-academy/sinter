@@ -186,12 +186,14 @@ typedef struct siheap_string siheap_string_t;
 #else
 typedef struct siheap_string {
   siheap_header_t header;
+  address_t size;
   char string[];
 } siheap_string_t;
 #endif
 
 SINTER_INLINEIFC siheap_string_t *sistring_new(address_t size) SINTER_BODYIFC(
   siheap_string_t *obj = (siheap_string_t *) siheap_malloc(sizeof(siheap_string_t) + size, sitype_string);
+  obj->size = size;
   return obj;
 )
 

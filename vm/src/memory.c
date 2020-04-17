@@ -180,8 +180,9 @@ static void write_strobj(siheap_header_t *obj, char **to) {
   switch (obj->type) {
   case sitype_strconst: {
     siheap_strconst_t *v = (siheap_strconst_t *) obj;
-    memcpy(*to, v->string->data, v->string->length - 1);
-    *to += v->string->length - 1;
+    const address_t size = v->string->length - 1;
+    memcpy(*to, v->string->data, size);
+    *to += size;
     return;
   }
 
@@ -194,7 +195,7 @@ static void write_strobj(siheap_header_t *obj, char **to) {
 
   case sitype_string: {
     siheap_string_t *v = (siheap_string_t *) obj;
-    const address_t size = v->header.size - sizeof(siheap_string_t) - 1;
+    const address_t size = v->size - 1;
     memcpy(*to, v->string, size);
     *to += size;
     return;
