@@ -25,6 +25,7 @@ add_run_test(string_concat_compare)
 add_run_test(index_array)
 add_run_test(resize_array)
 add_run_test(move_array)
+add_run_test(fact_iterative_5000)
 add_run_test(sum_iterative_10000000)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
