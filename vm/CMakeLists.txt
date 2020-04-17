@@ -18,6 +18,7 @@ add_library(sinter
   src/memory.c
   src/main.c
   src/debug.c
+  src/debug_memorycheck.c
   src/inline.c
   src/primitives.c
 )
@@ -29,6 +30,7 @@ target_compile_options(sinter
   PRIVATE -DSINTER_STATIC_HEAP
   PRIVATE -DSINTER_DEBUG_LOGLEVEL=${SINTER_DEBUG_LOGLEVEL}
   PRIVATE $<$<BOOL:${SINTER_DEBUG_ABORT_ON_FAULT}>:-DSINTER_DEBUG_ABORT_ON_FAULT>
+  PRIVATE $<$<BOOL:${SINTER_DEBUG_MEMORY_CHECK}>:-DSINTER_DEBUG_MEMORY_CHECK>
 )
 
 target_include_directories(sinter

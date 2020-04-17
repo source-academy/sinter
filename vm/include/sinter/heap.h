@@ -40,7 +40,14 @@ extern size_t siheap_size;
 
 typedef address_t heapaddress_t;
 #define SINTER_HEAPREF(addr) (siheap + addr)
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+SINTER_INLINE bool siheap_inrange(const unsigned char *const ent) {
+  return ent >= siheap && ent < siheap + SINTER_HEAP_SIZE;
+}
+#define SIHEAP_INRANGE(ent) (siheap_inrange((const unsigned char *) (ent)))
+#else
 #define SIHEAP_INRANGE(ent) (((unsigned char *) (ent)) < siheap + SINTER_HEAP_SIZE)
+#endif
 #define SIHEAP_PTRTONANBOX(ptr) NANBOX_OFPTR((uint32_t) (((unsigned char *) (ptr)) - siheap))
 #define SIHEAP_NANBOXTOPTR(val) ((void *) (siheap + NANBOX_PTR(val)))
 
@@ -50,6 +57,9 @@ typedef address_t heapaddress_t;
 typedef struct siheap_header {
   siheap_type_t type;
   uint16_t refcount;
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+  uint16_t debug_refcount;
+#endif
   struct siheap_header *prev_node;
   /**
    * The size of the allocation, including the header.
@@ -283,6 +293,11 @@ SINTER_INLINE void siheap_derefbox(sinanbox_t ent) {
     siheap_deref(SIHEAP_NANBOXTOPTR(ent));
   }
 }
+
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+void debug_memorycheck(void);
+void debug_memorycheck_search(const siheap_header_t *needle);
+#endif
 
 #ifdef __cplusplus
 }

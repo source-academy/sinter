@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 const char *get_opcode_name(opcode_t op);
-void debug_heap_obj(siheap_header_t *o);
+void debug_heap_obj(const siheap_header_t *o);
 void debug_nanbox(sinanbox_t v);
 
 #ifdef __cplusplus

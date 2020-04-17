@@ -132,6 +132,9 @@ static void main_loop(void) {
   (void) previous_pc;
 #endif
   while (1) {
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+    debug_memorycheck();
+#endif
 #ifdef SINTER_DEBUG
     if (sistate.pc >= sistate.program_end) {
       SIBUGV("Jumped out of bounds to 0x%tx after instruction at address 0x%tx\n", SISTATE_CURADDR, previous_pc - sistate.program);

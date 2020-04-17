@@ -13,6 +13,8 @@
 extern "C" {
 #endif
 
+extern sinanbox_t sistack[SINTER_STACK_ENTRIES];
+
 // (Inclusive) Bottom of the current function's operand stack, as an index into
 // sistack.
 extern sinanbox_t *sistack_bottom;

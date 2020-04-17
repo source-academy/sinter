@@ -136,43 +136,44 @@ const char *get_opcode_name(opcode_t op) {
   }
 }
 
-void debug_heap_obj(siheap_header_t *o) {
+void debug_heap_obj(const siheap_header_t *o) {
   SIDEBUG("(address %p) ", (void *) o);
   switch (o->type) {
   case sitype_env: {
-    siheap_env_t *env = (siheap_env_t *) o;
+    const siheap_env_t *env = (const siheap_env_t *) o;
     SIDEBUG("environment with %d entries; parent at %p", env->entry_count, (void *) env->parent);
     break;
   }
   case sitype_frame: {
-    siheap_frame_t *fr = (siheap_frame_t *) o;
-    SIDEBUG("frame; return address %tx, stack bottom %p, limit %p, top %p, saved environment %p", fr->return_address - sistate.program,
+    const siheap_frame_t *fr = (const siheap_frame_t *) o;
+    SIDEBUG("frame; return address %tx, stack bottom %p, limit %p, top %p, saved environment %p",
+      fr->return_address ? (fr->return_address - sistate.program) : 0,
       (void *) fr->saved_stack_bottom, (void *) fr->saved_stack_limit, (void *) fr->saved_stack_top, (void *) fr->saved_env);
     break;
   }
   case sitype_function: {
-    siheap_function_t *f = (siheap_function_t *) o;
+    const siheap_function_t *f = (const siheap_function_t *) o;
     SIDEBUG("function; code address %tx, environment %p",
       (const opcode_t *) f->code - sistate.program, (void *) f->env);
     break;
   }
   case sitype_strpair: {
-    siheap_strpair_t *s = (siheap_strpair_t *) o;
+    const siheap_strpair_t *s = (const siheap_strpair_t *) o;
     SIDEBUG("string pair; left %p, right %p", (void *) s->left, (void *) s->right);
     break;
   }
   case sitype_strconst: {
-    siheap_strconst_t *s = (siheap_strconst_t *) o;
+    const siheap_strconst_t *s = (const siheap_strconst_t *) o;
     SIDEBUG("string constant; address %tx; value \"%s\"", (const opcode_t *) s->string - sistate.program, s->string->data);
     break;
   }
   case sitype_string: {
-    siheap_string_t *s = (siheap_string_t *) o;
+    const siheap_string_t *s = (const siheap_string_t *) o;
     SIDEBUG("string; address %p; value \"%s\"", (void *) s, s->string);
     break;
   }
   case sitype_array: {
-    siheap_array_t *a = (siheap_array_t *) o;
+    const siheap_array_t *a = (const siheap_array_t *) o;
     SIDEBUG("array; address %p; data address %p; count %d; allocated %d", (void *) a, (void *) a->data, a->count, a->alloc_size);
     break;
   }

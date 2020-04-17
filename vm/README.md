@@ -32,3 +32,5 @@ are performed)
   When deploying on an actual microcontroller, you will likely want to use `0`. `1` and `2` requires some implementation of `fprintf` and `stderr`. (This may be relaxed in future so the library consumer can provide a logging function instead.)
 
 - `SINTER_DEBUG_ABORT_ON_FAULT`: if `1`, raises an assertion failure when a fault occurs. (Intended for use when debugging under e.g. GDB.) Defaults to `0`.
+
+- `SINTER_DEBUG_MEMORY_CHECK`: if `1`, does _a lot_ of checks at every instruction to verify the correctness of the heap linked list, freelist, stack, and reference counting. Note: this slows down execution severely. Defaults to unset.
