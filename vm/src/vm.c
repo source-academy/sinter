@@ -24,10 +24,12 @@ sinter_printfn_string sinter_printer_string = NULL;
 sinter_printfn_integer sinter_printer_integer = NULL;
 sinter_printfn_float sinter_printer_float = NULL;
 
+#if 0
 static inline void unimpl_instr() {
   SIBUGV("Unimplemented instruction %02x at address 0x%tx\n", *sistate.pc, SISTATE_CURADDR);
   sifault(sinter_fault_invalid_program);
 }
+#endif
 
 static inline bool is_string_type(int type) {
   switch (type) {
