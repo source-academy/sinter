@@ -28,7 +28,7 @@ void debug_nanbox(sinanbox_t v) {
     break;
   NANBOX_CASES_TPTR
     SIDEBUG("pointer to ");
-    debug_heap_obj(SIHEAP_NANBOXTOPTR(v));
+    SIDEBUG_HEAPOBJ(SIHEAP_NANBOXTOPTR(v));
     break;
   default:
     if (NANBOX_ISFLOAT(v)) {
@@ -150,7 +150,7 @@ void debug_heap_obj(siheap_header_t *o) {
       (void *) fr->saved_stack_bottom, (void *) fr->saved_stack_limit, (void *) fr->saved_stack_top, (void *) fr->saved_env);
     break;
   }
-  case sinter_type_function: {
+  case sitype_function: {
     siheap_function_t *f = (siheap_function_t *) o;
     SIDEBUG("function; code address %tx, environment %p",
       (const opcode_t *) f->code - sistate.program, (void *) f->env);
@@ -176,6 +176,10 @@ void debug_heap_obj(siheap_header_t *o) {
     SIDEBUG("array; address %p; data address %p; count %d; allocated %d", (void *) a, (void *) a->data, a->count, a->alloc_size);
     break;
   }
+  case sitype_array_data:
+  case sitype_empty:
+  case sitype_free:
+  case sitype_marked:
   default: {
     SIDEBUG("unknown heap object type %d at address %p", o->type, (void *) o);
   }

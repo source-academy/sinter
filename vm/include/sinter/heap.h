@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-enum {
+typedef enum __attribute__((__packed__)) {
   sitype_empty = 0,
   sitype_frame = 20,
   sitype_env = 21,
@@ -25,8 +25,11 @@ enum {
   sitype_string = 24,
   sitype_array = 25,
   sitype_array_data = 26,
-  sitype_free = 0xFF
-};
+  sitype_function = 27,
+  sitype_free = 0xFF,
+  sitype_marked = 0x8000
+} siheap_type_t;
+_Static_assert(sizeof(siheap_type_t) == 2, "siheap_type_t wider than needed");
 
 #ifdef SINTER_STATIC_HEAP
 extern unsigned char siheap[SINTER_HEAP_SIZE];
@@ -45,7 +48,7 @@ typedef address_t heapaddress_t;
  * The header of a heap allocation.
  */
 typedef struct siheap_header {
-  uint16_t type;
+  siheap_type_t type;
   uint16_t refcount;
   struct siheap_header *prev_node;
   /**
@@ -159,7 +162,7 @@ SINTER_INLINEIFC siheap_free_t *siheap_malloc_find(address_t size) SINTER_BODYIF
   }
 )
 
-SINTER_INLINEIFC siheap_header_t *siheap_malloc_split(siheap_free_t *cur, address_t size, uint16_t type) SINTER_BODYIFC(
+SINTER_INLINEIFC siheap_header_t *siheap_malloc_split(siheap_free_t *cur, address_t size, siheap_type_t type) SINTER_BODYIFC(
   if (size + sizeof(siheap_free_t) <= cur->header.size) {
     // enough space for a new free node
     // create one
@@ -194,7 +197,7 @@ SINTER_INLINEIFC siheap_header_t *siheap_malloc_split(siheap_free_t *cur, addres
  *
  * The allocation is returned with a reference count of 1.
  */
-SINTER_INLINEIFC siheap_header_t *siheap_malloc(address_t size, uint16_t type) SINTER_BODYIFC(
+SINTER_INLINEIFC siheap_header_t *siheap_malloc(address_t size, siheap_type_t type) SINTER_BODYIFC(
   if (size < sizeof(siheap_free_t)) {
     size = sizeof(siheap_free_t);
   }

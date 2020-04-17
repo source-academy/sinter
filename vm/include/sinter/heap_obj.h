@@ -113,7 +113,7 @@ typedef struct {
 } siheap_function_t;
 
 SINTER_INLINE siheap_function_t *sifunction_new(const svm_function_t *code, siheap_env_t *parent_env) {
-  siheap_function_t *fn = (siheap_function_t *) siheap_malloc(sizeof(siheap_function_t), sinter_type_function);
+  siheap_function_t *fn = (siheap_function_t *) siheap_malloc(sizeof(siheap_function_t), sitype_function);
   fn->code = code;
   fn->env = parent_env;
   siheap_ref(parent_env);
@@ -215,6 +215,14 @@ SINTER_INLINEIFC const char *sistrobj_tocharptr(siheap_header_t *obj) SINTER_BOD
     return v->string;
   }
 
+  case sitype_array:
+  case sitype_array_data:
+  case sitype_empty:
+  case sitype_free:
+  case sitype_function:
+  case sitype_frame:
+  case sitype_marked:
+  case sitype_env:
   default:
     SIBUGM("Unknown string type\n");
     sifault(sinter_fault_internal_error);

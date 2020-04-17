@@ -38,6 +38,21 @@ static void display_strobj(siheap_header_t *obj, bool is_error) {
     display_strobj(pair->right, is_error);
     break;
   }
+  case sitype_string: {
+    siheap_string_t *str = (siheap_string_t *) obj;
+    SIVMFN_PRINT((const char *) str->string, is_error);
+    break;
+  }
+
+  case sitype_array_data:
+  case sitype_empty:
+  case sitype_frame:
+  case sitype_free:
+  case sitype_marked:
+  case sitype_env:
+  case sitype_array:
+  case sitype_function:
+    break;
   }
 }
 
@@ -60,8 +75,19 @@ static void display_nanbox(sinanbox_t v, bool is_error) {
     switch (obj->type) {
     case sitype_strconst:
     case sitype_strpair:
+    case sitype_string:
       display_strobj(obj, is_error);
       break;
+    case sitype_array:
+    case sitype_function:
+      // TODO
+      break;
+    case sitype_array_data:
+    case sitype_empty:
+    case sitype_frame:
+    case sitype_free:
+    case sitype_marked:
+    case sitype_env:
     default:
       SIBUGM("Unexpected object type\n");
       break;
@@ -212,7 +238,7 @@ static sinanbox_t sivmfn_prim_is_boolean(uint8_t argc, sinanbox_t *argv) {
 static sinanbox_t sivmfn_prim_is_function(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(1);
   sinanbox_t v = *argv;
-  return NANBOX_OFBOOL((NANBOX_ISPTR(v) && ((siheap_header_t *) SIHEAP_NANBOXTOPTR(v))->type == sinter_type_function)
+  return NANBOX_OFBOOL((NANBOX_ISPTR(v) && ((siheap_header_t *) SIHEAP_NANBOXTOPTR(v))->type == sitype_function)
     || NANBOX_ISIFN(v));
 }
 

@@ -613,7 +613,7 @@ static void main_loop(void) {
         siheap_function_t *fn_obj = SIHEAP_NANBOXTOPTR(fn_ptr);
 
         // check the type before we dereference further
-        if (fn_obj->header.type != sinter_type_function) {
+        if (fn_obj->header.type != sitype_function) {
           sifault(sinter_fault_type);
           return;
         }

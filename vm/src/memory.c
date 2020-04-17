@@ -39,8 +39,17 @@ void siheap_mdestroy(siheap_header_t *ent) {
   case sitype_array:
     siarray_destroy((siheap_array_t *) ent);
     break;
-  case sinter_type_function:
+  case sitype_function:
     sifunction_destroy((siheap_function_t *) ent);
+    break;
+  case sitype_array_data:
+  case sitype_empty:
+  case sitype_frame:
+  case sitype_free:
+  case sitype_marked:
+  case sitype_strconst:
+  case sitype_string:
+  default:
     break;
   }
 }
@@ -152,6 +161,14 @@ static address_t sizeof_strobj(siheap_header_t *obj) {
     return v->header.size - sizeof(siheap_string_t) - 1;
   }
 
+  case sitype_array_data:
+  case sitype_empty:
+  case sitype_frame:
+  case sitype_free:
+  case sitype_marked:
+  case sitype_env:
+  case sitype_array:
+  case sitype_function:
   default:
     SIBUGM("Unknown string type\n");
     sifault(sinter_fault_internal_error);
@@ -183,6 +200,14 @@ static void write_strobj(siheap_header_t *obj, char **to) {
     return;
   }
 
+  case sitype_array_data:
+  case sitype_empty:
+  case sitype_frame:
+  case sitype_free:
+  case sitype_marked:
+  case sitype_env:
+  case sitype_array:
+  case sitype_function:
   default:
     SIBUGM("Unknown string type\n");
     sifault(sinter_fault_internal_error);
@@ -231,7 +256,7 @@ siheap_header_t *siheap_mrealloc(siheap_header_t *ent, address_t newsize) {
   // the next block is not free and/or not large enough
 
   // store the type, refcount and size of the current block
-  uint16_t orig_type = ent->type;
+  siheap_type_t orig_type = ent->type;
   uint16_t orig_refcount = ent->refcount;
   address_t orig_size = ent->size;
 

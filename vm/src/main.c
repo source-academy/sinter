@@ -56,9 +56,16 @@ static void set_result(sinanbox_t exec_result, sinter_value_t *result) {
       result->type = sinter_type_string;
       result->string_value = sistrobj_tocharptr(obj);
       break;
-    case sinter_type_function:
+    case sitype_function:
       result->type = sinter_type_function;
       break;
+    case sitype_array_data:
+    case sitype_empty:
+    case sitype_frame:
+    case sitype_free:
+    case sitype_marked:
+    case sitype_env:
+    case sitype_array:
     default:
       SIBUGV("Unexpected return object type %d\n", obj->type);
       break;
