@@ -21,7 +21,7 @@ stack; defaults to `0x200` i.e. 512
 runtime e.g. stack over/underflow checks; defaults to unset (i.e. safety checks
 are performed)
 
-- `SINTER_DEBUG_LEVEL`: controls the debug output level; defaults to `0`
+- `SINTER_DEBUG_LOGLEVEL`: controls the debug output level; defaults to `0`
 
   - `0`: all debug output is disabled.
   - `1`: prints reasons for most faults/errors

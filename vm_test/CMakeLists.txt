@@ -26,7 +26,7 @@ add_run_test(index_array)
 add_run_test(resize_array)
 add_run_test(move_array)
 
-if(${SINTER_DEBUG_LEVEL} EQUAL 2)
+if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(display)
   add_run_stderr_test(error)
 endif()

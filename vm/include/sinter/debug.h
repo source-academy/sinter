@@ -4,14 +4,14 @@
 #include "config.h"
 #include "opcode.h"
 
-#if SINTER_DEBUG_LEVEL >= 1
+#if SINTER_DEBUG_LOGLEVEL >= 1
 #include <stdio.h>
 #define SIDEBUG(...) fprintf(stderr, __VA_ARGS__)
 #else
 #define SIDEBUG(...) ((void) 0)
 #endif
 
-#if SINTER_DEBUG_LEVEL >= 2
+#if SINTER_DEBUG_LOGLEVEL >= 2
 #include <stdio.h>
 #define SITRACE(...) fprintf(stderr, __VA_ARGS__)
 #else

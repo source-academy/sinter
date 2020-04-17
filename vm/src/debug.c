@@ -8,7 +8,7 @@
 #include <sinter/debug_heap.h>
 #include <sinter/heap_obj.h>
 
-#if SINTER_DEBUG_LEVEL >= 1
+#if SINTER_DEBUG_LOGLEVEL >= 1
 void debug_nanbox(sinanbox_t v) {
   switch (NANBOX_GETTYPE(v)) {
   NANBOX_CASES_TINT

@@ -68,7 +68,7 @@ static void siheap_mark(siheap_header_t *vent) {
   }
 
   if (!(vent->type & 0x8000)) {
-#if SINTER_DEBUG_LEVEL >= 2
+#if SINTER_DEBUG_LOGLEVEL >= 2
     SIDEBUG("Marking object ");
     SIDEBUG_HEAPOBJ(vent);
     SIDEBUG("\n");
@@ -116,7 +116,7 @@ static inline void siheap_sweep(void) {
   while (SIHEAP_INRANGE(curr)) {
     if (!(curr->type & 0x8000)) {
       curr->refcount = 0;
-#if SINTER_DEBUG_LEVEL >= 2
+#if SINTER_DEBUG_LOGLEVEL >= 2
       SIDEBUG("Sweeping object ");
       SIDEBUG_HEAPOBJ(curr);
       SIDEBUG("\n");

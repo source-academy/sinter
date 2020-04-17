@@ -30,7 +30,7 @@ SINTER_INLINE void sistack_push(sinanbox_t entry) {
   }
 #endif
 
-#if SINTER_DEBUG_LEVEL >= 2
+#if SINTER_DEBUG_LOGLEVEL >= 2
     SIDEBUG("Pushed onto stack: ");
     SIDEBUG_NANBOX(entry);
     SIDEBUG("\n");
@@ -46,7 +46,7 @@ SINTER_INLINE sinanbox_t sistack_pop(void) {
   } else
 #endif
   {
-#if SINTER_DEBUG_LEVEL >= 2
+#if SINTER_DEBUG_LOGLEVEL >= 2
     SIDEBUG("Popped from stack: ");
     SIDEBUG_NANBOX(*(sistack_top - 1));
     SIDEBUG("\n");

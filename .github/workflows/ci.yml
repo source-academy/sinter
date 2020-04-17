@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        cmake-args: [-DCMAKE_BUILD_TYPE=Debug -DSINTER_DEBUG_LEVEL=2, -DCMAKE_BUILD_TYPE=Release]
+        cmake-args: [-DCMAKE_BUILD_TYPE=Debug -DSINTER_DEBUG_LOGLEVEL=2, -DCMAKE_BUILD_TYPE=Release]
     steps:
     - uses: actions/checkout@v2
     - name: mkdir

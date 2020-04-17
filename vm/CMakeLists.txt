@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(SINTER_DEBUG_LEVEL 0 CACHE STRING "Debug level")
+set(SINTER_DEBUG_LOGLEVEL 0 CACHE STRING "Debug level")
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Defaulting to Debug build.")
@@ -25,7 +25,7 @@ add_library(sinter
 target_compile_options(sinter
   PRIVATE -Wall -Wextra -Wswitch-enum -std=c11 -pedantic -Werror -fwrapv -g
   PRIVATE -DSINTER_STATIC_HEAP
-  PRIVATE -DSINTER_DEBUG_LEVEL=${SINTER_DEBUG_LEVEL} $<$<BOOL:${SINTER_ABORT_ON_FAULT}>:-DSINTER_ABORT_ON_FAULT>
+  PRIVATE -DSINTER_DEBUG_LOGLEVEL=${SINTER_DEBUG_LOGLEVEL} $<$<BOOL:${SINTER_ABORT_ON_FAULT}>:-DSINTER_ABORT_ON_FAULT>
   PRIVATE $<$<CONFIG:Debug>:-Og -DSINTER_DEBUG>
   PRIVATE $<$<CONFIG:Release>:-O2 -DNDEBUG>
 )

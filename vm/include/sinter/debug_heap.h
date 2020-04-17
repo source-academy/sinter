@@ -6,7 +6,7 @@
 #include "debug.h"
 #include "heap.h"
 
-#if SINTER_DEBUG_LEVEL >= 1
+#if SINTER_DEBUG_LOGLEVEL >= 1
 #define SIDEBUG_NANBOX(v) debug_nanbox(v)
 #define SIDEBUG_HEAPOBJ(v) debug_heap_obj(v)
 
