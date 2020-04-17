@@ -281,9 +281,13 @@ SINTER_INLINEIFC void siarray_put(siheap_array_t *array, address_t index, sinanb
     }
     array->data = (siheap_array_data_t *) siheap_mrealloc(&array->data->header,
       sizeof(siheap_array_data_t) + new_size*sizeof(sinanbox_t));
+    for (address_t i = array->alloc_size; i < new_size; ++i) {
+      array->data->data[i] = NANBOX_OFUNDEF();
+    }
     array->alloc_size = new_size;
   }
 
+  siheap_derefbox(array->data->data[index]);
   array->data->data[index] = v;
   if (array->count <= index) {
     array->count = index + 1;
