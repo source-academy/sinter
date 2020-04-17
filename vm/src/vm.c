@@ -68,6 +68,53 @@ static inline void pop_array_args(siheap_array_t **array, address_t *index) {
   }
 }
 
+static inline bool do_internal_function(
+  const uint8_t id,
+  const uint8_t num_args,
+  size_t sizeof_instr,
+  const bool is_primitive,
+  const bool is_tailcall) {
+  if ((is_primitive && id >= SIVMFN_PRIMITIVE_COUNT) || (!is_primitive && id >= sivmfn_vminternal_count)) {
+    SIDEBUG("Invalid %s function index %d\n", is_primitive ? "primitive" : "VM-internal", id);
+    sifault(sinter_fault_invalid_program);
+    return false;
+  }
+
+  // check that there are enough items on the stack
+  if (num_args > 0) {
+    sistack_peek(num_args - 1);
+  }
+
+  // call the function
+  sinanbox_t retv = (is_primitive ? sivmfn_primitives : sivmfn_vminternals)[id](num_args, sistack_top - num_args);
+
+  // pop the arguments off the stack
+  for (unsigned int i = 0; i < num_args; ++i) {
+    sinanbox_t arg = sistack_pop();
+    // if the function returns one of the arguments, we don't want to deref it!
+    if (arg.as_i32 != retv.as_i32) {
+      siheap_derefbox(arg);
+    }
+  }
+
+  // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
+  if (is_tailcall) {
+    sistack_destroy(&sistate.pc, &sistate.env);
+  } else {
+    // otherwise we advance to the return address
+    sistate.pc += sizeof_instr;
+  }
+
+  sistack_push(retv);
+
+  // tail call from main
+  if (is_tailcall && !sistate.pc) {
+    return true;
+  }
+
+  return false;
+}
+
 #define WRAP_INTEGER(v) (((v) >= NANBOX_INTMIN && (v) <= NANBOX_INTMAX) ? \
   NANBOX_OFINT(v) : NANBOX_OFFLOAT(v))
 #define DECLOPSTRUCT(type) const struct type *instr = (const struct type *) sistate.pc
@@ -608,7 +655,9 @@ static void main_loop(void) {
       sinanbox_t fn_ptr = sistack_peek(instr->num_args);
 
       if (NANBOX_ISIFN(fn_ptr)) {
-        unimpl_instr();
+        if (do_internal_function(NANBOX_IFN_NUMBER(fn_ptr), instr->num_args, sizeof(*instr), NANBOX_IFN_TYPE(fn_ptr) == 0, this_opcode == op_call_t)) {
+          return;
+        }
       } else if (NANBOX_ISPTR(fn_ptr)) {
         siheap_function_t *fn_obj = SIHEAP_NANBOXTOPTR(fn_ptr);
 
@@ -671,41 +720,7 @@ static void main_loop(void) {
       const bool is_primitive = this_opcode == op_call_p || this_opcode == op_call_t_p;
       const bool is_tailcall = this_opcode == op_call_t_v || this_opcode == op_call_t_p;
 
-      if ((is_primitive && instr->id >= SIVMFN_PRIMITIVE_COUNT) || (!is_primitive && instr->id >= sivmfn_vminternal_count)) {
-        SIDEBUG("Invalid %s function index %d\n", is_primitive ? "primitive" : "VM-internal", instr->id);
-        sifault(sinter_fault_invalid_program);
-        return;
-      }
-
-      // check that there are enough items on the stack
-      if (instr->num_args > 0) {
-        sistack_peek(instr->num_args - 1);
-      }
-
-      // call the function
-      sinanbox_t retv = (is_primitive ? sivmfn_primitives : sivmfn_vminternals)[instr->id](instr->num_args, sistack_top - instr->num_args);
-
-      // pop the arguments off the stack
-      for (unsigned int i = 0; i < instr->num_args; ++i) {
-        sinanbox_t arg = sistack_pop();
-        // if the function returns one of the arguments, we don't want to deref it!
-        if (arg.as_i32 != retv.as_i32) {
-          siheap_derefbox(arg);
-        }
-      }
-
-      // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
-      if (is_tailcall) {
-        sistack_destroy(&sistate.pc, &sistate.env);
-      } else {
-        // otherwise we advance to the return address
-        sistate.pc += sizeof(*instr);
-      }
-
-      sistack_push(retv);
-
-      // tail call from main
-      if (is_tailcall && !sistate.pc) {
+      if (do_internal_function(instr->id, instr->num_args, sizeof(*instr), is_primitive, is_tailcall)) {
         return;
       }
 
