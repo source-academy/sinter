@@ -177,7 +177,9 @@ SINTER_INLINE siheap_strpair_t *sistrpair_new(siheap_header_t *left, siheap_head
 
 SINTER_INLINE void sistrpair_destroy(siheap_strpair_t *obj) {
   siheap_deref(obj->left);
-  siheap_deref(obj->right);
+  if (obj->right) {
+    siheap_deref(obj->right);
+  }
 }
 
 #ifdef __cplusplus

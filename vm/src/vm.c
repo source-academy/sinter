@@ -35,8 +35,11 @@ static inline bool is_string_type(int type) {
   switch (type) {
   case sitype_strconst:
   case sitype_strpair:
-  case sitype_string:
     return true;
+  case sitype_string:
+    SIBUGM("siheap_string_t seen on stack");
+    sifault(sinter_fault_internal_error);
+    return false;
   default:
     return false;
   }
@@ -101,6 +104,7 @@ static inline bool do_internal_function(
 
   // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
   if (is_tailcall) {
+    siheap_deref(sistate.env);
     sistack_destroy(&sistate.pc, &sistate.env);
   } else {
     // otherwise we advance to the return address
@@ -696,6 +700,7 @@ static void main_loop(void) {
 
         // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
         if (this_opcode == op_call_t) {
+          siheap_deref(sistate.env);
           sistack_destroy(&sistate.pc, &sistate.env);
         } else {
           // otherwise we advance to the return address
@@ -783,6 +788,7 @@ static void main_loop(void) {
     case op_newenv: {
       DECLOPSTRUCT(op_oneindex);
       siheap_env_t *new_env = sienv_new(sistate.env, instr->index);
+      siheap_deref(sistate.env);
       sistate.env = new_env;
       ADVANCE_PCI();
     }
@@ -790,6 +796,7 @@ static void main_loop(void) {
     case op_popenv: {
       siheap_env_t *old_env = sistate.env;
       sistate.env = old_env->parent;
+      siheap_ref(sistate.env);
       siheap_deref(old_env);
       ADVANCE_PCONE();
     }

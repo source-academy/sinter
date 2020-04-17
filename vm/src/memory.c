@@ -43,13 +43,16 @@ void siheap_mdestroy(siheap_header_t *ent) {
     sifunction_destroy((siheap_function_t *) ent);
     break;
   case sitype_array_data:
-  case sitype_empty:
   case sitype_frame:
-  case sitype_free:
-  case sitype_marked:
   case sitype_strconst:
   case sitype_string:
+    break;
   default:
+  case sitype_marked:
+  case sitype_empty:
+  case sitype_free:
+    SIBUGV("Attempting to destroy object of type %d\n", ent->type);
+    assert(false);
     break;
   }
 }
@@ -177,6 +180,9 @@ static address_t sizeof_strobj(siheap_header_t *obj) {
 }
 
 static void write_strobj(siheap_header_t *obj, char **to) {
+  if (!obj) {
+    return;
+  }
   switch (obj->type) {
   case sitype_strconst: {
     siheap_strconst_t *v = (siheap_strconst_t *) obj;
@@ -228,7 +234,9 @@ siheap_string_t *sistrpair_flatten(siheap_strpair_t *obj) {
   write_strobj(&obj->header, &to);
   *to = '\0';
 
-  siheap_ref(string);
+  siheap_deref(obj->left);
+  siheap_deref(obj->right);
+
   obj->left = &string->header;
   obj->right = NULL;
   return string;
@@ -261,11 +269,24 @@ siheap_header_t *siheap_mrealloc(siheap_header_t *ent, address_t newsize) {
   uint16_t orig_refcount = ent->refcount;
   address_t orig_size = ent->size;
 
-  // *FREE* the current block
-  siheap_mfree_inner(ent);
+  // if the previous node is a free block, then we free BEFORE malloc
+  // so there is a chance that the new merged free block is large enough
+  // we cannot do this all the time as in some cases (if a new free node is
+  // constructed in our current memory block) our array data will be overwritten
+  const bool free_first = ((unsigned char *) ent->prev_node) >= siheap
+    && ent->prev_node->type == sitype_free;
+  ent->refcount = 0;
+
+  if (free_first) {
+    siheap_mfree_inner(ent);
+  }
 
   // now allocate a new block with the new size and original type
   siheap_header_t *new_alloc = siheap_malloc(newsize, orig_type);
+
+  if (!free_first) {
+    siheap_mfree_inner(ent);
+  }
   // restore the refcount
   new_alloc->refcount = orig_refcount;
 
