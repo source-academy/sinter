@@ -27,6 +27,7 @@ add_run_test(resize_array)
 add_run_test(move_array)
 add_run_test(fact_iterative_5000)
 add_run_test(sum_iterative_10000000)
+add_run_test(internal_function)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(display)
