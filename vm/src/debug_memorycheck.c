@@ -159,8 +159,8 @@ static void debug_memorycheck_walk_do_object_2(const siheap_header_t *obj) {
   case sitype_strconst: {
     siheap_strconst_t *c = (siheap_strconst_t *) obj;
 
-    // check that the string is in the program binary
-    assert((const opcode_t *) c->string >= sistate.program && (const opcode_t *) c->string < sistate.program_end);
+    // check that the string is not NULL
+    assert(c->string);
 
     break;
   }
