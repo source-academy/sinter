@@ -7,6 +7,11 @@
  * non-qualified definitions, which make them have external linkage.
  */
 
+#include <sinter/config.h>
+
+#ifdef SINTER_INLINE
+#undef SINTER_INLINE
+#endif
 #define SINTER_INLINE
 
 #include <sinter/heap.h>
