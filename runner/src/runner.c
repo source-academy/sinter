@@ -40,6 +40,8 @@ static const char *type_names[] = {
   "function"
 };
 
+void setup_internals(void);
+
 ssize_t check_posix(ssize_t result, const char *msg) {
   if (result == -1 && errno) {
     perror(msg);
@@ -85,6 +87,8 @@ int main(int argc, char *argv[]) {
   sinter_printer_float = print_float;
   sinter_printer_string = print_string;
   sinter_printer_integer = print_integer;
+
+  setup_internals();
 
   sinter_value_t result = { 0 };
   sinter_fault_t fault = sinter_run(program, size, &result);

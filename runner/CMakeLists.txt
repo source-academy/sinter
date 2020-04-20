@@ -13,6 +13,7 @@ project(runner C)
 
 add_executable(runner
   src/runner.c
+  src/internal_functions.c
 )
 
 target_compile_options(runner
