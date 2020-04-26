@@ -262,6 +262,8 @@ static void debug_memorycheck_search_do_nanboxes(const sinanbox_t *arr, const si
   }
 }
 
+// LCOV_EXCL_START
+// This part is meant for use from GDB; not part of the normal execution of the VM.
 /**
  * Search the heap for referents
  */
@@ -358,4 +360,5 @@ void debug_memorycheck_search(const siheap_header_t *needle) {
     obj = siheap_next(obj);
   }
 }
+// LCOV_EXCL_STOP
 #endif
