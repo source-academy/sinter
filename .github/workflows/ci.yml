@@ -35,11 +35,12 @@ jobs:
       working-directory: build
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
-      run: cpp-coveralls
+      run: ~/.local/bin/cpp-coveralls
       if: contains(matrix.cmake-args, 'coverage')
   check-headers:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
     - name: check if headers work in C++
       working-directory: vm/include
       run: g++ -std=c++11 -fsyntax-only sinter/*.h sinter.h -I. -Wall -Wextra -pedantic
