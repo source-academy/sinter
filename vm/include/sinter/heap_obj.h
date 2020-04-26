@@ -269,7 +269,7 @@ SINTER_INLINE _Bool siheap_is_string(siheap_header_t *h) {
   case sitype_strpair:
     return true;
   case sitype_string:
-    SIBUGM("siheap_string_t seen on stack");
+    SIBUGM("siheap_string_t seen on stack\n");
     sifault(sinter_fault_internal_error);
     return false;
   case sitype_array:

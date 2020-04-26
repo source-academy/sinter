@@ -108,7 +108,7 @@ static void siheap_mark(siheap_header_t *vent) {
       // These types have no children, no need to do anything
       break;
     default:
-      SIBUGV("Unknown type %d", vent->type & 0x7FFF);
+      SIBUGV("Unknown type %d\n", vent->type & 0x7FFF);
       break;
     }
   }
