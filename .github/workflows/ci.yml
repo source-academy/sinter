@@ -35,7 +35,8 @@ jobs:
       working-directory: build
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
-      run: ~/.local/bin/cpp-coveralls -r .. --include vm --include runner --gcov-options '\-lp'
+        TRAVIS_JOB_ID: ${{ github.run_id }}
+      run: ~/.local/bin/cpp-coveralls -r .. --include vm --include runner --gcov-options '\-lp' -y ../.coveralls.yml
       if: github.event_name != 'pull_request' && contains(matrix.cmake-args, 'coverage')
   check-headers:
     runs-on: ubuntu-latest
