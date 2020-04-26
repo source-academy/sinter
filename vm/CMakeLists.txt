@@ -31,6 +31,11 @@ target_compile_options(sinter
   PRIVATE -DSINTER_DEBUG_LOGLEVEL=${SINTER_DEBUG_LOGLEVEL}
   PRIVATE $<$<BOOL:${SINTER_DEBUG_ABORT_ON_FAULT}>:-DSINTER_DEBUG_ABORT_ON_FAULT>
   PRIVATE $<$<BOOL:${SINTER_DEBUG_MEMORY_CHECK}>:-DSINTER_DEBUG_MEMORY_CHECK>
+  PRIVATE $<$<BOOL:${SINTER_COVERAGE}>:--coverage>
+)
+
+target_link_options(sinter
+  PRIVATE $<$<BOOL:${SINTER_COVERAGE}>:--coverage>
 )
 
 target_include_directories(sinter

@@ -11,9 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        cmake-args: [-DCMAKE_BUILD_TYPE=Debug -DSINTER_DEBUG_LOGLEVEL=2 -DSINTER_DEBUG_MEMORY_CHECK=1, -DCMAKE_BUILD_TYPE=Release]
+        cmake-args:
+          - -DCMAKE_BUILD_TYPE=Debug -DSINTER_DEBUG_LOGLEVEL=2 -DSINTER_DEBUG_MEMORY_CHECK=1 -DSINTER_COVERAGE=1
+          - -DCMAKE_BUILD_TYPE=Debug -DSINTER_DEBUG_LOGLEVEL=2 -DSINTER_DEBUG_MEMORY_CHECK=1
+          - -DCMAKE_BUILD_TYPE=Release
     steps:
     - uses: actions/checkout@v2
+    - name: install cpp-coveralls
+      run: pip install --user cpp-coveralls
+      if: contains(matrix.cmake-args, 'coverage')
     - name: mkdir
       run: mkdir build
     - name: cmake
@@ -25,6 +31,14 @@ jobs:
     - name: test
       working-directory: build
       run: make CTEST_OUTPUT_ON_FAILURE=1 test
+    - name: coverage
+      working-directory: build
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+      run: cpp-coveralls
+  check-headers:
+    runs-on: ubuntu-latest
+    steps:
     - name: check if headers work in C++
       working-directory: vm/include
       run: g++ -std=c++11 -fsyntax-only sinter/*.h sinter.h -I. -Wall -Wextra -pedantic
