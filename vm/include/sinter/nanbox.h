@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "config.h"
+#include "fault.h"
 
 /**
  * Sinter 32-bit NaN-box
@@ -109,6 +110,7 @@ inline int32_t nanbox_int(sinanbox_t val) {
 #define NANBOX_INT(val) (((struct { int32_t n : 21; }) { .n = (val).as_i32 }).n)
 #endif
 #define NANBOX_PTR(val) ((val).as_i32 & 0x3fffffu)
+#define NANBOX_TOFLOAT(val) (nanbox_tofloat(v))
 
 #define NANBOX_IFN_TYPE(val) (((val).as_i32 & 0x100) >> 8)
 #define NANBOX_IFN_NUMBER(val) ((val).as_i32 & 0xff)
@@ -153,6 +155,17 @@ extern "C" {
 SINTER_INLINE _Bool nanbox_isfloat(sinanbox_t v) {
   uint32_t i = v.as_i32;
   return ((i & 0x7f800000) != 0x7f800000) || ((i & 0x7fffff) == 0) || i == 0x7fc00000;
+}
+
+SINTER_INLINE float nanbox_tofloat(sinanbox_t v) {
+  if (NANBOX_ISINT(v)) {
+    return (float) NANBOX_INT(v);
+  } else if (NANBOX_ISFLOAT(v)) {
+    return NANBOX_FLOAT(v);
+  } else {
+    sifault(sinter_fault_type);
+    return 0;
+  }
 }
 
 #ifdef __cplusplus
