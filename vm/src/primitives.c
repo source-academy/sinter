@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <stdlib.h>
+#include <limits.h>
 #include <math.h>
 
 #include <sinter/nanbox.h>
@@ -125,109 +127,14 @@ static void handle_display(unsigned int argc, sinanbox_t *argv, bool is_error) {
   } \
 } while (0)
 
-static sinanbox_t sivmfn_prim_accumulate(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_append(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_array_length(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_build_list(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_build_stream(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_display(uint8_t argc, sinanbox_t *argv) {
-  SIDEBUG("Program called display with %d arguments:\n", argc);
-  debug_display_argv(argc, argv);
-  handle_display(argc, argv, false);
-  return argc ? argv[0] : NANBOX_OFUNDEF();
-}
-
-static sinanbox_t sivmfn_prim_draw_data(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_enum_list(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_enum_stream(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_equal(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_error(uint8_t argc, sinanbox_t *argv) {
-  SIDEBUG("Program called error with %d arguments:\n", argc);
-  debug_display_argv(argc, argv);
-  handle_display(argc, argv, true);
-  sifault(sinter_fault_program_error);
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_eval_stream(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_filter(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_for_each(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_head(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_integers_from(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
+/******************************************************************************
+ * Type-checking primitives
+ ******************************************************************************/
 
 static sinanbox_t sivmfn_prim_is_array(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(1);
+  sinanbox_t v = *argv;
+  return NANBOX_OFBOOL(NANBOX_ISPTR(v) && ((siheap_header_t *) SIHEAP_NANBOXTOPTR(v))->type == sitype_array);
 }
 
 static sinanbox_t sivmfn_prim_is_boolean(uint8_t argc, sinanbox_t *argv) {
@@ -271,14 +178,334 @@ static sinanbox_t sivmfn_prim_is_stream(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_is_string(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(1);
+  sinanbox_t v = *argv;
+  return NANBOX_OFBOOL(NANBOX_ISPTR(v) && siheap_is_string(SIHEAP_NANBOXTOPTR(v)));
 }
 
 static sinanbox_t sivmfn_prim_is_undefined(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(1);
   return NANBOX_OFBOOL(NANBOX_ISUNDEF(*argv));
+}
+
+/******************************************************************************
+ * Math primitives
+ ******************************************************************************/
+
+#define MATH_FN(name) static sinanbox_t sivmfn_prim_math_ ## name(uint8_t argc, sinanbox_t *argv) { \
+  CHECK_ARGC(1); \
+  return NANBOX_OFFLOAT(name ## f(NANBOX_TOFLOAT(*argv))); \
+}
+
+#define MATH_FN_2(name) static sinanbox_t sivmfn_prim_math_ ## name(uint8_t argc, sinanbox_t *argv) { \
+  CHECK_ARGC(2); \
+  return NANBOX_OFFLOAT(name ## f(NANBOX_TOFLOAT(argv[0]), NANBOX_TOFLOAT(argv[1]))); \
+}
+
+MATH_FN(acos)
+MATH_FN(acosh)
+MATH_FN(asin)
+MATH_FN(asinh)
+MATH_FN(atan)
+MATH_FN(atanh)
+MATH_FN(cbrt)
+MATH_FN(cos)
+MATH_FN(cosh)
+MATH_FN(exp)
+MATH_FN(expm1)
+MATH_FN(log)
+MATH_FN(log1p)
+MATH_FN(log2)
+MATH_FN(log10)
+MATH_FN(sin)
+MATH_FN(sinh)
+MATH_FN(sqrt)
+MATH_FN(tan)
+MATH_FN(tanh)
+MATH_FN_2(atan2)
+MATH_FN_2(pow)
+
+static sinanbox_t sivmfn_prim_math_hypot(uint8_t argc, sinanbox_t *argv) {
+  // Adapted from https://github.com/v8/v8/blob/master/src/builtins/math.tq#L405
+  if (argc == 0) {
+    return NANBOX_OFINT(0);
+  }
+
+  float max = 0;
+  for (unsigned int i = 0; i < argc; ++i) {
+    if (NANBOX_IDENTICAL(argv[i], NANBOX_CANONICAL_NAN)) {
+      return NANBOX_CANONICAL_NAN;
+    }
+    float v = NANBOX_TOFLOAT(argv[i]);
+    if (v > max) {
+      max = v;
+    }
+  }
+
+  if (max == 0.0f) {
+    return NANBOX_OFINT(0);
+  }
+
+  float sum = 0;
+  float compensation = 0;
+  for (unsigned int i = 0; i < argc; ++i) {
+    float n = NANBOX_TOFLOAT(argv[i]) / max;
+    float summand = n * n - compensation;
+    float preliminary = sum + summand;
+    compensation = (preliminary - sum) - summand;
+    sum = preliminary;
+  }
+
+  return NANBOX_OFFLOAT(sqrtf(sum) * max);
+}
+
+static inline uint32_t nanbox_tou32(sinanbox_t v) {
+  if (NANBOX_ISINT(v)) {
+    return (uint32_t) NANBOX_INT(v);
+  } else if (NANBOX_ISFLOAT(v)) {
+    return (uint32_t) NANBOX_FLOAT(v);
+  }
+  sifault(sinter_fault_type);
+  return 0;
+}
+
+static sinanbox_t sivmfn_prim_math_abs(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  sinanbox_t v = *argv;
+
+  if (NANBOX_ISINT(v)) {
+    return NANBOX_WRAP_INT(abs(NANBOX_INT(v)));
+  } else if (NANBOX_ISFLOAT(v)) {
+    return NANBOX_OFFLOAT(fabsf(NANBOX_FLOAT(v)));
+  }
+
+  sifault(sinter_fault_type);
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_math_clz32(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  uint32_t clzarg = nanbox_tou32(*argv);
+
+  if (clzarg == 0) {
+    return NANBOX_OFINT(32);
+  }
+
+  unsigned int ret;
+#if UINT_MAX == UINT32_MAX
+  ret = __builtin_clz(clzarg);
+#elif ULONG_MAX == UINT32_MAX
+  ret = __builtin_clzl(clzarg);
+#elif ULLONG_MAX == UINT32_MAX
+  ret = __builtin_clzll(clzarg);
+#endif
+  return NANBOX_OFINT(ret);
+}
+
+static sinanbox_t sivmfn_prim_math_fround(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  // no-op: sinter uses floats not doubles
+  return *argv;
+}
+
+static sinanbox_t sivmfn_prim_math_imul(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(2);
+  uint32_t r = nanbox_tou32(argv[0])*nanbox_tou32(argv[1]);
+  if (r > INT32_MAX) {
+    r -= 0x80000000ull;
+  }
+  return NANBOX_WRAP_INT((int32_t) r);
+}
+
+static sinanbox_t sivmfn_prim_math_max(uint8_t argc, sinanbox_t *argv) {
+  if (argc == 0) {
+    return NANBOX_OFFLOAT(-INFINITY);
+  }
+
+  sinanbox_t max = argv[0];
+  if (NANBOX_IDENTICAL(max, NANBOX_CANONICAL_NAN)) {
+    return max;
+  }
+  if (!NANBOX_ISFLOAT(max) && !NANBOX_ISINT(max)) {
+    sifault(sinter_fault_type);
+    return max;
+  }
+  for (unsigned int i = 1; i < argc; ++i) {
+    sinanbox_t contender = argv[i];
+    if (NANBOX_IDENTICAL(contender, NANBOX_CANONICAL_NAN)) {
+      return contender;
+    }
+    if (NANBOX_ISINT(max) && NANBOX_ISINT(contender)) {
+      int32_t maxi = NANBOX_INT(max);
+      int32_t contenderi = NANBOX_INT(contender);
+      if (contenderi > maxi) {
+        max = contender;
+      }
+    } else if (NANBOX_ISFLOAT(contender) || NANBOX_ISINT(contender)) {
+      float maxf = NANBOX_TOFLOAT(max);
+      float contenderf = NANBOX_TOFLOAT(contender);
+      if (contenderf > maxf) {
+        max = contender;
+      }
+    } else {
+      sifault(sinter_fault_type);
+    }
+  }
+
+  return max;
+}
+
+static sinanbox_t sivmfn_prim_math_min(uint8_t argc, sinanbox_t *argv) {
+  if (argc == 0) {
+    return NANBOX_OFFLOAT(INFINITY);
+  }
+
+  sinanbox_t min = argv[0];
+  if (NANBOX_IDENTICAL(min, NANBOX_CANONICAL_NAN)) {
+    return min;
+  }
+  if (!NANBOX_ISFLOAT(min) && !NANBOX_ISINT(min)) {
+    sifault(sinter_fault_type);
+    return min;
+  }
+  for (unsigned int i = 1; i < argc; ++i) {
+    sinanbox_t contender = argv[i];
+    if (NANBOX_IDENTICAL(contender, NANBOX_CANONICAL_NAN)) {
+      return contender;
+    }
+    if (NANBOX_ISINT(min) && NANBOX_ISINT(contender)) {
+      int32_t mini = NANBOX_INT(min);
+      int32_t contenderi = NANBOX_INT(contender);
+      if (contenderi < mini) {
+        min = contender;
+      }
+    } else if (NANBOX_ISFLOAT(contender) || NANBOX_ISINT(contender)) {
+      float minf = NANBOX_TOFLOAT(min);
+      float contenderf = NANBOX_TOFLOAT(contender);
+      if (contenderf < minf) {
+        min = contender;
+      }
+    } else {
+      sifault(sinter_fault_type);
+    }
+  }
+
+  return min;
+}
+static sinanbox_t sivmfn_prim_math_random(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(0); (void) argv;
+  return NANBOX_OFFLOAT((float) rand() / (float) RAND_MAX);
+}
+
+static sinanbox_t sivmfn_prim_math_sign(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  sinanbox_t v = *argv;
+  if (NANBOX_ISINT(v)) {
+    int32_t intv = NANBOX_INT(v);
+    return NANBOX_OFINT(intv ? (intv > 0 ? 1 : -1) : 0);
+  } else if (NANBOX_ISFLOAT(v)) {
+    float fv = NANBOX_FLOAT(v);
+    return NANBOX_OFINT(fv != 0.0f ? (fv > 0.0f ? 1 : -1) : 0);
+  } else {
+    sifault(sinter_fault_type);
+  }
+  return NANBOX_OFEMPTY();
+}
+
+#define FLOAT_ROUND_FN(name) static sinanbox_t sivmfn_prim_math_## name(uint8_t argc, sinanbox_t *argv) { \
+  CHECK_ARGC(1); \
+  sinanbox_t v = *argv; \
+  if (NANBOX_ISINT(v)) { \
+    return v; \
+  } else if (NANBOX_ISFLOAT(v)) { \
+    float retv = name ## f(NANBOX_FLOAT(v)); \
+    if (retv >= NANBOX_INTMIN && retv <= NANBOX_INTMAX) { \
+      return NANBOX_OFINT((int32_t) retv); \
+    } \
+    return NANBOX_OFFLOAT(retv); \
+  } else { \
+    sifault(sinter_fault_type); \
+  } \
+  return NANBOX_OFEMPTY(); \
+}
+
+FLOAT_ROUND_FN(floor)
+FLOAT_ROUND_FN(ceil)
+FLOAT_ROUND_FN(round)
+FLOAT_ROUND_FN(trunc)
+
+/******************************************************************************
+ * Pair primitives
+ ******************************************************************************/
+
+static sinanbox_t sivmfn_prim_pair(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_head(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_tail(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_set_head(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_set_tail(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+/******************************************************************************
+ * List primitives
+ ******************************************************************************/
+
+static sinanbox_t sivmfn_prim_accumulate(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_append(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_build_list(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_enum_list(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_filter(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_for_each(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
 }
 
 static sinanbox_t sivmfn_prim_length(uint8_t argc, sinanbox_t *argv) {
@@ -317,230 +544,7 @@ static sinanbox_t sivmfn_prim_map(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFEMPTY();
 }
 
-static sinanbox_t sivmfn_prim_math_abs(uint8_t argc, sinanbox_t *argv) {
-  CHECK_ARGC(1);
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_acos(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_acosh(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_asin(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_asinh(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_atan(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_atan2(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_atanh(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_cbrt(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_ceil(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_clz32(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_cos(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_cosh(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_exp(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_expm1(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_floor(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_fround(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_hypot(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_imul(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_log(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_log1p(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_log2(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_log10(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_max(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_min(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_pow(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_random(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_round(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_sign(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_sin(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_sinh(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_sqrt(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_tan(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_tanh(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_math_trunc(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
 static sinanbox_t sivmfn_prim_member(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_pair(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_parse_int(uint8_t argc, sinanbox_t *argv) {
   (void) argc; (void) argv;
   unimpl();
   return NANBOX_OFEMPTY();
@@ -564,19 +568,46 @@ static sinanbox_t sivmfn_prim_reverse(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFEMPTY();
 }
 
-static sinanbox_t sivmfn_prim_runtime(uint8_t argc, sinanbox_t *argv) {
+/******************************************************************************
+ * Array primitive
+ ******************************************************************************/
+
+static sinanbox_t sivmfn_prim_array_length(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  sinanbox_t v = *argv;
+  siheap_header_t *obj = SIHEAP_NANBOXTOPTR(v);
+  if (!NANBOX_ISPTR(v) || obj->type != sitype_array) {
+    sifault(sinter_fault_type);
+    return NANBOX_OFEMPTY();
+  }
+
+  siheap_array_t *arr = (siheap_array_t *) obj;
+  return NANBOX_WRAP_INT((int) arr->count);
+}
+
+/******************************************************************************
+ * Stream primitives
+ ******************************************************************************/
+
+static sinanbox_t sivmfn_prim_build_stream(uint8_t argc, sinanbox_t *argv) {
   (void) argc; (void) argv;
   unimpl();
   return NANBOX_OFEMPTY();
 }
 
-static sinanbox_t sivmfn_prim_set_head(uint8_t argc, sinanbox_t *argv) {
+static sinanbox_t sivmfn_prim_enum_stream(uint8_t argc, sinanbox_t *argv) {
   (void) argc; (void) argv;
   unimpl();
   return NANBOX_OFEMPTY();
 }
 
-static sinanbox_t sivmfn_prim_set_tail(uint8_t argc, sinanbox_t *argv) {
+static sinanbox_t sivmfn_prim_eval_stream(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_integers_from(uint8_t argc, sinanbox_t *argv) {
   (void) argc; (void) argv;
   unimpl();
   return NANBOX_OFEMPTY();
@@ -660,19 +691,62 @@ static sinanbox_t sivmfn_prim_stream_to_list(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFEMPTY();
 }
 
-static sinanbox_t sivmfn_prim_tail(uint8_t argc, sinanbox_t *argv) {
+/******************************************************************************
+ * Miscellaneous primitives
+ ******************************************************************************/
+
+static sinanbox_t sivmfn_prim_display(uint8_t argc, sinanbox_t *argv) {
+  SIDEBUG("Program called display with %d arguments:\n", argc);
+  debug_display_argv(argc, argv);
+  handle_display(argc, argv, false);
+  return argc ? argv[0] : NANBOX_OFUNDEF();
+}
+
+static sinanbox_t sivmfn_prim_draw_data(uint8_t argc, sinanbox_t *argv) {
+  // Not supported on Sinter.
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_equal(uint8_t argc, sinanbox_t *argv) {
+  // TODO
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_error(uint8_t argc, sinanbox_t *argv) {
+  SIDEBUG("Program called error with %d arguments:\n", argc);
+  debug_display_argv(argc, argv);
+  handle_display(argc, argv, true);
+  sifault(sinter_fault_program_error);
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_parse_int(uint8_t argc, sinanbox_t *argv) {
+  // TODO (Needs prompt for this to make sense)
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
+
+static sinanbox_t sivmfn_prim_runtime(uint8_t argc, sinanbox_t *argv) {
+  // TODO
   (void) argc; (void) argv;
   unimpl();
   return NANBOX_OFEMPTY();
 }
 
 static sinanbox_t sivmfn_prim_stringify(uint8_t argc, sinanbox_t *argv) {
+  // TODO
   (void) argc; (void) argv;
   unimpl();
   return NANBOX_OFEMPTY();
 }
 
 static sinanbox_t sivmfn_prim_prompt(uint8_t argc, sinanbox_t *argv) {
+  // TODO (Needs to call out to the hosting application)
   (void) argc; (void) argv;
   unimpl();
   return NANBOX_OFEMPTY();
