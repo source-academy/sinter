@@ -30,6 +30,7 @@ add_run_test(sum_iterative_10000000)
 add_run_test(internal_function)
 add_run_test(math_test)
 add_run_test(array_length)
+add_run_test(type_primitives)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(display)
