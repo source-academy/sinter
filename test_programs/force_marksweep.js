@@ -1,5 +1,6 @@
 function a(x) {
-  return () => x;
+  let f = () => x;
+  return f;
 }
 
 let c = 0;
