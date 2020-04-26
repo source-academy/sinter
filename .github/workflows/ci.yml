@@ -35,7 +35,7 @@ jobs:
       working-directory: build
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
-      run: ~/.local/bin/cpp-coveralls --verbose -r .. --gcov-options '\-lp'
+      run: ~/.local/bin/cpp-coveralls -r .. --include vm --include runner --gcov-options '\-lp'
       if: github.event_name != 'pull_request' && contains(matrix.cmake-args, 'coverage')
   check-headers:
     runs-on: ubuntu-latest
