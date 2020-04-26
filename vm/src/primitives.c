@@ -394,7 +394,7 @@ static sinanbox_t sivmfn_prim_math_min(uint8_t argc, sinanbox_t *argv) {
 }
 static sinanbox_t sivmfn_prim_math_random(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(0); (void) argv;
-  return NANBOX_OFFLOAT((float) rand() / (float) RAND_MAX);
+  return NANBOX_OFFLOAT((float) rand() / (((float) RAND_MAX) + 1.0f));
 }
 
 static sinanbox_t sivmfn_prim_math_sign(uint8_t argc, sinanbox_t *argv) {

@@ -2,6 +2,10 @@ function is_nan(x) {
   return is_number(x) && !(x < 0) && !(x >= 0);
 }
 
+function check_rand(x) {
+  return is_number(x) && x >= 0 && x < 1;
+}
+
 display(math_abs(2.25) === 2.25);
 display(math_abs(-2.75) === 2.75);
 display(math_acos(0.25) === 1.318116071652818);
@@ -54,7 +58,7 @@ display(math_min(2.25, 5, 5000) === 2.25);
 display(math_min(2.25, 5, 5000, Infinity) === 2.25);
 display(math_pow(2.25, 2.5) === 7.59375);
 display(math_pow(2.75, 2.5) === 12.540987488531355);
-display(is_number(math_random()));
+display(check_rand(math_random()));
 display(math_round(2.25) === 2);
 display(math_round(2.75) === 3);
 display(math_sign(2.25) === 1);
