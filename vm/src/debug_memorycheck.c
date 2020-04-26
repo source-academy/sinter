@@ -98,8 +98,8 @@ static void debug_memorycheck_walk_do_object_2(const siheap_header_t *obj) {
     siheap_env_t *c = (siheap_env_t *) obj;
 
     // check that the entry count and allocated size tally
-    // note: >= because the heap allocator could over-allocate (in case it decides not to split the block)
-    assert(sizeof(siheap_env_t) + c->entry_count*sizeof(siheap_env_t) >= c->header.size);
+    // note: <= because the heap allocator could over-allocate (in case it decides not to split the block)
+    assert(sizeof(siheap_env_t) + c->entry_count*sizeof(sinanbox_t) <= c->header.size);
     assert(!c->parent || SIHEAP_INRANGE(c->parent));
 
     if (c->parent) {
