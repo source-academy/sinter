@@ -234,7 +234,7 @@ SINTER_INLINEIFC const char *sistrobj_tocharptr(siheap_header_t *obj) SINTER_BOD
   }
 )
 
-SINTER_INLINE bool siheap_is_string(siheap_header_t *h) {
+SINTER_INLINE _Bool siheap_is_string(siheap_header_t *h) {
   switch (h->type) {
   case sitype_strconst:
   case sitype_strpair:
