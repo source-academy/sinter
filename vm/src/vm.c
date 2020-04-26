@@ -31,20 +31,6 @@ static inline void unimpl_instr() {
 }
 #endif
 
-static inline bool is_string_type(int type) {
-  switch (type) {
-  case sitype_strconst:
-  case sitype_strpair:
-    return true;
-  case sitype_string:
-    SIBUGM("siheap_string_t seen on stack");
-    sifault(sinter_fault_internal_error);
-    return false;
-  default:
-    return false;
-  }
-}
-
 static inline void pop_array_args(siheap_array_t **array, address_t *index) {
   sinanbox_t indexv = sistack_pop();
   sinanbox_t arrayv = sistack_pop();
@@ -233,7 +219,7 @@ static void main_loop(void) {
         siheap_header_t *hv0 = SIHEAP_NANBOXTOPTR(v0);
         siheap_header_t *hv1 = SIHEAP_NANBOXTOPTR(v1);
 
-        if (is_string_type(hv0->type) && is_string_type(hv1->type)) {
+        if (siheap_is_string(hv0) && siheap_is_string(hv1)) {
           // if either are empty string, no-op
           if (hv0->type == sitype_strconst && *(((siheap_strconst_t *) hv0)->string->data) == '\0') {
             siheap_ref(hv1);
@@ -436,7 +422,7 @@ static void main_loop(void) {
       } else if (NANBOX_ISPTR(v0) & NANBOX_ISPTR(v1)) { \
         siheap_header_t *hv0 = SIHEAP_NANBOXTOPTR(v0); \
         siheap_header_t *hv1 = SIHEAP_NANBOXTOPTR(v1); \
-        if (is_string_type(hv0->type) && is_string_type(hv1->type)) { \
+        if (siheap_is_string(hv0) && siheap_is_string(hv1)) { \
           r = NANBOX_OFBOOL(strcmp(sistrobj_tocharptr(hv0), sistrobj_tocharptr(hv1)) op 0); \
         } else { \
           SIDEBUG("Invalid operands to comparison.\n"); \
@@ -502,7 +488,7 @@ static void main_loop(void) {
       } else if (NANBOX_ISPTR(v0) & NANBOX_ISPTR(v1)) {
         siheap_header_t *hv0 = SIHEAP_NANBOXTOPTR(v0);
         siheap_header_t *hv1 = SIHEAP_NANBOXTOPTR(v1);
-        if (is_string_type(hv0->type) && is_string_type(hv1->type)) {
+        if (siheap_is_string(hv0) && siheap_is_string(hv1)) {
           r = strcmp(sistrobj_tocharptr(hv0), sistrobj_tocharptr(hv1)) == 0;
         } else {
           // for arrays and functions, identical only if they are the SAME object

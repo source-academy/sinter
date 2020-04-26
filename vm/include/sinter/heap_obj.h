@@ -234,6 +234,28 @@ SINTER_INLINEIFC const char *sistrobj_tocharptr(siheap_header_t *obj) SINTER_BOD
   }
 )
 
+SINTER_INLINE bool siheap_is_string(siheap_header_t *h) {
+  switch (h->type) {
+  case sitype_strconst:
+  case sitype_strpair:
+    return true;
+  case sitype_string:
+    SIBUGM("siheap_string_t seen on stack");
+    sifault(sinter_fault_internal_error);
+    return false;
+  case sitype_array:
+  case sitype_array_data:
+  case sitype_empty:
+  case sitype_free:
+  case sitype_function:
+  case sitype_frame:
+  case sitype_marked:
+  case sitype_env:
+  default:
+    return false;
+  }
+}
+
 #ifdef __cplusplus
 struct siheap_array_data;
 typedef struct siheap_array_data siheap_array_data_t;
