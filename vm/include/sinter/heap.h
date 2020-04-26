@@ -139,7 +139,9 @@ SINTER_INLINE void siheap_free_fix_neighbours(siheap_free_t *cur) {
   }
 }
 
-SINTER_INLINEIFC void siheap_init(void) SINTER_BODYIFC(
+SINTER_INLINEIFC void siheap_init(void);
+#ifndef __cplusplus
+SINTER_INLINEIFC void siheap_init(void) {
   siheap_first_free = (siheap_free_t *) siheap;
   *siheap_first_free = (siheap_free_t) {
     .header = {
@@ -151,11 +153,12 @@ SINTER_INLINEIFC void siheap_init(void) SINTER_BODYIFC(
     .prev_free = NULL,
     .next_free = NULL
   };
-)
+}
+#endif
 
 void siheap_mark_sweep(void);
 
-SINTER_INLINEIFC siheap_free_t *siheap_malloc_find(address_t size) SINTER_BODYIFC(
+SINTER_INLINEIFC siheap_free_t *siheap_malloc_find(address_t size) {
   bool sweeped = false;
   while (1) {
     siheap_free_t *cur = siheap_first_free;
@@ -179,9 +182,11 @@ SINTER_INLINEIFC siheap_free_t *siheap_malloc_find(address_t size) SINTER_BODYIF
 
     return cur;
   }
-)
+}
 
-SINTER_INLINEIFC siheap_header_t *siheap_malloc_split(siheap_free_t *cur, address_t size, siheap_type_t type) SINTER_BODYIFC(
+SINTER_INLINEIFC siheap_header_t *siheap_malloc_split(siheap_free_t *cur, address_t size, siheap_type_t type);
+#ifndef __cplusplus
+SINTER_INLINEIFC siheap_header_t *siheap_malloc_split(siheap_free_t *cur, address_t size, siheap_type_t type) {
   if (size + sizeof(siheap_free_t) <= cur->header.size) {
     // enough space for a new free node
     // create one
@@ -209,14 +214,15 @@ SINTER_INLINEIFC siheap_header_t *siheap_malloc_split(siheap_free_t *cur, addres
 
   cur->header.type = type;
   return &cur->header;
-)
+}
+#endif
 
 /**
  * Allocate memory.
  *
  * The allocation is returned with a reference count of 1.
  */
-SINTER_INLINEIFC siheap_header_t *siheap_malloc(address_t size, siheap_type_t type) SINTER_BODYIFC(
+SINTER_INLINEIFC siheap_header_t *siheap_malloc(address_t size, siheap_type_t type) {
   if (size < sizeof(siheap_free_t)) {
     size = sizeof(siheap_free_t);
   }
@@ -225,7 +231,7 @@ SINTER_INLINEIFC siheap_header_t *siheap_malloc(address_t size, siheap_type_t ty
   siheap_header_t *allocated = siheap_malloc_split(free_block, size, type);
   siheap_ref(allocated);
   return allocated;
-)
+}
 
 void siheap_mdestroy(siheap_header_t *ent);
 
