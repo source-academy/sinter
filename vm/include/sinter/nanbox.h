@@ -105,12 +105,12 @@ inline int32_t nanbox_int(sinanbox_t val) {
   struct { int32_t n : 21; } v = { static_cast<int32_t>(val.as_i32) };
   return v.n;
 }
-#define NANBOX_INT(val) (nanbox_int(val))
+#define NANBOX_INT(val) (nanbox_int((val)))
 #else
 #define NANBOX_INT(val) (((struct { int32_t n : 21; }) { .n = (val).as_i32 }).n)
 #endif
 #define NANBOX_PTR(val) ((val).as_i32 & 0x3fffffu)
-#define NANBOX_TOFLOAT(val) (nanbox_tofloat(v))
+#define NANBOX_TOFLOAT(val) (nanbox_tofloat((val)))
 
 #define NANBOX_IFN_TYPE(val) (((val).as_i32 & 0x100) >> 8)
 #define NANBOX_IFN_NUMBER(val) ((val).as_i32 & 0xff)
@@ -139,8 +139,8 @@ inline int32_t nanbox_int(sinanbox_t val) {
 #define NANBOX_WRAP_INT(v) (((v) >= NANBOX_INTMIN && (v) <= NANBOX_INTMAX) ? \
   NANBOX_OFINT(v) : NANBOX_OFFLOAT(v))
 
-#define NANBOX_OFIFN_PRIMITIVE(number) (NANBOX_WITH_I32(NANBOX_TIFN | number))
-#define NANBOX_OFIFN_VM(number) (NANBOX_WITH_I32(NANBOX_TIFN | 0x100 | number))
+#define NANBOX_OFIFN_PRIMITIVE(number) (NANBOX_WITH_I32(NANBOX_TIFN | (number)))
+#define NANBOX_OFIFN_VM(number) (NANBOX_WITH_I32(NANBOX_TIFN | 0x100 | (number)))
 
 #define NANBOX_INTMAX 0xFFFFF
 #define NANBOX_INTMIN (-0x100000)
