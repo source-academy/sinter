@@ -1,5 +1,7 @@
 # Sinter
 
+[![Coverage Status](https://coveralls.io/repos/github/angelsl/sinter/badge.svg)](https://coveralls.io/github/angelsl/sinter)
+
 Name etymology: <strong>S</strong>VM <strong>inter</strong>preter. (This isn't a direct Source interpreter though.)
 
 This is an implementation of the Source language intended for microcontroller platforms like an Arduino.
