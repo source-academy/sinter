@@ -107,8 +107,6 @@ static inline bool do_internal_function(
   return false;
 }
 
-#define WRAP_INTEGER(v) (((v) >= NANBOX_INTMIN && (v) <= NANBOX_INTMAX) ? \
-  NANBOX_OFINT(v) : NANBOX_OFFLOAT(v))
 #define DECLOPSTRUCT(type) const struct type *instr = (const struct type *) sistate.pc
 #define ADVANCE_PCONE() sistate.pc += sizeof(opcode_t); continue
 #define ADVANCE_PCI() sistate.pc += sizeof(*instr); continue
@@ -142,7 +140,7 @@ static void main_loop(void) {
     case op_ldc_i:
     case op_lgc_i: {
       DECLOPSTRUCT(op_i32);
-      sistack_push(WRAP_INTEGER(instr->operand));
+      sistack_push(NANBOX_WRAP_INT(instr->operand));
       ADVANCE_PCI();
     }
     case op_ldc_f32:
@@ -200,7 +198,7 @@ static void main_loop(void) {
         switch (NANBOX_ISFLOAT(v1) << 1 | NANBOX_ISFLOAT(v0)) {
         case 0: /* neither are floats */
           /* addition/subtraction of 2 21-bit integers won't overflow a 32-bit integer; no worries here */
-          r = WRAP_INTEGER(NANBOX_INT(v0) + NANBOX_INT(v1));
+          r = NANBOX_WRAP_INT(NANBOX_INT(v0) + NANBOX_INT(v1));
           break;
         case 1: /* v0 is float */
           r = NANBOX_OFFLOAT(NANBOX_FLOAT(v0) + NANBOX_INT(v1));
@@ -257,7 +255,7 @@ static void main_loop(void) {
       switch (NANBOX_ISFLOAT(v1) << 1 | NANBOX_ISFLOAT(v0)) {
       case 0: /* neither are floats */
         /* addition/subtraction of 2 21-bit integers won't overflow a 32-bit integer; no worries here */
-        r = WRAP_INTEGER(NANBOX_INT(v0) - NANBOX_INT(v1));
+        r = NANBOX_WRAP_INT(NANBOX_INT(v0) - NANBOX_INT(v1));
         break;
       case 1: /* v0 is float */
         r = NANBOX_OFFLOAT(NANBOX_FLOAT(v0) - NANBOX_INT(v1));
@@ -288,7 +286,7 @@ static void main_loop(void) {
       switch (NANBOX_ISFLOAT(v1) << 1 | NANBOX_ISFLOAT(v0)) {
       case 0: /* neither are floats */
         /* this can overflow, use int64 instead */
-        r = WRAP_INTEGER(((int64_t) NANBOX_INT(v0)) * ((int64_t) NANBOX_INT(v1)));
+        r = NANBOX_WRAP_INT(((int64_t) NANBOX_INT(v0)) * ((int64_t) NANBOX_INT(v1)));
         break;
       case 1: /* v0 is float */
         r = NANBOX_OFFLOAT(NANBOX_FLOAT(v0) *  NANBOX_INT(v1));
@@ -374,7 +372,7 @@ static void main_loop(void) {
       sinanbox_t v1 = sistack_pop();
 
       if (NANBOX_ISINT(v1)) {
-        sistack_push(WRAP_INTEGER(-NANBOX_INT(v1)));
+        sistack_push(NANBOX_WRAP_INT(-NANBOX_INT(v1)));
       } else if (NANBOX_ISFLOAT(v1)) {
         sistack_push(NANBOX_OFFLOAT(-NANBOX_FLOAT(v1)));
       } else {
