@@ -81,8 +81,8 @@ static void siheap_mark(siheap_header_t *vent) {
     vent->type |= 0x8000;
 
     // mark any children
-    switch (vent->type & 0x7FFF) {
-    case sinter_type_function:
+    switch ((siheap_type_t) (vent->type & 0x7FFF)) {
+    case sitype_function:
       siheap_mark(&((siheap_function_t *) vent)->env->header);
       break;
     case sitype_frame:
@@ -101,12 +101,27 @@ static void siheap_mark(siheap_header_t *vent) {
       for (address_t i = 0; i < a->count; ++i) {
         siheap_markbox(a->data->data[i]);
       }
+      siheap_mark(&a->data->header);
       break;
     }
+    case sitype_strpair: {
+      siheap_strpair_t *a = (siheap_strpair_t *) vent;
+      siheap_mark(a->left);
+      if (a->right) {
+        siheap_mark(a->right);
+      }
+      break;
+    }
+    case sitype_array_data:
     case sitype_strconst:
     case sitype_string:
       // These types have no children, no need to do anything
       break;
+    case sitype_free:
+      SIBUGM("Attempting to mark free block\n");
+      break;
+    case sitype_empty:
+    case sitype_marked:
     default:
       SIBUGV("Unknown type %d\n", vent->type & 0x7FFF);
       break;
