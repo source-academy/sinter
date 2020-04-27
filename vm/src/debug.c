@@ -1,3 +1,5 @@
+#include <sinter/config.h>
+
 #include <stdio.h>
 #include <inttypes.h>
 

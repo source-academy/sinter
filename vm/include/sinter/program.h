@@ -1,9 +1,10 @@
 #ifndef SINTER_PROGRAM_H
 #define SINTER_PROGRAM_H
 
+#include "config.h"
+
 #include <stdint.h>
 
-#include "config.h"
 #include "opcode.h"
 
 #define SVM_MAGIC 0x5005ACADu

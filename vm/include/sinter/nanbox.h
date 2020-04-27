@@ -1,9 +1,10 @@
 #ifndef SINTER_NANBOX_H
 #define SINTER_NANBOX_H
 
+#include "config.h"
+
 #include <stdint.h>
 
-#include "config.h"
 #include "fault.h"
 
 /**

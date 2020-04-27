@@ -1,9 +1,9 @@
 #ifndef SINTER_OPCODE_H
 #define SINTER_OPCODE_H
 
-#include <stdint.h>
-
 #include "config.h"
+
+#include <stdint.h>
 
 typedef unsigned char opcode_t;
 typedef uint32_t address_t;

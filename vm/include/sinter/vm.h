@@ -1,11 +1,12 @@
 #ifndef SINTER_VM_H
 #define SINTER_VM_H
 
+#include "config.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
-#include "config.h"
 #include "nanbox.h"
 #include "heap_obj.h"
 #include "opcode.h"

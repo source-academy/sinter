@@ -1,8 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SINTER_STATIC_HEAP
-
 #include <sinter/vm.h>
 #include <sinter/program.h>
 #include <sinter/heap_obj.h>

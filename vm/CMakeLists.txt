@@ -25,17 +25,18 @@ add_library(sinter
 
 target_compile_options(sinter
   PRIVATE -Wall -Wextra -Wswitch-enum -std=c11 -pedantic -Werror -fwrapv -g
-  PRIVATE $<$<CONFIG:Debug>:-Og -DSINTER_DEBUG>
+  PRIVATE $<$<CONFIG:Debug>:-Og>
   PRIVATE $<$<CONFIG:Release>:-O2 -DNDEBUG>
-  PRIVATE -DSINTER_STATIC_HEAP
-  PRIVATE -DSINTER_DEBUG_LOGLEVEL=${SINTER_DEBUG_LOGLEVEL}
-  PRIVATE $<$<BOOL:${SINTER_DEBUG_ABORT_ON_FAULT}>:-DSINTER_DEBUG_ABORT_ON_FAULT>
-  PRIVATE $<$<BOOL:${SINTER_DEBUG_MEMORY_CHECK}>:-DSINTER_DEBUG_MEMORY_CHECK>
-  PRIVATE $<$<BOOL:${SINTER_COVERAGE}>:--coverage -fno-inline -fno-inline-small-functions -fno-default-inline>
+  PUBLIC $<$<CONFIG:Debug>:-DSINTER_DEBUG>
+  PUBLIC -DSINTER_STATIC_HEAP
+  PUBLIC -DSINTER_DEBUG_LOGLEVEL=${SINTER_DEBUG_LOGLEVEL}
+  PUBLIC $<$<BOOL:${SINTER_DEBUG_ABORT_ON_FAULT}>:-DSINTER_DEBUG_ABORT_ON_FAULT>
+  PUBLIC $<$<BOOL:${SINTER_DEBUG_MEMORY_CHECK}>:-DSINTER_DEBUG_MEMORY_CHECK>
+  PUBLIC $<$<BOOL:${SINTER_COVERAGE}>:--coverage -fno-inline -fno-inline-small-functions -fno-default-inline>
 )
 
 target_link_options(sinter
-  PRIVATE $<$<BOOL:${SINTER_COVERAGE}>:--coverage>
+  PUBLIC $<$<BOOL:${SINTER_COVERAGE}>:--coverage>
 )
 
 target_include_directories(sinter

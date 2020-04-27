@@ -31,4 +31,8 @@
 #define SINTER_INLINEIFC SINTER_INLINE
 #endif
 
+#if defined(SINTER_DEBUG) && defined(NDEBUG)
+#undef NDEBUG
+#endif
+
 #endif

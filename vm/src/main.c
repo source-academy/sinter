@@ -1,3 +1,5 @@
+#include <sinter/config.h>
+
 #include <sinter.h>
 
 #include <sinter/heap.h>

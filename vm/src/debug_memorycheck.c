@@ -1,10 +1,10 @@
+#include <sinter/config.h>
 #include <sinter/vm.h>
 #include <sinter/heap.h>
 #include <sinter/stack.h>
 #include <sinter/heap_obj.h>
 #include <sinter/debug.h>
 #include <sinter/debug_heap.h>
-#include <sinter/config.h>
 
 #ifdef SINTER_DEBUG_MEMORY_CHECK
 /**

@@ -1,10 +1,11 @@
 #ifndef SINTER_FAULT_H
 #define SINTER_FAULT_H
 
+#include "config.h"
+
 #include <setjmp.h>
 
 #include <sinter.h>
-#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {

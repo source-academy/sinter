@@ -1,9 +1,10 @@
 #ifndef SINTER_STACK_H
 #define SINTER_STACK_H
 
+#include "config.h"
+
 #include <stdint.h>
 
-#include "config.h"
 #include "nanbox.h"
 #include "heap_obj.h"
 #include "debug.h"

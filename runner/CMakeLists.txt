@@ -20,11 +20,6 @@ target_compile_options(runner
   PRIVATE -Wall -Wextra -Wswitch-enum -std=c11 -pedantic -Werror -fwrapv -g
   PRIVATE $<$<CONFIG:Debug>:-Og>
   PRIVATE $<$<CONFIG:Release>:-O2>
-  PRIVATE $<$<BOOL:${SINTER_COVERAGE}>:--coverage -fno-inline -fno-inline-small-functions -fno-default-inline>
-)
-
-target_link_options(runner
-  PRIVATE $<$<BOOL:${SINTER_COVERAGE}>:--coverage>
 )
 
 target_link_libraries(runner sinter)

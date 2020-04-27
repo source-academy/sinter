@@ -1,3 +1,5 @@
+#include <sinter/config.h>
+
 #ifdef SINTER_DEBUG_ABORT_ON_FAULT
 #include <assert.h>
 #endif

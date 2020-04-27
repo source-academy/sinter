@@ -1,6 +1,7 @@
+#include <sinter/config.h>
+
 #include <string.h>
 
-#include <sinter/config.h>
 #include <sinter/heap.h>
 #include <sinter/heap_obj.h>
 #include <sinter/stack.h>
@@ -12,6 +13,10 @@ unsigned char siheap[SINTER_HEAP_SIZE] = { 0 };
 #else
 unsigned char *siheap = NULL;
 size_t siheap_size = 0;
+#endif
+
+#ifdef SINTER_DEBUG
+bool siheap_sweeping = 0;
 #endif
 
 siheap_free_t *siheap_first_free = NULL;
@@ -29,7 +34,11 @@ sinanbox_t *sistack_top = sistack;
  * of objects referred to by the given object.
  */
 void siheap_mdestroy(siheap_header_t *ent) {
-  switch (ent->type) {
+  if (ent->type & 0x4000u) {
+    return;
+  }
+  ent->type |= 0x4000u;
+  switch ((siheap_type_t) (ent->type & ~0x4000u)) {
   case sitype_env:
     sienv_destroy((siheap_env_t *) ent);
     break;
@@ -130,21 +139,27 @@ static void siheap_mark(siheap_header_t *vent) {
 }
 
 static inline void siheap_sweep(void) {
+#ifdef SINTER_DEBUG
+  siheap_sweeping = 1;
+#endif
   siheap_header_t *curr = (siheap_header_t *) siheap;
   while (SIHEAP_INRANGE(curr)) {
-    if (!(curr->type & 0x8000)) {
+    if (!(curr->type & 0x8000) && curr->type != sitype_free) {
       curr->refcount = 0;
 #if SINTER_DEBUG_LOGLEVEL >= 2
       SIDEBUG("Sweeping object ");
       SIDEBUG_HEAPOBJ(curr);
       SIDEBUG("\n");
 #endif
-      siheap_mfree(curr);
+      curr = siheap_mfree(curr);
     } else {
       curr->type &= 0x7FFF;
     }
     curr = siheap_next(curr);
   }
+#ifdef SINTER_DEBUG
+  siheap_sweeping = 0;
+#endif
 }
 
 void siheap_mark_sweep(void) {
