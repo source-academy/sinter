@@ -236,6 +236,8 @@ void debug_memorycheck(void) {
   WALK_HEAP(debug_memorycheck_walk_do_object_3);
 }
 
+// LCOV_EXCL_START
+// This part is meant for use from GDB; not part of the normal execution of the VM.
 static void debug_memorycheck_search_do_nanboxes(const sinanbox_t *arr, const size_t count, const siheap_header_t *needle, const siheap_header_t *container) {
   bool printed_header = false;
   for (size_t i = 0; i < count; ++i) {
@@ -262,8 +264,6 @@ static void debug_memorycheck_search_do_nanboxes(const sinanbox_t *arr, const si
   }
 }
 
-// LCOV_EXCL_START
-// This part is meant for use from GDB; not part of the normal execution of the VM.
 /**
  * Search the heap for referents
  */
