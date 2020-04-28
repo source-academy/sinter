@@ -21,7 +21,7 @@ bool siheap_sweeping = 0;
 
 siheap_free_t *siheap_first_free = NULL;
 
-sinanbox_t sistack[SINTER_STACK_ENTRIES] = { 0 };
+sinanbox_t sistack[SINTER_STACK_ENTRIES];
 
 sinanbox_t *sistack_bottom = sistack;
 sinanbox_t *sistack_limit = sistack;

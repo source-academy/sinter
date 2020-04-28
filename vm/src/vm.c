@@ -213,6 +213,7 @@ static void main_loop(void) {
           break;
         default:
           SIBUG();
+          assert(false);
           break;
         }
       } else if (NANBOX_ISPTR(v0) & NANBOX_ISPTR(v1)) {
@@ -361,6 +362,7 @@ static void main_loop(void) {
         break;
       default:
         SIBUG();
+        assert(false);
         break;
       }
       sistack_push(r);

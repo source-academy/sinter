@@ -127,7 +127,7 @@ inline int32_t nanbox_int(sinanbox_t val) {
 #define NANBOX_OFEMPTY() (NANBOX_WITH_I32(NANBOX_TEMPTY))
 #define NANBOX_OFUNDEF() (NANBOX_WITH_I32(NANBOX_TUNDEF))
 #define NANBOX_OFNULL() (NANBOX_WITH_I32(NANBOX_TNULL))
-#define NANBOX_OFBOOL(val) (NANBOX_WITH_I32((!!(val)) | NANBOX_TBOOL))
+#define NANBOX_OFBOOL(val) (NANBOX_WITH_I32(((unsigned int) !!(val)) | NANBOX_TBOOL))
 /**
  * Creates a NaN-box of an integer.
  *
