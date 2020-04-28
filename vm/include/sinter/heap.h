@@ -163,7 +163,7 @@ SINTER_INLINEIFC void siheap_init(void) {
 
 void siheap_mark_sweep(void);
 
-SINTER_INLINEIFC siheap_free_t *siheap_malloc_find(address_t size) {
+SINTER_INLINE siheap_free_t *siheap_malloc_find(address_t size) {
   bool sweeped = false;
   while (1) {
     siheap_free_t *cur = siheap_first_free;
@@ -227,7 +227,7 @@ SINTER_INLINEIFC siheap_header_t *siheap_malloc_split(siheap_free_t *cur, addres
  *
  * The allocation is returned with a reference count of 1.
  */
-SINTER_INLINEIFC siheap_header_t *siheap_malloc(address_t size, siheap_type_t type) {
+SINTER_INLINE siheap_header_t *siheap_malloc(address_t size, siheap_type_t type) {
   if (size < sizeof(siheap_free_t)) {
     size = sizeof(siheap_free_t);
   }
