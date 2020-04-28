@@ -497,9 +497,8 @@ static void main_loop(void) {
           r = hv0 == hv1;
         }
       } else {
-        SIBUG();
-        sifault(sinter_fault_internal_error);
-        return;
+        // different types, so not equal
+        r = 0;
       }
 
       if (this_opcode >= op_neq_g) {
