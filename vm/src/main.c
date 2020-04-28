@@ -116,7 +116,7 @@ sinter_fault_t sinter_run(const unsigned char *const code, const size_t code_siz
   validate_header(header);
 
   const svm_function_t *entry_fn = (const svm_function_t *) SISTATE_ADDRTOPC(header->entry);
-  sinanbox_t exec_result = siexec(entry_fn);
+  sinanbox_t exec_result = siexec(entry_fn, NULL, 0, NULL);
   set_result(exec_result, result);
 
   return sinter_fault_none;

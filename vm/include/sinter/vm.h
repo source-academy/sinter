@@ -10,6 +10,7 @@
 #include "nanbox.h"
 #include "heap_obj.h"
 #include "opcode.h"
+#include "fault.h"
 #include "../sinter.h"
 
 #ifdef __cplusplus
@@ -40,7 +41,33 @@ extern const sivmfnptr_t sivmfn_primitives[];
 extern const sivmfnptr_t *sivmfn_vminternals;
 extern size_t sivmfn_vminternal_count;
 
-sinanbox_t siexec(const svm_function_t *fn);
+sinanbox_t siexec(const svm_function_t *fn, siheap_env_t *parent_env, uint8_t argc, sinanbox_t *argv);
+
+SINTER_INLINE sinanbox_t siexec_nanbox(sinanbox_t fn, uint8_t argc, sinanbox_t *argv) {
+  if (NANBOX_ISIFN(fn)) {
+    uint8_t ifn = NANBOX_IFN_NUMBER(fn);
+    if (NANBOX_IFN_TYPE(fn) && ifn < sivmfn_vminternal_count) {
+      // vm-internal function
+      return sivmfn_vminternals[ifn](argc, argv);
+    } else if (!NANBOX_IFN_TYPE(fn) && ifn < SIVMFN_PRIMITIVE_COUNT) {
+      return sivmfn_primitives[ifn](argc, argv);
+    } else {
+      sifault(sinter_fault_invalid_program);
+      return NANBOX_OFEMPTY();
+    }
+  } else if (NANBOX_ISPTR(fn)) {
+    siheap_header_t *v = SIHEAP_NANBOXTOPTR(fn);
+    siheap_function_t *f = (siheap_function_t *) v;
+    if (v->type != sitype_function) {
+      sifault(sinter_fault_type);
+      return NANBOX_OFEMPTY();
+    }
+    return siexec(f->code, f->env, argc, argv);
+  } else {
+    sifault(sinter_fault_type);
+    return NANBOX_OFEMPTY();
+  }
+}
 
 #define SISTATE_CURADDR (sistate.pc - sistate.program)
 #define SISTATE_ADDRTOPC(addr) (sistate.program + (addr))

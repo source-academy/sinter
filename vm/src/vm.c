@@ -804,17 +804,25 @@ static void main_loop(void) {
  * This is used by the main entrypoint in main.c, as well as by primitive
  * functions that need to execute functions given to it (e.g. map).
  */
-sinanbox_t siexec(const svm_function_t *fn) {
+sinanbox_t siexec(const svm_function_t *fn, siheap_env_t *parent_env, uint8_t argc, sinanbox_t *argv) {
   siheap_env_t *old_env = sistate.env;
   const opcode_t *old_pc = sistate.pc;
 
-  sistate.env = sienv_new(NULL, fn->env_size);
-  sistack_new(fn->stack_size, NULL, NULL);
+  if (fn->env_size < argc) {
+    sifault(sinter_fault_invalid_load);
+    return NANBOX_OFEMPTY();
+  }
+
+  sistate.env = sienv_new(parent_env, fn->env_size);
+  sistack_new(fn->stack_size, NULL, old_env);
+  if (argc) {
+    memcpy(sistate.env->entry, argv, argc*sizeof(sinanbox_t));
+  }
   sistate.pc = &fn->code;
 
   main_loop();
 
-  sinanbox_t ret = sistack_top == sistack_bottom ? NANBOX_OFEMPTY() : *sistack_bottom;
+  sinanbox_t ret = sistack_top == sistack_bottom ? NANBOX_OFEMPTY() : *(--sistack_top);
   sistate.env = old_env;
   sistate.pc = old_pc;
 
