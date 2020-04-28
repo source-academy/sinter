@@ -76,15 +76,32 @@ static void display_nanbox(sinanbox_t v, bool is_error) {
     break;
   NANBOX_CASES_TPTR {
     siheap_header_t *obj = SIHEAP_NANBOXTOPTR(v);
+    if (obj->type & 0x2000u) {
+      SIVMFN_PRINT("<recursive>", is_error);
+      return;
+    }
     switch (obj->type) {
     case sitype_strconst:
     case sitype_strpair:
     case sitype_string:
       display_strobj(obj, is_error);
       break;
-    case sitype_array:
+    case sitype_array: {
+      siheap_array_t *a = (siheap_array_t *) obj;
+      obj->type |= 0x2000u; // mark the array so we don't recursively display it
+      SIVMFN_PRINT("[", is_error);
+      for (size_t i = 0; i < a->count; ++i) {
+        if (i) {
+          SIVMFN_PRINT(", ", is_error);
+        }
+        display_nanbox(a->data->data[i], is_error);
+      }
+      SIVMFN_PRINT("]", is_error);
+      obj->type &= ~0x2000u;
+      break;
+    }
     case sitype_function:
-      // TODO
+      SIVMFN_PRINT("<function>", is_error);
       break;
     case sitype_array_data:
     case sitype_empty:
