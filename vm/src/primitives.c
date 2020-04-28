@@ -147,7 +147,7 @@ static void handle_display(unsigned int argc, sinanbox_t *argv, bool is_error) {
 } while (0)
 
 /******************************************************************************
- * Type-checking primitives
+ * Basic type-checking primitives
  ******************************************************************************/
 
 static sinanbox_t sivmfn_prim_is_array(uint8_t argc, sinanbox_t *argv) {
@@ -168,12 +168,6 @@ static sinanbox_t sivmfn_prim_is_function(uint8_t argc, sinanbox_t *argv) {
     || NANBOX_ISIFN(v));
 }
 
-static sinanbox_t sivmfn_prim_is_list(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
 static sinanbox_t sivmfn_prim_is_null(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(1);
   return NANBOX_OFBOOL(NANBOX_ISNULL(*argv));
@@ -182,12 +176,6 @@ static sinanbox_t sivmfn_prim_is_null(uint8_t argc, sinanbox_t *argv) {
 static sinanbox_t sivmfn_prim_is_number(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(1);
   return NANBOX_OFBOOL(NANBOX_ISNUMERIC(*argv));
-}
-
-static sinanbox_t sivmfn_prim_is_pair(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
 }
 
 static sinanbox_t sivmfn_prim_is_stream(uint8_t argc, sinanbox_t *argv) {
@@ -457,39 +445,86 @@ FLOAT_ROUND_FN(trunc)
  * Pair primitives
  ******************************************************************************/
 
+static inline siheap_array_t *source_pair_ptr(sinanbox_t l, sinanbox_t r) {
+  siheap_array_t *arr = siarray_new(2);
+  siarray_put(arr, 0, l);
+  siarray_put(arr, 1, r);
+  return arr;
+}
+
+static inline sinanbox_t source_pair(sinanbox_t l, sinanbox_t r) {
+  return SIHEAP_PTRTONANBOX(source_pair_ptr(l, r));
+}
+
+static inline siheap_array_t *nanbox_toarray(sinanbox_t p) {
+  siheap_header_t *v = SIHEAP_NANBOXTOPTR(p);
+  siheap_array_t *a = (siheap_array_t *) v;
+  if (!NANBOX_ISPTR(p) || v->type != sitype_array) {
+    sifault(sinter_fault_type);
+    return NULL;
+  }
+  return a;
+}
+
+static inline sinanbox_t source_head(sinanbox_t p) {
+  siheap_array_t *a = nanbox_toarray(p);
+  return siarray_get(a, 0);
+}
+
+static inline sinanbox_t source_tail(sinanbox_t p) {
+  siheap_array_t *a = nanbox_toarray(p);
+  return siarray_get(a, 1);
+}
+
 static sinanbox_t sivmfn_prim_pair(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  return source_pair(argv[0], argv[1]);
 }
 
 static sinanbox_t sivmfn_prim_head(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(1);
+  sinanbox_t ret = source_head(argv[0]);
+  siheap_refbox(ret);
+  return ret;
 }
 
 static sinanbox_t sivmfn_prim_tail(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(1);
+  sinanbox_t ret = source_tail(argv[0]);
+  siheap_refbox(ret);
+  return ret;
 }
 
 static sinanbox_t sivmfn_prim_set_head(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  siheap_array_t *a = nanbox_toarray(argv[0]);
+  siarray_put(a, 0, argv[1]);
+  return NANBOX_OFUNDEF();
 }
 
 static sinanbox_t sivmfn_prim_set_tail(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  siheap_array_t *a = nanbox_toarray(argv[0]);
+  siarray_put(a, 1, argv[1]);
+  return NANBOX_OFUNDEF();
+}
+
+static sinanbox_t sivmfn_prim_is_pair(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  siheap_header_t *v = SIHEAP_NANBOXTOPTR(argv[0]);
+  siheap_array_t *a = (siheap_array_t *) v;
+  return NANBOX_OFBOOL(NANBOX_ISPTR(argv[0]) && v->type == sitype_array && a->count == 2);
 }
 
 /******************************************************************************
  * List primitives
  ******************************************************************************/
+
+static sinanbox_t sivmfn_prim_is_list(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
 
 static sinanbox_t sivmfn_prim_accumulate(uint8_t argc, sinanbox_t *argv) {
   (void) argc; (void) argv;
@@ -534,9 +569,25 @@ static sinanbox_t sivmfn_prim_length(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_list(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  if (argc == 0) {
+    return NANBOX_OFNULL();
+  }
+
+  siheap_array_t *new_list = NULL;
+  siheap_array_t *prev_pair = NULL;
+
+  for (size_t i = 0; i < argc; ++i) {
+    siheap_array_t *new_pair = source_pair_ptr(argv[i], NANBOX_OFNULL());
+    if (prev_pair) {
+      siarray_put(prev_pair, 1, SIHEAP_PTRTONANBOX(new_pair));
+    }
+    if (!new_list) {
+      new_list = new_pair;
+    }
+    prev_pair = new_pair;
+  }
+
+  return SIHEAP_PTRTONANBOX(new_list);
 }
 
 static sinanbox_t sivmfn_prim_list_ref(uint8_t argc, sinanbox_t *argv) {
@@ -558,9 +609,35 @@ static sinanbox_t sivmfn_prim_list_to_string(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_map(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  if (NANBOX_ISNULL(argv[1])) {
+    return NANBOX_OFNULL();
+  }
+
+  const sinanbox_t map_fn = argv[0];
+
+  sinanbox_t old_list = argv[1];
+  siheap_array_t *new_list = NULL;
+  siheap_array_t *prev_pair = NULL;
+  while (1) {
+    if (NANBOX_ISNULL(old_list)) {
+      break;
+    }
+
+    sinanbox_t cur = source_head(old_list);
+    old_list = source_tail(old_list);
+    sinanbox_t newval = siexec_nanbox(map_fn, 1, &cur);
+    siheap_array_t *new_pair = source_pair_ptr(newval, NANBOX_OFNULL());
+    if (prev_pair) {
+      siarray_put(prev_pair, 1, SIHEAP_PTRTONANBOX(new_pair));
+    }
+    if (!new_list) {
+      new_list = new_pair;
+    }
+    prev_pair = new_pair;
+  }
+
+  return SIHEAP_PTRTONANBOX(new_list);
 }
 
 static sinanbox_t sivmfn_prim_member(uint8_t argc, sinanbox_t *argv) {
