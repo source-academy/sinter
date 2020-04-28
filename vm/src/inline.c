@@ -18,3 +18,4 @@
 #include <sinter/heap_obj.h>
 #include <sinter/nanbox.h>
 #include <sinter/stack.h>
+#include <sinter/vm.h>
