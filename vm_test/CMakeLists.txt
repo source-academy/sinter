@@ -32,6 +32,8 @@ add_run_test(math_test)
 add_run_test(array_length)
 add_run_test(type_primitives)
 add_run_test(force_marksweep)
+add_run_test(pair)
+add_run_test(list)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(display)
