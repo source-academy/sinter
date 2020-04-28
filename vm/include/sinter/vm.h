@@ -56,7 +56,7 @@ SINTER_INLINE sinanbox_t siexec_nanbox(sinanbox_t fn, uint8_t argc, sinanbox_t *
       return NANBOX_OFEMPTY();
     }
   } else if (NANBOX_ISPTR(fn)) {
-    siheap_header_t *v = SIHEAP_NANBOXTOPTR(fn);
+    siheap_header_t *v = (siheap_header_t *) SIHEAP_NANBOXTOPTR(fn);
     siheap_function_t *f = (siheap_function_t *) v;
     if (v->type != sitype_function) {
       sifault(sinter_fault_type);
