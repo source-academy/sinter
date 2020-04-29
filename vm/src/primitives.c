@@ -519,15 +519,76 @@ static sinanbox_t sivmfn_prim_is_pair(uint8_t argc, sinanbox_t *argv) {
  ******************************************************************************/
 
 static sinanbox_t sivmfn_prim_is_list(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(1);
+
+  sinanbox_t l = argv[0];
+  while (!NANBOX_ISNULL(l)) {
+    siheap_header_t *v = SIHEAP_NANBOXTOPTR(l);
+    siheap_array_t *a = (siheap_array_t *) v;
+    if (!NANBOX_ISPTR(l) || v->type != sitype_array || a->count != 2) {
+      return NANBOX_OFBOOL(false);
+    }
+    l = siarray_get(a, 1);
+  }
+
+  return NANBOX_OFBOOL(true);
+}
+
+static inline size_t source_list_length(sinanbox_t l) {
+  size_t length = 0;
+  while (!NANBOX_ISNULL(l)) {
+    ++length;
+    l = source_tail(l);
+  }
+  return length;
 }
 
 static sinanbox_t sivmfn_prim_accumulate(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(3);
+
+  // this function is particularly horrible for us
+  // we don't want to have a naive recursive implementation (in case we blow the C stack
+  // the Sinter stack isn't particularly large either
+  // so.. here's a compromise: we allocate an array and flatten the list into it
+  // then we accumulate using the array
+
+  sinanbox_t f = argv[0], acc = argv[1];
+  const size_t list_length = source_list_length(argv[2]);
+  siheap_array_t *flat_list = siarray_new(list_length);
+  flat_list->header.flag_internal_ref = true;
+  // flatten the list into the array
+  {
+    size_t idx = 0;
+    sinanbox_t l = argv[2];
+    while (!NANBOX_ISNULL(l)) {
+      siheap_array_t *pair = nanbox_toarray(l);
+      sinanbox_t head = siarray_get(pair, 0);
+      siheap_refbox(head);
+      siarray_put(flat_list, idx, head);
+      l = siarray_get(pair, 1);
+      idx += 1;
+    }
+    assert(idx == list_length);
+  }
+
+  // the initial acc has a ref from the caller's stack (it's not removed until
+  // after we return. if we are passing it to a reentrant call, then there will
+  // be a second ref from our callee's env
+  // ref it
+  siheap_refbox(acc);
+  for (size_t idxp1 = list_length; idxp1 > 0; --idxp1) {
+    sinanbox_t f_args[] = {siarray_get(flat_list, idxp1 - 1), acc};
+    siheap_refbox(f_args[0]);
+    acc = siexec_nanbox(f, 2, f_args);
+  }
+  if (NANBOX_IDENTICAL(acc, argv[1])) {
+    siheap_derefbox(acc);
+  }
+
+  flat_list->header.flag_internal_ref = false;
+  siheap_deref(flat_list);
+
+  return acc;
 }
 
 static sinanbox_t sivmfn_prim_append(uint8_t argc, sinanbox_t *argv) {
@@ -562,14 +623,7 @@ static sinanbox_t sivmfn_prim_for_each(uint8_t argc, sinanbox_t *argv) {
 
 static sinanbox_t sivmfn_prim_length(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(1);
-  size_t length = 0;
-  sinanbox_t l = argv[0];
-  while (!NANBOX_ISNULL(l)) {
-    ++length;
-    l = source_tail(l);
-  }
-
-  return NANBOX_WRAP_UINT(length);
+  return NANBOX_WRAP_UINT(source_list_length(argv[0]));
 }
 
 static sinanbox_t sivmfn_prim_list(uint8_t argc, sinanbox_t *argv) {
