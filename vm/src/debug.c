@@ -182,10 +182,9 @@ void debug_heap_obj(const siheap_header_t *o) {
   case sitype_array_data:
   case sitype_empty:
   case sitype_free:
-  case sitype_marked:
-  default: {
+  default:
     SIDEBUG("unknown heap object type %d at address %p", o->type, (void *) o);
-  }
+    break;
   }
 }
 #endif

@@ -253,7 +253,6 @@ SINTER_INLINEIFC const char *sistrobj_tocharptr(siheap_header_t *obj) {
   case sitype_free:
   case sitype_function:
   case sitype_frame:
-  case sitype_marked:
   case sitype_env:
   default:
     SIBUGM("Unknown string type\n");
@@ -278,7 +277,6 @@ SINTER_INLINE _Bool siheap_is_string(siheap_header_t *h) {
   case sitype_free:
   case sitype_function:
   case sitype_frame:
-  case sitype_marked:
   case sitype_env:
   default:
     return false;

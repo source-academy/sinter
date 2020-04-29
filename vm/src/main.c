@@ -71,7 +71,6 @@ static void set_result(sinanbox_t exec_result, sinter_value_t *result) {
     case sitype_empty:
     case sitype_frame:
     case sitype_free:
-    case sitype_marked:
     case sitype_env:
     default:
       SIBUGV("Unexpected return object type %d\n", obj->type);

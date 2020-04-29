@@ -42,7 +42,6 @@ static void debug_memorycheck_walk_check_nanboxes(sinanbox_t *arr, const size_t 
       case sitype_free:
       case sitype_empty:
       case sitype_env:
-      case sitype_marked:
       // string caches the result of flattening a strpair, it should never be
       // referred to in a nanbox
       case sitype_string:
@@ -66,6 +65,9 @@ static void debug_memorycheck_walk_check_nanboxes(sinanbox_t *arr, const size_t 
  * Do type-specific checks, and increment the refcount of all direct children.
  */
 static void debug_memorycheck_walk_do_object_2(const siheap_header_t *obj) {
+  assert(!obj->flag_displayed);
+  assert(!obj->flag_marked);
+  assert(!obj->flag_destroying);
   switch (obj->type) {
   case sitype_array: {
     siheap_array_t *c = (siheap_array_t *) obj;
@@ -202,7 +204,6 @@ static void debug_memorycheck_walk_do_object_2(const siheap_header_t *obj) {
 
   }
 
-  case sitype_marked:
   default:
     assert(false);
     break;
@@ -339,7 +340,6 @@ static void debug_memorycheck_search_do_object(const siheap_header_t *needle, co
   case sitype_free:
   case sitype_strconst:
   case sitype_string:
-  case sitype_marked:
   default:
     break;
   }

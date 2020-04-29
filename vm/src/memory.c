@@ -34,11 +34,11 @@ sinanbox_t *sistack_top = sistack;
  * of objects referred to by the given object.
  */
 void siheap_mdestroy(siheap_header_t *ent) {
-  if (ent->type & 0x4000u) {
+  if (ent->flag_destroying) {
     return;
   }
-  ent->type |= 0x4000u;
-  switch ((siheap_type_t) (ent->type & ~0x4000u)) {
+  ent->flag_destroying = true;
+  switch (ent->type) {
   case sitype_env:
     sienv_destroy((siheap_env_t *) ent);
     break;
@@ -57,7 +57,6 @@ void siheap_mdestroy(siheap_header_t *ent) {
   case sitype_string:
     break;
   default:
-  case sitype_marked:
   case sitype_empty:
   case sitype_free:
     SIBUGV("Attempting to destroy object of type %d\n", ent->type);
@@ -79,7 +78,7 @@ static void siheap_mark(siheap_header_t *vent) {
     return;
   }
 
-  if (!(vent->type & 0x8000)) {
+  if (!vent->flag_marked) {
 #if SINTER_DEBUG_LOGLEVEL >= 2
     SIDEBUG("Marking object ");
     SIDEBUG_HEAPOBJ(vent);
@@ -87,10 +86,10 @@ static void siheap_mark(siheap_header_t *vent) {
 #endif
 
     // object is unmarked; mark it
-    vent->type |= 0x8000;
+    vent->flag_marked = true;
 
     // mark any children
-    switch ((siheap_type_t) (vent->type & 0x7FFF)) {
+    switch (vent->type) {
     case sitype_function:
       siheap_mark(&((siheap_function_t *) vent)->env->header);
       break;
@@ -130,9 +129,8 @@ static void siheap_mark(siheap_header_t *vent) {
       SIBUGM("Attempting to mark free block\n");
       break;
     case sitype_empty:
-    case sitype_marked:
     default:
-      SIBUGV("Unknown type %d\n", vent->type & 0x7FFF);
+      SIBUGV("Unknown type %d\n", vent->type);
       break;
     }
   }
@@ -144,7 +142,7 @@ static inline void siheap_sweep(void) {
 #endif
   siheap_header_t *curr = (siheap_header_t *) siheap;
   while (SIHEAP_INRANGE(curr)) {
-    if (!(curr->type & 0x8000) && curr->type != sitype_free) {
+    if (!curr->flag_marked && curr->type != sitype_free) {
       curr->refcount = 0;
 #if SINTER_DEBUG_LOGLEVEL >= 2
       SIDEBUG("Sweeping object ");
@@ -153,7 +151,7 @@ static inline void siheap_sweep(void) {
 #endif
       curr = siheap_mfree(curr);
     } else {
-      curr->type &= 0x7FFF;
+      curr->flag_marked = false;
     }
     curr = siheap_next(curr);
   }
@@ -198,7 +196,6 @@ static address_t sizeof_strobj(siheap_header_t *obj) {
   case sitype_empty:
   case sitype_frame:
   case sitype_free:
-  case sitype_marked:
   case sitype_env:
   case sitype_array:
   case sitype_function:
@@ -241,7 +238,6 @@ static void write_strobj(siheap_header_t *obj, char **to) {
   case sitype_empty:
   case sitype_frame:
   case sitype_free:
-  case sitype_marked:
   case sitype_env:
   case sitype_array:
   case sitype_function:
@@ -295,6 +291,7 @@ siheap_header_t *siheap_mrealloc(siheap_header_t *ent, address_t newsize) {
   // the next block is not free and/or not large enough
 
   // store the type, refcount and size of the current block
+  _Bool orig_internal_ref = ent->flag_internal_ref;
   siheap_type_t orig_type = ent->type;
   uint16_t orig_refcount = ent->refcount;
   address_t orig_size = ent->size;
@@ -319,6 +316,7 @@ siheap_header_t *siheap_mrealloc(siheap_header_t *ent, address_t newsize) {
   }
   // restore the refcount
   new_alloc->refcount = orig_refcount;
+  new_alloc->flag_internal_ref = orig_internal_ref;
 
   // move the contents over from the old block
   memmove(new_alloc + 1, ent + 1, orig_size - sizeof(siheap_header_t));

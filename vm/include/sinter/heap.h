@@ -28,9 +28,8 @@ typedef enum __attribute__((__packed__)) {
   sitype_array_data = 26,
   sitype_function = 27,
   sitype_free = 0xFF,
-  sitype_marked = 0x8000
 } siheap_type_t;
-_Static_assert(sizeof(siheap_type_t) == 2, "siheap_type_t wider than needed");
+_Static_assert(sizeof(siheap_type_t) == 1, "siheap_type_t wider than needed");
 
 #ifdef SINTER_STATIC_HEAP
 extern unsigned char siheap[SINTER_HEAP_SIZE];
@@ -60,16 +59,20 @@ SINTER_INLINE bool siheap_inrange(const unsigned char *const ent) {
  * The header of a heap allocation.
  */
 typedef struct siheap_header {
-  siheap_type_t type;
-  uint16_t refcount;
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-  uint16_t debug_refcount;
-#endif
   struct siheap_header *prev_node;
   /**
    * The size of the allocation, including the header.
    */
   address_t size;
+  uint16_t refcount;
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+  uint16_t debug_refcount;
+#endif
+  siheap_type_t type;
+  _Bool flag_marked : 1;
+  _Bool flag_destroying : 1;
+  _Bool flag_displayed : 1;
+  _Bool flag_internal_ref : 1;
 } siheap_header_t;
 
 typedef struct siheap_free {
@@ -218,6 +221,7 @@ SINTER_INLINEIFC siheap_header_t *siheap_malloc_split(siheap_free_t *cur, addres
   }
 
   cur->header.type = type;
+  cur->header.flag_destroying = cur->header.flag_displayed = cur->header.flag_marked = cur->header.flag_internal_ref = false;
   return &cur->header;
 }
 #endif
@@ -242,7 +246,7 @@ void siheap_mdestroy(siheap_header_t *ent);
 
 SINTER_INLINE siheap_header_t *siheap_mfree_inner(siheap_header_t *ent) {
   assert(ent->size >= sizeof(siheap_free_t));
-  if (ent->type & 0x8000) {
+  if (ent->flag_marked) {
     SIBUGM("Freeing marked object\n");
     assert(false);
   }
@@ -270,6 +274,7 @@ SINTER_INLINE siheap_header_t *siheap_mfree_inner(siheap_header_t *ent) {
     assert(entf + 1 <= nextf);
     ent->size = ent->size + next->size;
     ent->type = sitype_free;
+    ent->flag_destroying = ent->flag_displayed = ent->flag_marked = ent->flag_internal_ref = false;
     entf->prev_free = nextf->prev_free;
     entf->next_free = nextf->next_free;
     assert(entf->prev_free != entf);
@@ -293,6 +298,7 @@ SINTER_INLINE siheap_header_t *siheap_mfree_inner(siheap_header_t *ent) {
     siheap_free_t *const entf = (siheap_free_t *) ent;
 
     ent->type = sitype_free;
+    ent->flag_destroying = ent->flag_displayed = ent->flag_marked = ent->flag_internal_ref = false;
     entf->prev_free = NULL;
     entf->next_free = siheap_first_free;
     assert(entf->next_free != entf);
@@ -314,7 +320,7 @@ siheap_header_t *siheap_mrealloc(siheap_header_t *ent, address_t newsize);
 SINTER_INLINE void siheap_deref(void *vent) {
   assert(vent);
   siheap_header_t *ent = (siheap_header_t *) vent;
-  if (ent->type & 0x4000u) {
+  if (ent->flag_destroying) {
     // this object is in a cycle
     return;
   }

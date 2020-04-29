@@ -52,7 +52,6 @@ static void display_strobj(siheap_header_t *obj, bool is_error) {
   case sitype_empty:
   case sitype_frame:
   case sitype_free:
-  case sitype_marked:
   case sitype_env:
   case sitype_array:
   case sitype_function:
@@ -76,7 +75,7 @@ static void display_nanbox(sinanbox_t v, bool is_error) {
     break;
   NANBOX_CASES_TPTR {
     siheap_header_t *obj = SIHEAP_NANBOXTOPTR(v);
-    if (obj->type & 0x2000u) {
+    if (obj->flag_displayed) {
       SIVMFN_PRINT("<recursive>", is_error);
       return;
     }
@@ -88,7 +87,7 @@ static void display_nanbox(sinanbox_t v, bool is_error) {
       break;
     case sitype_array: {
       siheap_array_t *a = (siheap_array_t *) obj;
-      obj->type |= 0x2000u; // mark the array so we don't recursively display it
+      obj->flag_displayed = true; // mark the array so we don't recursively display it
       SIVMFN_PRINT("[", is_error);
       for (size_t i = 0; i < a->count; ++i) {
         if (i) {
@@ -97,7 +96,7 @@ static void display_nanbox(sinanbox_t v, bool is_error) {
         display_nanbox(a->data->data[i], is_error);
       }
       SIVMFN_PRINT("]", is_error);
-      obj->type &= ~0x2000u;
+      obj->flag_displayed = false;
       break;
     }
     case sitype_function:
@@ -107,7 +106,6 @@ static void display_nanbox(sinanbox_t v, bool is_error) {
     case sitype_empty:
     case sitype_frame:
     case sitype_free:
-    case sitype_marked:
     case sitype_env:
     default:
       SIBUGM("Unexpected object type\n");
