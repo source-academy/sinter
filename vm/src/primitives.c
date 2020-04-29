@@ -806,11 +806,34 @@ static sinanbox_t sivmfn_prim_draw_data(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFEMPTY();
 }
 
+static inline bool structural_equal(sinanbox_t l, sinanbox_t r) {
+  if (sivm_equal(l, r)) {
+    return true;
+  }
+
+  if (!NANBOX_ISPTR(l) || !NANBOX_ISPTR(r)) {
+    return false;
+  }
+
+  siheap_header_t *lv = SIHEAP_NANBOXTOPTR(l);
+  siheap_header_t *rv = SIHEAP_NANBOXTOPTR(r);
+  if (lv->type != sitype_array || rv->type != sitype_array) {
+    return false;
+  }
+
+  siheap_array_t *la = (siheap_array_t *) lv;
+  siheap_array_t *ra = (siheap_array_t *) rv;
+  if (la->count != 2 || ra->count != 2) {
+    return false;
+  }
+
+  return structural_equal(siarray_get(la, 0), siarray_get(ra, 0))
+    && structural_equal(siarray_get(la, 1), siarray_get(ra, 1));
+}
+
 static sinanbox_t sivmfn_prim_equal(uint8_t argc, sinanbox_t *argv) {
-  // TODO
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  return NANBOX_OFBOOL(structural_equal(argv[0], argv[1]));
 }
 
 static sinanbox_t sivmfn_prim_error(uint8_t argc, sinanbox_t *argv) {
