@@ -476,6 +476,8 @@ static inline sinanbox_t source_tail(sinanbox_t p) {
 
 static sinanbox_t sivmfn_prim_pair(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(2);
+  siheap_refbox(argv[0]);
+  siheap_refbox(argv[1]);
   return source_pair(argv[0], argv[1]);
 }
 
@@ -496,6 +498,7 @@ static sinanbox_t sivmfn_prim_tail(uint8_t argc, sinanbox_t *argv) {
 static sinanbox_t sivmfn_prim_set_head(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(2);
   siheap_array_t *a = nanbox_toarray(argv[0]);
+  siheap_refbox(argv[1]);
   siarray_put(a, 0, argv[1]);
   return NANBOX_OFUNDEF();
 }
@@ -503,6 +506,7 @@ static sinanbox_t sivmfn_prim_set_head(uint8_t argc, sinanbox_t *argv) {
 static sinanbox_t sivmfn_prim_set_tail(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(2);
   siheap_array_t *a = nanbox_toarray(argv[0]);
+  siheap_refbox(argv[1]);
   siarray_put(a, 1, argv[1]);
   return NANBOX_OFUNDEF();
 }
@@ -635,6 +639,7 @@ static sinanbox_t sivmfn_prim_list(uint8_t argc, sinanbox_t *argv) {
   siheap_array_t *prev_pair = NULL;
 
   for (size_t i = 0; i < argc; ++i) {
+    siheap_refbox(argv[i]);
     siheap_array_t *new_pair = source_pair_ptr(argv[i], NANBOX_OFNULL());
     if (prev_pair) {
       siarray_put(prev_pair, 1, SIHEAP_PTRTONANBOX(new_pair));
