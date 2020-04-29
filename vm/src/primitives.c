@@ -594,12 +594,6 @@ static sinanbox_t sivmfn_prim_list_ref(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFEMPTY();
 }
 
-static sinanbox_t sivmfn_prim_list_to_stream(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
 static sinanbox_t sivmfn_prim_list_to_string(uint8_t argc, sinanbox_t *argv) {
   (void) argc; (void) argv;
   unimpl();
@@ -685,6 +679,12 @@ static sinanbox_t sivmfn_prim_array_length(uint8_t argc, sinanbox_t *argv) {
 /******************************************************************************
  * Stream primitives
  ******************************************************************************/
+
+static sinanbox_t sivmfn_prim_list_to_stream(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  unimpl();
+  return NANBOX_OFEMPTY();
+}
 
 static sinanbox_t sivmfn_prim_build_stream(uint8_t argc, sinanbox_t *argv) {
   (void) argc; (void) argv;
