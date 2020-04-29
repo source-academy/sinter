@@ -561,9 +561,15 @@ static sinanbox_t sivmfn_prim_for_each(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_length(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(1);
+  size_t length = 0;
+  sinanbox_t l = argv[0];
+  while (!NANBOX_ISNULL(l)) {
+    ++length;
+    l = source_tail(l);
+  }
+
+  return NANBOX_WRAP_UINT(length);
 }
 
 static sinanbox_t sivmfn_prim_list(uint8_t argc, sinanbox_t *argv) {

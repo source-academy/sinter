@@ -41,6 +41,7 @@ add_run_test(prim_map_arrays)
 add_run_test(prim_map_primitive)
 add_run_test(prim_equal)
 add_run_test(prim_set_pair)
+add_run_test(prim_length)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(prim_display)

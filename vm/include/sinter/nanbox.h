@@ -139,6 +139,8 @@ inline int32_t nanbox_int(sinanbox_t val) {
 #define NANBOX_OFPTR(val) (NANBOX_WITH_I32(((val) & 0x3fffffu) | NANBOX_TPTR))
 #define NANBOX_WRAP_INT(v) (((v) >= NANBOX_INTMIN && (v) <= NANBOX_INTMAX) ? \
   NANBOX_OFINT(v) : NANBOX_OFFLOAT(v))
+#define NANBOX_WRAP_UINT(v) (((v) <= NANBOX_INTMAX) ? \
+  NANBOX_OFINT(v) : NANBOX_OFFLOAT(v))
 
 #define NANBOX_OFIFN_PRIMITIVE(number) (NANBOX_WITH_I32(NANBOX_TIFN | (number)))
 #define NANBOX_OFIFN_VM(number) (NANBOX_WITH_I32(NANBOX_TIFN | 0x100 | (number)))
