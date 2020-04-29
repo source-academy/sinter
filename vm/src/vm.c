@@ -33,6 +33,40 @@ static inline void unimpl_instr() {
 }
 #endif
 
+bool sivm_equal(sinanbox_t l, sinanbox_t r) {
+  if (NANBOX_GETTYPE(l) == NANBOX_GETTYPE(r) && NANBOX_IDENTICAL(l, r)) {
+    // if they are *identical* then they are equal provided they are not NaN
+    return !NANBOX_IDENTICAL(l, NANBOX_CANONICAL_NAN);
+  } else if (NANBOX_ISNUMERIC(l) && NANBOX_ISNUMERIC(r)) {
+    switch (NANBOX_ISFLOAT(r) << 1 | NANBOX_ISFLOAT(l)) {
+      case 0: /* neither are floats */
+        return NANBOX_INT(l) == NANBOX_INT(r);
+      case 1: /* v0 is float */
+        return NANBOX_FLOAT(l) == NANBOX_INT(r);
+      case 2: /* r is float */
+        return NANBOX_INT(l) == NANBOX_FLOAT(r);
+      case 3: /* both are float */
+        return NANBOX_FLOAT(l) == NANBOX_FLOAT(r);
+      default:
+        SIBUG();
+        sifault(sinter_fault_internal_error);
+        return false;
+    }
+  } else if (NANBOX_ISPTR(l) & NANBOX_ISPTR(r)) {
+    siheap_header_t *hv0 = SIHEAP_NANBOXTOPTR(l);
+    siheap_header_t *hv1 = SIHEAP_NANBOXTOPTR(r);
+    if (siheap_is_string(hv0) && siheap_is_string(hv1)) {
+      return strcmp(sistrobj_tocharptr(hv0), sistrobj_tocharptr(hv1)) == 0;
+    } else {
+      // for arrays and functions, identical only if they are the SAME object
+      return hv0 == hv1;
+    }
+  } else {
+    // different types, so not equal
+    return false;
+  }
+}
+
 static inline void pop_array_args(siheap_array_t **array, address_t *index) {
   sinanbox_t indexv = sistack_pop();
   sinanbox_t arrayv = sistack_pop();
@@ -463,43 +497,7 @@ static void main_loop(void) {
     case op_eq_b: {
       sinanbox_t v0 = sistack_pop();
       sinanbox_t v1 = sistack_pop();
-      bool r;
-
-      if (NANBOX_GETTYPE(v0) == NANBOX_GETTYPE(v1) && NANBOX_IDENTICAL(v0, v1)) {
-        // if they are *identical* then they are equal provided they are not NaN
-        r = !NANBOX_IDENTICAL(v0, NANBOX_CANONICAL_NAN);
-      } else if (NANBOX_ISNUMERIC(v0) && NANBOX_ISNUMERIC(v1)) {
-        switch (NANBOX_ISFLOAT(v1) << 1 | NANBOX_ISFLOAT(v0)) {
-        case 0: /* neither are floats */
-          r = NANBOX_INT(v0) == NANBOX_INT(v1);
-          break;
-        case 1: /* v0 is float */
-          r = NANBOX_FLOAT(v0) == NANBOX_INT(v1);
-          break;
-        case 2: /* v1 is float */
-          r = NANBOX_INT(v0) == NANBOX_FLOAT(v1);
-          break;
-        case 3: /* both are float */
-          r = NANBOX_FLOAT(v0) == NANBOX_FLOAT(v1);
-          break;
-        default:
-          SIBUG();
-          sifault(sinter_fault_internal_error);
-          return;
-        }
-      } else if (NANBOX_ISPTR(v0) & NANBOX_ISPTR(v1)) {
-        siheap_header_t *hv0 = SIHEAP_NANBOXTOPTR(v0);
-        siheap_header_t *hv1 = SIHEAP_NANBOXTOPTR(v1);
-        if (siheap_is_string(hv0) && siheap_is_string(hv1)) {
-          r = strcmp(sistrobj_tocharptr(hv0), sistrobj_tocharptr(hv1)) == 0;
-        } else {
-          // for arrays and functions, identical only if they are the SAME object
-          r = hv0 == hv1;
-        }
-      } else {
-        // different types, so not equal
-        r = 0;
-      }
+      bool r = sivm_equal(v1, v0);
 
       if (this_opcode >= op_neq_g) {
         r = !r;

@@ -69,6 +69,8 @@ SINTER_INLINE sinanbox_t siexec_nanbox(sinanbox_t fn, uint8_t argc, sinanbox_t *
   }
 }
 
+bool sivm_equal(sinanbox_t l, sinanbox_t r);
+
 #define SISTATE_CURADDR (sistate.pc - sistate.program)
 #define SISTATE_ADDRTOPC(addr) (sistate.program + (addr))
 
