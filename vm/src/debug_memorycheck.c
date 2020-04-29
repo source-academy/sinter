@@ -215,7 +215,7 @@ static void debug_memorycheck_walk_do_object_2(const siheap_header_t *obj) {
 }
 
 static void debug_memorycheck_walk_do_object_3(const siheap_header_t *obj) {
-  assert(obj->refcount == obj->debug_refcount);
+  assert(obj->refcount == obj->debug_refcount || obj->flag_internal_ref);
 }
 
 #define WALK_HEAP(fn) do { \

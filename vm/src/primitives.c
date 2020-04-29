@@ -624,6 +624,7 @@ static sinanbox_t sivmfn_prim_map(uint8_t argc, sinanbox_t *argv) {
 
     sinanbox_t cur = source_head(old_list);
     old_list = source_tail(old_list);
+    siheap_refbox(cur);
     sinanbox_t newval = siexec_nanbox(map_fn, 1, &cur);
     siheap_array_t *new_pair = source_pair_ptr(newval, NANBOX_OFNULL());
     if (prev_pair) {
@@ -631,10 +632,12 @@ static sinanbox_t sivmfn_prim_map(uint8_t argc, sinanbox_t *argv) {
     }
     if (!new_list) {
       new_list = new_pair;
+      new_list->header.flag_internal_ref = true;
     }
     prev_pair = new_pair;
   }
 
+  new_list->header.flag_internal_ref = false;
   return SIHEAP_PTRTONANBOX(new_list);
 }
 

@@ -34,6 +34,8 @@ add_run_test(type_primitives)
 add_run_test(force_marksweep)
 add_run_test(pair)
 add_run_test(list)
+add_run_test(map)
+add_run_test(map_arrays)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(display)
