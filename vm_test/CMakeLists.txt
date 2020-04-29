@@ -38,6 +38,7 @@ add_run_test(prim_pair)
 add_run_test(prim_list)
 add_run_test(prim_map)
 add_run_test(prim_map_arrays)
+add_run_test(prim_map_primitive)
 add_run_test(prim_equal)
 add_run_test(prim_set_pair)
 
