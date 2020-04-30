@@ -675,9 +675,46 @@ static sinanbox_t sivmfn_prim_build_list(uint8_t argc, sinanbox_t *argv) {
   return SIHEAP_PTRTONANBOX(new_list);
 }
 
+#define PRIM_ENUM_LIST_FN(type, each) static inline sinanbox_t enum_list_##type(type start, type end) { \
+  if (start > end) { \
+    return NANBOX_OFNULL(); \
+  } \
+  siheap_array_t *new_list = NULL; \
+  siheap_array_t *prev_pair = NULL; \
+  for (type i = start; i <= end; i += 1) { \
+    siheap_array_t *new_pair = source_pair_ptr(each, NANBOX_OFNULL()); \
+    if (prev_pair) { \
+      siarray_put(prev_pair, 1, SIHEAP_PTRTONANBOX(new_pair)); \
+    } \
+    if (!new_list) { \
+      new_list = new_pair; \
+    } \
+    prev_pair = new_pair; \
+  } \
+  return SIHEAP_PTRTONANBOX(new_list); \
+}
+
+PRIM_ENUM_LIST_FN(int32_t, NANBOX_WRAP_INT(i))
+PRIM_ENUM_LIST_FN(float, NANBOX_OFFLOAT(i))
+
 static sinanbox_t sivmfn_prim_enum_list(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
+  CHECK_ARGC(2);
+
+  if (NANBOX_ISINT(argv[0])) {
+      if (NANBOX_ISINT(argv[1])) {
+        return enum_list_int32_t(NANBOX_INT(argv[0]), NANBOX_INT(argv[1]));
+      } else if (NANBOX_ISFLOAT(argv[1])) {
+        float end = NANBOX_FLOAT(argv[1]);
+        if (end > INT32_MIN && end < INT32_MAX) {
+          return enum_list_int32_t(nanbox_toi32(argv[0]), (int32_t) end);
+        } else {
+          return enum_list_float(NANBOX_INT(argv[0]), end);
+        }
+      }
+  } else if (NANBOX_ISFLOAT(argv[0])) {
+    return enum_list_float(NANBOX_FLOAT(argv[0]), NANBOX_TOFLOAT(argv[1]));
+  }
+  sifault(sinter_fault_type);
   return NANBOX_OFEMPTY();
 }
 

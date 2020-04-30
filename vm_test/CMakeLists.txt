@@ -50,6 +50,7 @@ add_run_test(prim_accumulate_arrays)
 add_run_test(prim_is_list)
 add_run_test(prim_append)
 add_run_test(prim_build_list)
+add_run_test(prim_enum_list)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(prim_display)
