@@ -41,9 +41,9 @@ extern const sivmfnptr_t sivmfn_primitives[];
 extern const sivmfnptr_t *sivmfn_vminternals;
 extern size_t sivmfn_vminternal_count;
 
-sinanbox_t siexec(const svm_function_t *fn, siheap_env_t *parent_env, uint8_t argc, sinanbox_t *argv);
+sinanbox_t __attribute__((warn_unused_result)) siexec(const svm_function_t *fn, siheap_env_t *parent_env, uint8_t argc, sinanbox_t *argv);
 
-SINTER_INLINE sinanbox_t siexec_nanbox(sinanbox_t fn, uint8_t argc, sinanbox_t *argv) {
+SINTER_INLINE __attribute__((warn_unused_result)) sinanbox_t siexec_nanbox(sinanbox_t fn, uint8_t argc, sinanbox_t *argv) {
   if (NANBOX_ISIFN(fn)) {
     uint8_t ifn = NANBOX_IFN_NUMBER(fn);
     if (NANBOX_IFN_TYPE(fn) && ifn < sivmfn_vminternal_count) {

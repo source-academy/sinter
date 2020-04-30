@@ -42,7 +42,7 @@ SINTER_INLINE void sistack_push(sinanbox_t entry) {
   *(sistack_top++) = entry;
 }
 
-SINTER_INLINE sinanbox_t sistack_pop(void) {
+SINTER_INLINE __attribute__((warn_unused_result)) sinanbox_t sistack_pop(void) {
 #ifndef SINTER_SEATBELTS_OFF
   if (sistack_top <= sistack_bottom) {
     sifault(sinter_fault_stack_underflow);
