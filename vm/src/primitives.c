@@ -933,9 +933,45 @@ static sinanbox_t sivmfn_prim_remove(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_remove_all(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  if (NANBOX_ISNULL(argv[1])) {
+    return NANBOX_OFNULL();
+  }
+
+  const sinanbox_t needle = argv[0];
+
+  sinanbox_t list = argv[1];
+  siheap_array_t *new_list = NULL;
+  siheap_array_t *prev_pair = NULL;
+  while (!NANBOX_ISNULL(list)) {
+    siheap_array_t *pair = nanbox_toarray(list);
+    sinanbox_t cur = siarray_get(pair, 0);
+    list = siarray_get(pair, 1);
+    if (sivm_equal(cur, needle)) {
+      continue;
+    }
+
+    siheap_refbox(cur);
+    siheap_array_t *new_pair = source_pair_ptr(cur, NANBOX_OFNULL());
+    if (prev_pair) {
+      siarray_put(prev_pair, 1, SIHEAP_PTRTONANBOX(new_pair));
+    }
+    if (!new_list) {
+      new_list = new_pair;
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+      new_list->header.internal_refcount++;
+#endif
+    }
+    prev_pair = new_pair;
+  }
+
+  if (new_list) {
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+    new_list->header.internal_refcount--;
+#endif
+    return SIHEAP_PTRTONANBOX(new_list);
+  }
+  return NANBOX_OFNULL();
 }
 
 static sinanbox_t sivmfn_prim_reverse(uint8_t argc, sinanbox_t *argv) {
