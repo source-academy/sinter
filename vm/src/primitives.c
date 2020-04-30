@@ -719,9 +719,47 @@ static sinanbox_t sivmfn_prim_enum_list(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_filter(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  if (NANBOX_ISNULL(argv[1])) {
+    return NANBOX_OFNULL();
+  }
+
+  const sinanbox_t filter_fn = argv[0];
+
+  sinanbox_t old_list = argv[1];
+  siheap_array_t *new_list = NULL;
+  siheap_array_t *prev_pair = NULL;
+  while (!NANBOX_ISNULL(old_list)) {
+    siheap_array_t *pair = nanbox_toarray(old_list);
+    sinanbox_t cur = siarray_get(pair, 0);
+    old_list = siarray_get(pair, 1);
+    siheap_refbox(cur);
+    sinanbox_t pred_result = siexec_nanbox(filter_fn, 1, &cur);
+    if (NANBOX_ISBOOL(pred_result)) {
+      if (!NANBOX_BOOL(pred_result)) {
+        continue;
+      }
+    } else {
+      sifault(sinter_fault_type);
+    }
+    siheap_refbox(cur);
+    siheap_array_t *new_pair = source_pair_ptr(cur, NANBOX_OFNULL());
+    if (prev_pair) {
+      siarray_put(prev_pair, 1, SIHEAP_PTRTONANBOX(new_pair));
+    }
+    if (!new_list) {
+      new_list = new_pair;
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+      new_list->header.internal_refcount++;
+#endif
+    }
+    prev_pair = new_pair;
+  }
+
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+  new_list->header.internal_refcount--;
+#endif
+  return SIHEAP_PTRTONANBOX(new_list);
 }
 
 static sinanbox_t sivmfn_prim_for_each(uint8_t argc, sinanbox_t *argv) {
@@ -781,13 +819,10 @@ static sinanbox_t sivmfn_prim_map(uint8_t argc, sinanbox_t *argv) {
   sinanbox_t old_list = argv[1];
   siheap_array_t *new_list = NULL;
   siheap_array_t *prev_pair = NULL;
-  while (1) {
-    if (NANBOX_ISNULL(old_list)) {
-      break;
-    }
-
-    sinanbox_t cur = source_head(old_list);
-    old_list = source_tail(old_list);
+  while (!NANBOX_ISNULL(old_list)) {
+    siheap_array_t *pair = nanbox_toarray(old_list);
+    sinanbox_t cur = siarray_get(pair, 0);
+    old_list = siarray_get(pair, 1);
     siheap_refbox(cur);
     sinanbox_t newval = siexec_nanbox(map_fn, 1, &cur);
     siheap_array_t *new_pair = source_pair_ptr(newval, NANBOX_OFNULL());
