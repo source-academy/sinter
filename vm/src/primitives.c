@@ -600,9 +600,34 @@ static sinanbox_t sivmfn_prim_accumulate(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_append(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+
+  sinanbox_t list = argv[0];
+
+  if (NANBOX_ISNULL(list)) {
+    return argv[1];
+  }
+
+  siheap_array_t *new_list = NULL;
+  siheap_array_t *prev_pair = NULL;
+  while (!NANBOX_ISNULL(list)) {
+    siheap_array_t *pair = nanbox_toarray(list);
+    sinanbox_t head = siarray_get(pair, 0);
+    list = siarray_get(pair, 1);
+    siheap_refbox(head);
+    siheap_array_t *new_pair = source_pair_ptr(head, NANBOX_OFNULL());
+    if (prev_pair) {
+      siarray_put(prev_pair, 1, SIHEAP_PTRTONANBOX(new_pair));
+    }
+    if (!new_list) {
+      new_list = new_pair;
+    }
+    prev_pair = new_pair;
+  }
+
+  siheap_refbox(argv[1]);
+  siarray_put(prev_pair, 1, argv[1]);
+  return SIHEAP_PTRTONANBOX(new_list);
 }
 
 static sinanbox_t sivmfn_prim_build_list(uint8_t argc, sinanbox_t *argv) {

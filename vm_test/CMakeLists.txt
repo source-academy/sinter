@@ -48,6 +48,7 @@ add_run_test(prim_length)
 add_run_test(prim_accumulate)
 add_run_test(prim_accumulate_arrays)
 add_run_test(prim_is_list)
+add_run_test(prim_append)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(prim_display)
