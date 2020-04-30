@@ -52,6 +52,7 @@ add_run_test(prim_append)
 add_run_test(prim_build_list)
 add_run_test(prim_enum_list)
 add_run_test(prim_filter)
+add_run_test(prim_for_each)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(prim_display)
