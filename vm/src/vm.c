@@ -117,11 +117,7 @@ static inline bool do_internal_function(
 
   // pop the arguments off the stack
   for (unsigned int i = 0; i < num_args; ++i) {
-    sinanbox_t arg = sistack_pop();
-    // if the function returns one of the arguments, we don't want to deref it!
-    if (arg.as_i32 != retv.as_i32) {
-      siheap_derefbox(arg);
-    }
+    siheap_derefbox(sistack_pop());
   }
 
   // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
@@ -669,15 +665,23 @@ static void main_loop(void) {
           return;
         }
 
+        if (fn_code->num_args > fn_code->env_size) {
+          sifault(sinter_fault_invalid_load);
+          return;
+        }
+
         // create the new environment
         siheap_env_t *new_env = sienv_new(fn_obj->env, fn_code->env_size);
 
-        // pop the arguments off the caller's stack
-        // insert them into the callee's environment
-        for (unsigned int i = 0; i < fn_code->num_args; ++i) {
-          sinanbox_t v = sistack_pop();
-          sienv_put(new_env, fn_code->num_args - 1 - i, v);
+        // check we have enough arguments on the stack
+        sistack_top -= fn_code->num_args;
+        if (sistack_top < sistack_bottom) {
+          sifault(sinter_fault_stack_underflow);
+          return;
         }
+
+        // copy the arguments from the stack to the environment
+        memcpy(new_env->entry, sistack_top, fn_code->num_args*sizeof(sinanbox_t));
 
         // pop the function off the caller's stack, and deref it at the same time
         siheap_derefbox(sistack_pop());

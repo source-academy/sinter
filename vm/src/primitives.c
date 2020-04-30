@@ -597,9 +597,6 @@ static sinanbox_t sivmfn_prim_accumulate(uint8_t argc, sinanbox_t *argv) {
     siheap_refbox(f_args[0]);
     acc = siexec_nanbox(f, 2, f_args);
   }
-  if (NANBOX_IDENTICAL(acc, argv[1])) {
-    siheap_derefbox(acc);
-  }
 
 #ifdef SINTER_DEBUG_MEMORY_CHECK
   flat_list->header.internal_refcount--;
@@ -615,6 +612,7 @@ static sinanbox_t sivmfn_prim_append(uint8_t argc, sinanbox_t *argv) {
   sinanbox_t list = argv[0];
 
   if (NANBOX_ISNULL(list)) {
+    siheap_refbox(argv[1]);
     return argv[1];
   }
 
@@ -885,9 +883,7 @@ static sinanbox_t sivmfn_prim_member(uint8_t argc, sinanbox_t *argv) {
     list = siarray_get(pair, 1);
   }
 
-  if (!NANBOX_IDENTICAL(list, argv[1])) {
-    siheap_refbox(list);
-  }
+  siheap_refbox(list);
   return list;
 }
 
@@ -1046,7 +1042,11 @@ static sinanbox_t sivmfn_prim_display(uint8_t argc, sinanbox_t *argv) {
   SIDEBUG("Program called display with %d arguments:\n", argc);
   debug_display_argv(argc, argv);
   handle_display(argc, argv, false);
-  return argc ? argv[0] : NANBOX_OFUNDEF();
+  if (argc) {
+    siheap_refbox(argv[0]);
+    return argv[0];
+  }
+  return NANBOX_OFUNDEF();
 }
 
 static sinanbox_t sivmfn_prim_draw_data(uint8_t argc, sinanbox_t *argv) {

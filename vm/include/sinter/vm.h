@@ -46,15 +46,20 @@ sinanbox_t __attribute__((warn_unused_result)) siexec(const svm_function_t *fn, 
 SINTER_INLINE __attribute__((warn_unused_result)) sinanbox_t siexec_nanbox(sinanbox_t fn, uint8_t argc, sinanbox_t *argv) {
   if (NANBOX_ISIFN(fn)) {
     uint8_t ifn = NANBOX_IFN_NUMBER(fn);
+    sinanbox_t ret;
     if (NANBOX_IFN_TYPE(fn) && ifn < sivmfn_vminternal_count) {
       // vm-internal function
-      return sivmfn_vminternals[ifn](argc, argv);
+      ret = sivmfn_vminternals[ifn](argc, argv);
     } else if (!NANBOX_IFN_TYPE(fn) && ifn < SIVMFN_PRIMITIVE_COUNT) {
-      return sivmfn_primitives[ifn](argc, argv);
+      ret = sivmfn_primitives[ifn](argc, argv);
     } else {
       sifault(sinter_fault_invalid_program);
       return NANBOX_OFEMPTY();
     }
+    for (size_t i = 0; i < argc; ++i) {
+      siheap_derefbox(argv[i]);
+    }
+    return ret;
   } else if (NANBOX_ISPTR(fn)) {
     siheap_header_t *v = (siheap_header_t *) SIHEAP_NANBOXTOPTR(fn);
     siheap_function_t *f = (siheap_function_t *) v;
