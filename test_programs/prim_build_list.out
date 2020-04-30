@@ -1,0 +1,7 @@
+[0, [0, [0, [0, [0, null]]]]]
+[0, [1, [2, [3, [4, null]]]]]
+[1, [2, [3, [4, [5, null]]]]]
+[[0], [[1], [[2], [[3], [[4], null]]]]]
+[[0, null], [[1, null], [[2, null], [[3, null], [[4, null], null]]]]]
+[true, [true, [true, [true, [true, null]]]]]
+Program exited with fault no fault and result type null: null

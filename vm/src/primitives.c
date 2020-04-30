@@ -144,6 +144,26 @@ static void handle_display(unsigned int argc, sinanbox_t *argv, bool is_error) {
   } \
 } while (0)
 
+static inline uint32_t nanbox_tou32(sinanbox_t v) {
+  if (NANBOX_ISINT(v)) {
+    return (uint32_t) NANBOX_INT(v);
+  } else if (NANBOX_ISFLOAT(v)) {
+    return (uint32_t) NANBOX_FLOAT(v);
+  }
+  sifault(sinter_fault_type);
+  return 0;
+}
+
+static inline int32_t nanbox_toi32(sinanbox_t v) {
+  if (NANBOX_ISINT(v)) {
+    return NANBOX_INT(v);
+  } else if (NANBOX_ISFLOAT(v)) {
+    return (int32_t) NANBOX_FLOAT(v);
+  }
+  sifault(sinter_fault_type);
+  return 0;
+}
+
 /******************************************************************************
  * Basic type-checking primitives
  ******************************************************************************/
@@ -262,16 +282,6 @@ static sinanbox_t sivmfn_prim_math_hypot(uint8_t argc, sinanbox_t *argv) {
   }
 
   return NANBOX_OFFLOAT(sqrtf(sum) * max);
-}
-
-static inline uint32_t nanbox_tou32(sinanbox_t v) {
-  if (NANBOX_ISINT(v)) {
-    return (uint32_t) NANBOX_INT(v);
-  } else if (NANBOX_ISFLOAT(v)) {
-    return (uint32_t) NANBOX_FLOAT(v);
-  }
-  sifault(sinter_fault_type);
-  return 0;
 }
 
 static sinanbox_t sivmfn_prim_math_abs(uint8_t argc, sinanbox_t *argv) {
@@ -631,9 +641,38 @@ static sinanbox_t sivmfn_prim_append(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_build_list(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+
+  int32_t limit = nanbox_toi32(argv[0]);
+
+  if (limit <= 0) {
+    return NANBOX_OFNULL();
+  }
+
+  siheap_array_t *new_list = NULL;
+  siheap_array_t *prev_pair = NULL;
+
+  for (int32_t i = 0; i < limit; ++i) {
+    sinanbox_t arg = NANBOX_WRAP_INT(i);
+    sinanbox_t new_val = siexec_nanbox(argv[1], 1, &arg);
+    siheap_array_t *new_pair = source_pair_ptr(new_val, NANBOX_OFNULL());
+    if (prev_pair) {
+      siarray_put(prev_pair, 1, SIHEAP_PTRTONANBOX(new_pair));
+    }
+    if (!new_list) {
+      new_list = new_pair;
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+      new_list->header.internal_refcount++;
+#endif
+    }
+    prev_pair = new_pair;
+  }
+
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+  new_list->header.internal_refcount--;
+#endif
+
+  return SIHEAP_PTRTONANBOX(new_list);
 }
 
 static sinanbox_t sivmfn_prim_enum_list(uint8_t argc, sinanbox_t *argv) {
