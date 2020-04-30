@@ -100,7 +100,7 @@ _Static_assert(sizeof(sinanbox_t) == 4, "sinanbox_t has wrong size");
 #define NANBOX_ISNUMERIC(val) (NANBOX_ISFLOAT(val) || NANBOX_ISINT(val))
 
 #define NANBOX_FLOAT(val) ((val).as_float)
-#define NANBOX_BOOL(val) ((val).as_i32 & 1)
+#define NANBOX_BOOL(val) ((val).as_i32 & 1u)
 #ifdef __cplusplus
 inline int32_t nanbox_int(sinanbox_t val) {
   struct { int32_t n : 21; } v = { static_cast<int32_t>(val.as_i32) };
