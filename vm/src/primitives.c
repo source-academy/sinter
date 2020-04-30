@@ -138,7 +138,7 @@ static void handle_display(unsigned int argc, sinanbox_t *argv, bool is_error) {
 }
 
 #define CHECK_ARGC(n) do { \
-  if (argc != (n)) { \
+  if (argc < (n)) { \
     sifault(sinter_fault_function_arity); \
     return NANBOX_OFEMPTY(); \
   } \
@@ -398,7 +398,7 @@ static sinanbox_t sivmfn_prim_math_min(uint8_t argc, sinanbox_t *argv) {
   return min;
 }
 static sinanbox_t sivmfn_prim_math_random(uint8_t argc, sinanbox_t *argv) {
-  CHECK_ARGC(0); (void) argv;
+  (void) argc; (void) argv;
   return NANBOX_OFFLOAT((float) rand() / (((float) RAND_MAX) + 1.0f));
 }
 
