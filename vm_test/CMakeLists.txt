@@ -55,6 +55,7 @@ add_run_test(prim_filter)
 add_run_test(prim_for_each)
 add_run_test(prim_list_ref)
 add_run_test(prim_member)
+add_run_test(prim_remove)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(prim_display)
