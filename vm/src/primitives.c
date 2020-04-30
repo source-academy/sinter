@@ -975,9 +975,25 @@ static sinanbox_t sivmfn_prim_remove_all(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_reverse(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(1);
+
+  sinanbox_t list = argv[0];
+  if (NANBOX_ISNULL(list)) {
+    return list;
+  }
+
+  siheap_array_t *new_list = NULL;
+
+  while (!NANBOX_ISNULL(list)) {
+    siheap_array_t *pair = nanbox_toarray(list);
+    sinanbox_t cur = siarray_get(pair, 0);
+    list = siarray_get(pair, 1);
+
+    siheap_refbox(cur);
+    new_list = source_pair_ptr(cur, new_list ? SIHEAP_PTRTONANBOX(new_list) : NANBOX_OFNULL());
+  }
+
+  return SIHEAP_PTRTONANBOX(new_list);
 }
 
 /******************************************************************************
