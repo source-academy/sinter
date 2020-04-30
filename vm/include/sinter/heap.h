@@ -67,12 +67,12 @@ typedef struct siheap_header {
   uint16_t refcount;
 #ifdef SINTER_DEBUG_MEMORY_CHECK
   uint16_t debug_refcount;
+  uint16_t internal_refcount;
 #endif
   siheap_type_t type;
   _Bool flag_marked : 1;
   _Bool flag_destroying : 1;
   _Bool flag_displayed : 1;
-  _Bool flag_internal_ref : 1;
 } siheap_header_t;
 
 typedef struct siheap_free {
@@ -221,7 +221,10 @@ SINTER_INLINEIFC siheap_header_t *siheap_malloc_split(siheap_free_t *cur, addres
   }
 
   cur->header.type = type;
-  cur->header.flag_destroying = cur->header.flag_displayed = cur->header.flag_marked = cur->header.flag_internal_ref = false;
+  cur->header.flag_destroying = cur->header.flag_displayed = cur->header.flag_marked = false;
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+  cur->header.internal_refcount = 0;
+#endif
   return &cur->header;
 }
 #endif
@@ -274,7 +277,10 @@ SINTER_INLINE siheap_header_t *siheap_mfree_inner(siheap_header_t *ent) {
     assert(entf + 1 <= nextf);
     ent->size = ent->size + next->size;
     ent->type = sitype_free;
-    ent->flag_destroying = ent->flag_displayed = ent->flag_marked = ent->flag_internal_ref = false;
+    ent->flag_destroying = ent->flag_displayed = ent->flag_marked = false;
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+    ent->internal_refcount = 0;
+#endif
     entf->prev_free = nextf->prev_free;
     entf->next_free = nextf->next_free;
     assert(entf->prev_free != entf);
@@ -298,7 +304,10 @@ SINTER_INLINE siheap_header_t *siheap_mfree_inner(siheap_header_t *ent) {
     siheap_free_t *const entf = (siheap_free_t *) ent;
 
     ent->type = sitype_free;
-    ent->flag_destroying = ent->flag_displayed = ent->flag_marked = ent->flag_internal_ref = false;
+    ent->flag_destroying = ent->flag_displayed = ent->flag_marked = false;
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+    ent->internal_refcount = 0;
+#endif
     entf->prev_free = NULL;
     entf->next_free = siheap_first_free;
     assert(entf->next_free != entf);

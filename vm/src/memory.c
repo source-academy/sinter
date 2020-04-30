@@ -291,7 +291,9 @@ siheap_header_t *siheap_mrealloc(siheap_header_t *ent, address_t newsize) {
   // the next block is not free and/or not large enough
 
   // store the type, refcount and size of the current block
-  _Bool orig_internal_ref = ent->flag_internal_ref;
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+  uint16_t orig_internal_refcount = ent->internal_refcount;
+#endif
   siheap_type_t orig_type = ent->type;
   uint16_t orig_refcount = ent->refcount;
   address_t orig_size = ent->size;
@@ -316,7 +318,9 @@ siheap_header_t *siheap_mrealloc(siheap_header_t *ent, address_t newsize) {
   }
   // restore the refcount
   new_alloc->refcount = orig_refcount;
-  new_alloc->flag_internal_ref = orig_internal_ref;
+#ifdef SINTER_DEBUG_MEMORY_CHECK
+  new_alloc->internal_refcount = orig_internal_refcount;
+#endif
 
   // move the contents over from the old block
   memmove(new_alloc + 1, ent + 1, orig_size - sizeof(siheap_header_t));
