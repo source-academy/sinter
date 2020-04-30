@@ -76,7 +76,7 @@ static void display_nanbox(sinanbox_t v, bool is_error) {
   NANBOX_CASES_TPTR {
     siheap_header_t *obj = SIHEAP_NANBOXTOPTR(v);
     if (obj->flag_displayed) {
-      SIVMFN_PRINT("<recursive>", is_error);
+      SIVMFN_PRINT("...<circular>", is_error);
       return;
     }
     switch (obj->type) {
