@@ -825,6 +825,7 @@ static sinanbox_t sivmfn_prim_list_ref(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_list_to_string(uint8_t argc, sinanbox_t *argv) {
+  // TODO: do we want to implement this?
   (void) argc; (void) argv;
   unimpl();
   return NANBOX_OFEMPTY();
@@ -867,9 +868,27 @@ static sinanbox_t sivmfn_prim_map(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_member(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  if (NANBOX_ISNULL(argv[1])) {
+    return NANBOX_OFNULL();
+  }
+
+  const sinanbox_t needle = argv[0];
+
+  sinanbox_t list = argv[1];
+  while (!NANBOX_ISNULL(list)) {
+    siheap_array_t *pair = nanbox_toarray(list);
+    sinanbox_t cur = siarray_get(pair, 0);
+    if (sivm_equal(needle, cur)) {
+      break;
+    }
+    list = siarray_get(pair, 1);
+  }
+
+  if (!NANBOX_IDENTICAL(list, argv[1])) {
+    siheap_refbox(list);
+  }
+  return list;
 }
 
 static sinanbox_t sivmfn_prim_remove(uint8_t argc, sinanbox_t *argv) {
