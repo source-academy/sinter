@@ -811,9 +811,17 @@ static sinanbox_t sivmfn_prim_list(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_list_ref(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+
+  sinanbox_t list = argv[0];
+  int32_t count = nanbox_toi32(argv[1]);
+  for (int32_t i = 0; i < count; ++i) {
+    list = source_tail(list);
+  }
+
+  sinanbox_t retv = source_head(list);
+  siheap_refbox(retv);
+  return retv;
 }
 
 static sinanbox_t sivmfn_prim_list_to_string(uint8_t argc, sinanbox_t *argv) {
