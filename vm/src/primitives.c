@@ -754,10 +754,14 @@ static sinanbox_t sivmfn_prim_filter(uint8_t argc, sinanbox_t *argv) {
     prev_pair = new_pair;
   }
 
+  if (new_list) {
 #ifdef SINTER_DEBUG_MEMORY_CHECK
-  new_list->header.internal_refcount--;
+    new_list->header.internal_refcount--;
 #endif
-  return SIHEAP_PTRTONANBOX(new_list);
+    return SIHEAP_PTRTONANBOX(new_list);
+  }
+
+  return NANBOX_OFNULL();
 }
 
 static sinanbox_t sivmfn_prim_for_each(uint8_t argc, sinanbox_t *argv) {
