@@ -1,6 +1,6 @@
 # Sinter
 
-[![Coverage Status](https://coveralls.io/repos/github/angelsl/sinter/badge.svg)](https://coveralls.io/github/angelsl/sinter)
+[![Coverage Status](https://coveralls.io/repos/github/source-academy/sinter/badge.svg?branch=master)](https://coveralls.io/github/source-academy/sinter?branch=master)
 
 Name etymology: <strong>S</strong>VML <strong>inter</strong>preter.
 
