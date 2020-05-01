@@ -1139,9 +1139,42 @@ static sinanbox_t sivmfn_prim_stream_tail(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_stream_to_list(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(1);
+
+  sinanbox_t stream = argv[0];
+
+  if (NANBOX_ISNULL(stream)) {
+    return NANBOX_OFNULL();
+  }
+
+  siheap_array_t *new_list = NULL;
+  siheap_array_t *prev_pair = NULL;
+  siheap_refbox(stream);
+  while (!NANBOX_ISNULL(stream)) {
+    siheap_array_t *stream_pair = nanbox_toarray(stream);
+    sinanbox_t new_val = siarray_get(stream_pair, 0);
+    sinanbox_t stream_tail = siarray_get(stream_pair, 1);
+    siheap_intref(stream_pair);
+    stream = siexec_nanbox(stream_tail, 0, NULL);
+    siheap_intderef(stream_pair);
+
+    siheap_refbox(new_val);
+    siheap_deref(stream_pair);
+
+    siheap_array_t *new_pair = source_pair_ptr(new_val, NANBOX_OFNULL());
+    if (prev_pair) {
+      siarray_put(prev_pair, 1, SIHEAP_PTRTONANBOX(new_pair));
+    }
+    if (!new_list) {
+      new_list = new_pair;
+      siheap_intref(new_list);
+    }
+    prev_pair = new_pair;
+  }
+
+  siheap_derefbox(stream);
+  siheap_intderef(new_list);
+  return SIHEAP_PTRTONANBOX(new_list);
 }
 
 /******************************************************************************

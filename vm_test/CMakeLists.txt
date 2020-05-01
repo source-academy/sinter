@@ -64,6 +64,7 @@ add_run_test(prim_list_to_stream)
 add_run_test(prim_build_stream)
 add_run_test(prim_enum_stream)
 add_run_test(prim_eval_stream)
+add_run_test(prim_stream_to_list)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(prim_display)
