@@ -1011,9 +1011,17 @@ static sinanbox_t sivmfn_prim_eval_stream(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_integers_from(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(1);
+
+  sinanbox_t val = argv[0];
+  siheap_intcont_t *ic = siintcont_new(sivmfn_prim_integers_from, 1);
+  if (NANBOX_ISINT(val)) {
+    ic->argv[0] = NANBOX_WRAP_INT(NANBOX_INT(val) + 1);
+  } else {
+    ic->argv[0] = NANBOX_OFFLOAT(NANBOX_TOFLOAT(val) + 1);
+  }
+
+  return source_pair(val, SIHEAP_PTRTONANBOX(ic));
 }
 
 /**
