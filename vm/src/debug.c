@@ -36,7 +36,7 @@ void debug_nanbox(sinanbox_t v) {
     if (NANBOX_ISFLOAT(v)) {
       SIDEBUG("float, value: %f", NANBOX_FLOAT(v));
     } else {
-      SIDEBUG("unknown NaNbox value: %08x", v.as_i32);
+      SIDEBUG("unknown NaNbox value: %08x", v.as_u32);
     }
     break;
   }

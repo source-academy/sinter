@@ -48,7 +48,7 @@ static void set_result(sinanbox_t exec_result, sinter_value_t *result) {
     break;
   case NANBOX_TIFN:
     result->type = sinter_type_function;
-    result->object_value = exec_result.as_i32;
+    result->object_value = exec_result.as_u32;
     break;
   NANBOX_CASES_TPTR {
     siheap_header_t *obj = SIHEAP_NANBOXTOPTR(exec_result);
@@ -61,11 +61,11 @@ static void set_result(sinanbox_t exec_result, sinter_value_t *result) {
       break;
     case sitype_function:
       result->type = sinter_type_function;
-      result->object_value = exec_result.as_i32;
+      result->object_value = exec_result.as_u32;
       break;
     case sitype_array:
       result->type = sinter_type_array;
-      result->object_value = exec_result.as_i32;
+      result->object_value = exec_result.as_u32;
       break;
     case sitype_array_data:
     case sitype_empty:
@@ -83,7 +83,7 @@ static void set_result(sinanbox_t exec_result, sinter_value_t *result) {
       result->type = sinter_type_float;
       result->float_value = NANBOX_FLOAT(exec_result);
     } else {
-      SIBUGV("Unexpected NaNbox: %08x\n", exec_result.as_i32);
+      SIBUGV("Unexpected NaNbox: %08x\n", exec_result.as_u32);
     }
     break;
   }
