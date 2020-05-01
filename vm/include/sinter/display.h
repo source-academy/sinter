@@ -66,6 +66,9 @@ SINTER_INLINEIFC void sidisplay_nanbox(sinanbox_t v, bool is_error) {
     case NANBOX_TNULL:
       SIVMFN_PRINT("null", is_error);
       break;
+    case NANBOX_TIFN:
+      SIVMFN_PRINT("<internal function>", is_error);
+      break;
     NANBOX_CASES_TPTR {
       siheap_header_t *obj = SIHEAP_NANBOXTOPTR(v);
       if (obj->flag_displayed) {
