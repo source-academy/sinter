@@ -1087,9 +1087,30 @@ static sinanbox_t sivmfn_prim_stream_filter(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_stream_for_each(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+
+  sinanbox_t stream = argv[1];
+  if (NANBOX_ISNULL(stream)) {
+    return NANBOX_OFUNDEF();
+  }
+
+  sinanbox_t fn = argv[0];
+
+  siheap_refbox(stream);
+  while (!NANBOX_ISNULL(stream)) {
+    siheap_array_t *stream_pair = nanbox_toarray(stream);
+    sinanbox_t head = siarray_get(stream_pair, 0);
+    sinanbox_t stream_tail = siarray_get(stream_pair, 1);
+    siheap_intref(stream_pair);
+    siheap_refbox(head);
+    siheap_derefbox(siexec_nanbox(fn, 1, &head));
+    stream = siexec_nanbox(stream_tail, 0, NULL);
+    siheap_intderef(stream_pair);
+    siheap_deref(stream_pair);
+  }
+  siheap_derefbox(stream);
+
+  return NANBOX_OFUNDEF();
 }
 
 static sinanbox_t sivmfn_prim_stream_length(uint8_t argc, sinanbox_t *argv) {
