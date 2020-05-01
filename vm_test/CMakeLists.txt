@@ -73,6 +73,7 @@ add_run_test(prim_stream_filter)
 add_run_test(prim_stream_map)
 add_run_test(prim_stream_member)
 add_run_test(prim_stream_ref)
+add_run_test(prim_stream_remove)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(prim_display)

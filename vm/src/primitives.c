@@ -1312,10 +1312,43 @@ static sinanbox_t sivmfn_prim_stream_ref(uint8_t argc, sinanbox_t *argv) {
   return head;
 }
 
+static sinanbox_t sivmfn_prim_stream_remove(uint8_t argc, sinanbox_t *argv);
+
+static sinanbox_t prim_stream_remove_cont(uint8_t argc, sinanbox_t *argv) {
+  (void) argc;
+  sinanbox_t needle = argv[0], tfn = argv[1];
+  sinanbox_t xs = siexec_nanbox(tfn, 0, NULL);
+  siheap_intrefbox(xs);
+  sinanbox_t retv = sivmfn_prim_stream_remove(2, (sinanbox_t[]) { needle, xs });
+  siheap_intderefbox(xs);
+  siheap_derefbox(xs);
+  return retv;
+}
+
 static sinanbox_t sivmfn_prim_stream_remove(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  sinanbox_t needle = argv[0], xs = argv[1];
+
+  if (NANBOX_ISNULL(xs)) {
+    return NANBOX_OFNULL();
+  }
+
+  siheap_array_t *stream_pair = nanbox_toarray(xs);
+  sinanbox_t head = siarray_get(stream_pair, 0);
+  sinanbox_t tail = siarray_get(stream_pair, 1);
+
+  if (!sivm_equal(head, needle)) {
+    siheap_intcont_t *ic = siintcont_new(prim_stream_remove_cont, 2);
+    siheap_refbox(head);
+    siheap_refbox(needle);
+    siheap_refbox(tail);
+    ic->argv[0] = needle;
+    ic->argv[1] = tail;
+    return source_pair(head, SIHEAP_PTRTONANBOX(ic));
+  }
+
+  xs = siexec_nanbox(tail, 0, NULL);
+  return xs;
 }
 
 static sinanbox_t sivmfn_prim_stream_remove_all(uint8_t argc, sinanbox_t *argv) {
