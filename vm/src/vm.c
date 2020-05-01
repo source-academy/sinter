@@ -100,7 +100,8 @@ static inline bool do_internal_function(
   const uint8_t num_args,
   size_t sizeof_instr,
   const bool is_primitive,
-  const bool is_tailcall) {
+  const bool is_tailcall,
+  const bool pop_fn) {
   if ((is_primitive && id >= SIVMFN_PRIMITIVE_COUNT) || (!is_primitive && id >= sivmfn_vminternal_count)) {
     SIDEBUG("Invalid %s function index %d\n", is_primitive ? "primitive" : "VM-internal", id);
     sifault(sinter_fault_invalid_program);
@@ -117,6 +118,11 @@ static inline bool do_internal_function(
 
   // pop the arguments off the stack
   for (unsigned int i = 0; i < num_args; ++i) {
+    siheap_derefbox(sistack_pop());
+  }
+
+  // pop the function off the stack, if needed
+  if (pop_fn) {
     siheap_derefbox(sistack_pop());
   }
 
@@ -639,74 +645,109 @@ static void main_loop(void) {
 
     case op_call:
     case op_call_t: {
+      // There are three types of functions:
+      // - regular SVM closures (those created by new.c)
+      // - internal functions (represented in a NaNbox)
+      // - internal continuations (used for streams)
+      // each of them have slightly different ways to call them, so you end up
+      // with three slightly different variants of the function call code
       DECLOPSTRUCT(op_call);
 
       // get the function object
       sinanbox_t fn_ptr = sistack_peek(instr->num_args);
+      const bool is_tailcall = this_opcode == op_call_t;
 
       if (NANBOX_ISIFN(fn_ptr)) {
-        if (do_internal_function(NANBOX_IFN_NUMBER(fn_ptr), instr->num_args, sizeof(*instr), NANBOX_IFN_TYPE(fn_ptr) == 0, this_opcode == op_call_t)) {
+        if (do_internal_function(NANBOX_IFN_NUMBER(fn_ptr), instr->num_args, sizeof(*instr), NANBOX_IFN_TYPE(fn_ptr) == 0, is_tailcall, true)) {
           return;
         }
       } else if (NANBOX_ISPTR(fn_ptr)) {
-        siheap_function_t *fn_obj = SIHEAP_NANBOXTOPTR(fn_ptr);
+        siheap_header_t *obj = SIHEAP_NANBOXTOPTR(fn_ptr);
+        if (obj->type == sitype_function) {
+          siheap_function_t *fn_obj = (siheap_function_t *) obj;
 
-        // check the type before we dereference further
-        if (fn_obj->header.type != sitype_function) {
+          // get the code
+          const svm_function_t *fn_code = fn_obj->code;
+
+          if (instr->num_args != fn_code->num_args) {
+            sifault(sinter_fault_function_arity);
+            return;
+          }
+
+          if (fn_code->num_args > fn_code->env_size) {
+            sifault(sinter_fault_invalid_load);
+            return;
+          }
+
+          // create the new environment
+          siheap_env_t *new_env = sienv_new(fn_obj->env, fn_code->env_size);
+
+          // check we have enough arguments on the stack
+          sistack_top -= fn_code->num_args;
+          if (sistack_top < sistack_bottom) {
+            sifault(sinter_fault_stack_underflow);
+            return;
+          }
+
+          // copy the arguments from the stack to the environment
+          memcpy(new_env->entry, sistack_top, fn_code->num_args*sizeof(sinanbox_t));
+
+          // pop the function off the caller's stack, and deref it at the same time
+          siheap_derefbox(sistack_pop());
+
+
+          // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
+          if (is_tailcall) {
+            siheap_deref(sistate.env);
+            sistack_destroy(&sistate.pc, &sistate.env);
+          } else {
+            // otherwise we advance to the return address
+            sistate.pc += sizeof(*instr);
+          }
+
+          // create the stack frame for the callee, which stores the return address and environment
+          sistack_new(fn_code->stack_size, sistate.pc, sistate.env);
+
+          // set the environment
+          sistate.env = new_env;
+
+          // enter the function
+          sistate.pc = &fn_code->code;
+        } else if (obj->type == sitype_intcont) {
+          siheap_intcont_t *fn_obj = (siheap_intcont_t *) obj;
+
+          // continuations are zero-arity
+          if (instr->num_args) {
+            sifault(sinter_fault_function_arity);
+            return;
+          }
+
+          // call the function
+          sinanbox_t retv = fn_obj->fn(fn_obj->argc, fn_obj->argv);
+
+          // pop the function off the stack
+          // note: we've checked for arity above, there should be 0 arguments
+          siheap_derefbox(sistack_pop());
+
+          // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
+          if (is_tailcall) {
+            siheap_deref(sistate.env);
+            sistack_destroy(&sistate.pc, &sistate.env);
+          } else {
+            // otherwise we advance to the return address
+            sistate.pc += sizeof(*instr);
+          }
+
+          sistack_push(retv);
+
+          // tail call from main
+          if (is_tailcall && !sistate.pc) {
+            return;
+          }
+        } else {
           sifault(sinter_fault_type);
           return;
         }
-
-        // get the code
-        const svm_function_t *fn_code = fn_obj->code;
-
-        if (instr->num_args != fn_code->num_args) {
-          sifault(sinter_fault_function_arity);
-          return;
-        }
-
-        if (fn_code->num_args > fn_code->env_size) {
-          sifault(sinter_fault_invalid_load);
-          return;
-        }
-
-        // create the new environment
-        siheap_env_t *new_env = sienv_new(fn_obj->env, fn_code->env_size);
-
-        // check we have enough arguments on the stack
-        sistack_top -= fn_code->num_args;
-        if (sistack_top < sistack_bottom) {
-          sifault(sinter_fault_stack_underflow);
-          return;
-        }
-
-        // copy the arguments from the stack to the environment
-        memcpy(new_env->entry, sistack_top, fn_code->num_args*sizeof(sinanbox_t));
-
-        // pop the function off the caller's stack, and deref it at the same time
-        siheap_derefbox(sistack_pop());
-
-
-        // if tail call, we destroy the caller's stack now, and "return" to the caller's caller
-        if (this_opcode == op_call_t) {
-          siheap_deref(sistate.env);
-          sistack_destroy(&sistate.pc, &sistate.env);
-        } else {
-          // otherwise we advance to the return address
-          sistate.pc += sizeof(*instr);
-        }
-
-        // create the stack frame for the callee, which stores the return address and environment
-        sistack_new(fn_code->stack_size, sistate.pc, sistate.env);
-
-        // set the environment
-        sistate.env = new_env;
-
-        // enter the function
-        sistate.pc = &fn_code->code;
-      } else {
-        sifault(sinter_fault_type);
-        return;
       }
       break;
     }
@@ -719,7 +760,7 @@ static void main_loop(void) {
       const bool is_primitive = this_opcode == op_call_p || this_opcode == op_call_t_p;
       const bool is_tailcall = this_opcode == op_call_t_v || this_opcode == op_call_t_p;
 
-      if (do_internal_function(instr->id, instr->num_args, sizeof(*instr), is_primitive, is_tailcall)) {
+      if (do_internal_function(instr->id, instr->num_args, sizeof(*instr), is_primitive, is_tailcall, false)) {
         return;
       }
 

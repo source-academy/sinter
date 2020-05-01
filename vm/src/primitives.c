@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <limits.h>
 #include <math.h>
 
@@ -907,6 +908,11 @@ static sinanbox_t sivmfn_prim_array_length(uint8_t argc, sinanbox_t *argv) {
  * Stream primitives
  ******************************************************************************/
 
+static inline sinanbox_t source_stream_tail(sinanbox_t stream) {
+  sinanbox_t tail = source_tail(stream);
+  return siexec_nanbox(tail, 0, NULL);
+}
+
 static sinanbox_t sivmfn_prim_list_to_stream(uint8_t argc, sinanbox_t *argv) {
   (void) argc; (void) argv;
   unimpl();
@@ -937,10 +943,61 @@ static sinanbox_t sivmfn_prim_integers_from(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFEMPTY();
 }
 
+/**
+ * Continuation for sivmfn_prim_stream.
+ *
+ * @param argc 2
+ * @param argv <tt>{ array: array, next_index: number }</tt>
+ * @return <tt>pair(array[next_index], siheap_intcont_t { array, next_index + 1 })</tt>
+ */
+static sinanbox_t prim_stream_cont(uint8_t argc, sinanbox_t *argv) {
+  (void) argc;
+  // no array (this is an optimisation for a stream of 1)
+  if (NANBOX_ISNULL(argv[0])) {
+    return NANBOX_OFNULL();
+  }
+
+  uint32_t idx = NANBOX_TOU32(argv[1]);
+  siheap_array_t *arr = SIHEAP_NANBOXTOPTR(argv[0]);
+
+  if (idx >= arr->count) {
+    return NANBOX_OFNULL();
+  }
+
+  // construct the new continuation
+  siheap_intcont_t *ic = siintcont_new(prim_stream_cont, 2);
+  ic->argv[0] = argv[0];
+  ic->argv[1] = NANBOX_WRAP_UINT(idx + 1);
+
+  // ref the new pair's head
+  siheap_refbox(arr->data->data[idx]);
+  // ref the array (since it's going into the continuation)
+  siheap_ref(arr);
+
+  return source_pair(arr->data->data[idx], SIHEAP_PTRTONANBOX(ic));
+}
+
 static sinanbox_t sivmfn_prim_stream(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  if (!argc) {
+    return NANBOX_OFNULL();
+  } else if (argc == 1) {
+    siheap_intcont_t *ic = siintcont_new(prim_stream_cont, 1);
+    ic->argv[0] = NANBOX_OFNULL();
+    return source_pair(argv[0], SIHEAP_PTRTONANBOX(ic));
+  }
+
+  for (size_t i = 0; i < argc; ++i) {
+    siheap_refbox(argv[i]);
+  }
+
+  siheap_array_t *arr = siarray_new(argc - 1);
+  memcpy(arr->data->data, argv + 1, (argc - 1)*sizeof(sinanbox_t));
+  arr->count = argc - 1;
+
+  siheap_intcont_t *ic = siintcont_new(prim_stream_cont, 2);
+  ic->argv[0] = SIHEAP_PTRTONANBOX(arr);
+  ic->argv[1] = NANBOX_OFINT(0);
+  return source_pair(argv[0], SIHEAP_PTRTONANBOX(ic));
 }
 
 static sinanbox_t sivmfn_prim_stream_append(uint8_t argc, sinanbox_t *argv) {
@@ -1004,9 +1061,8 @@ static sinanbox_t sivmfn_prim_stream_reverse(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_stream_tail(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(1);
+  return source_stream_tail(argv[0]);
 }
 
 static sinanbox_t sivmfn_prim_stream_to_list(uint8_t argc, sinanbox_t *argv) {

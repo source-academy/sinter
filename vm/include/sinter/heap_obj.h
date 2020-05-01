@@ -362,13 +362,22 @@ SINTER_INLINEIFC void siarray_destroy(siheap_array_t *array) {
 }
 #endif
 
-typedef struct {
+#ifdef __cplusplus
+struct siheap_intcont;
+typedef struct siheap_intcont siheap_intcont_t;
+#else
+typedef struct siheap_intcont {
   siheap_header_t header;
   sivmfnptr_t fn;
   address_t argc;
   sinanbox_t argv[];
 } siheap_intcont_t;
+#endif
 
+SINTER_INLINEIFC siheap_intcont_t *siintcont_new(sivmfnptr_t fn, address_t argc);
+SINTER_INLINEIFC void siintcont_destroy(siheap_intcont_t *ic);
+
+#ifndef __cplusplus
 SINTER_INLINEIFC siheap_intcont_t *siintcont_new(sivmfnptr_t fn, address_t argc) {
   siheap_intcont_t *ic = (siheap_intcont_t *) siheap_malloc(sizeof(siheap_intcont_t) + argc*sizeof(sinanbox_t), sitype_intcont);
   ic->argc = argc;
@@ -381,6 +390,7 @@ SINTER_INLINEIFC void siintcont_destroy(siheap_intcont_t *ic) {
     siheap_derefbox(ic->argv[i]);
   }
 }
+#endif
 
 #ifdef __cplusplus
 }

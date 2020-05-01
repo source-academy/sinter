@@ -58,6 +58,7 @@ add_run_test(prim_member)
 add_run_test(prim_remove)
 add_run_test(prim_remove_all)
 add_run_test(prim_reverse)
+add_run_test(prim_stream)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(prim_display)

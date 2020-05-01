@@ -31,7 +31,9 @@ extern struct sistate sistate;
 
 sinanbox_t __attribute__((warn_unused_result)) siexec(const svm_function_t *fn, siheap_env_t *parent_env, uint8_t argc, sinanbox_t *argv);
 
-SINTER_INLINE __attribute__((warn_unused_result)) sinanbox_t siexec_nanbox(sinanbox_t fn, uint8_t argc, sinanbox_t *argv) {
+SINTER_INLINEIFC __attribute__((warn_unused_result)) sinanbox_t siexec_nanbox(sinanbox_t fn, uint8_t argc, sinanbox_t *argv);
+#ifndef __cplusplus
+SINTER_INLINEIFC __attribute__((warn_unused_result)) sinanbox_t siexec_nanbox(sinanbox_t fn, uint8_t argc, sinanbox_t *argv) {
   if (NANBOX_ISIFN(fn)) {
     uint8_t ifn = NANBOX_IFN_NUMBER(fn);
     sinanbox_t ret = NANBOX_OFEMPTY();
@@ -50,17 +52,35 @@ SINTER_INLINE __attribute__((warn_unused_result)) sinanbox_t siexec_nanbox(sinan
     return ret;
   } else if (NANBOX_ISPTR(fn)) {
     siheap_header_t *v = (siheap_header_t *) SIHEAP_NANBOXTOPTR(fn);
-    siheap_function_t *f = (siheap_function_t *) v;
-    if (v->type != sitype_function) {
+    switch (v->type) {
+    case sitype_function: {
+      siheap_function_t *f = (siheap_function_t *) v;
+      return siexec(f->code, f->env, argc, argv);
+    }
+    case sitype_intcont: {
+      siheap_intcont_t *f = (siheap_intcont_t *) v;
+      // no need to deref arguments; it is handled when the intcont is destroyed
+      return f->fn(f->argc, f->argv);
+    }
+    case sitype_empty:
+    case sitype_frame:
+    case sitype_env:
+    case sitype_strconst:
+    case sitype_strpair:
+    case sitype_string:
+    case sitype_array:
+    case sitype_array_data:
+    case sitype_free:
+    default:
       sifault(sinter_fault_type);
       return NANBOX_OFEMPTY();
     }
-    return siexec(f->code, f->env, argc, argv);
   } else {
     sifault(sinter_fault_type);
     return NANBOX_OFEMPTY();
   }
 }
+#endif
 
 bool sivm_equal(sinanbox_t l, sinanbox_t r);
 
