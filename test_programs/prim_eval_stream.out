@@ -1,0 +1,15 @@
+null
+null
+null
+[1, null]
+[1, [2, null]]
+[1, [2, [3, null]]]
+[1, [2, [3, [4, null]]]]
+[1, [2, [3, [4, [5, null]]]]]
+null
+[[1], null]
+[[1], [[2], null]]
+[[1], [[2], [[3], null]]]
+[[1], [[2], [[3], [[4], null]]]]
+[[1], [[2], [[3], [[4], [[5], null]]]]]
+Program exited with fault no fault and result type null: null
