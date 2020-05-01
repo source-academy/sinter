@@ -19,3 +19,4 @@
 #include <sinter/nanbox.h>
 #include <sinter/stack.h>
 #include <sinter/vm.h>
+#include <sinter/display.h>
