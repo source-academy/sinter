@@ -914,15 +914,52 @@ static inline sinanbox_t source_stream_tail(sinanbox_t stream) {
 }
 
 static sinanbox_t sivmfn_prim_list_to_stream(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(1);
+
+  sinanbox_t list = argv[0];
+  if (NANBOX_ISNULL(list)) {
+    return list;
+  }
+
+  siheap_array_t *pair = nanbox_toarray(list);
+  sinanbox_t head = siarray_get(pair, 0);
+  sinanbox_t tail = siarray_get(pair, 1);
+  siheap_refbox(head);
+  siheap_refbox(tail);
+  siheap_intcont_t *ic = siintcont_new(sivmfn_prim_list_to_stream, 2);
+  ic->argv[0] = tail;
+  return source_pair(head, SIHEAP_PTRTONANBOX(ic));
+}
+
+/**
+ * Continuation for sivmfn_prim_build_stream.
+ *
+ * @param argc 2
+ * @param argv <tt>{ current: number, max: number, fn: function }</tt>
+ * @return <tt>pair(fn(current), intcont { current + 1, max, fn })</tt>
+ */
+static sinanbox_t prim_build_stream_cont(uint8_t argc, sinanbox_t *argv) {
+  (void) argc;
+  sinanbox_t fn = argv[2];
+  int32_t cur = NANBOX_TOI32(argv[0]), max = NANBOX_TOI32(argv[1]);
+  if (cur >= max) {
+    return NANBOX_OFNULL();
+  }
+
+  sinanbox_t curv = siexec_nanbox(fn, 1, argv);
+  siheap_intcont_t *ic = siintcont_new(prim_build_stream_cont, 3);
+  ic->argv[0] = NANBOX_WRAP_INT(cur + 1);
+  ic->argv[1] = argv[1];
+  siheap_refbox(fn);
+  ic->argv[2] = fn;
+
+  return source_pair(curv, SIHEAP_PTRTONANBOX(ic));
 }
 
 static sinanbox_t sivmfn_prim_build_stream(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  sinanbox_t arg[] = { NANBOX_OFINT(0u), argv[0], argv[1] };
+  return prim_build_stream_cont(3, arg);
 }
 
 static sinanbox_t sivmfn_prim_enum_stream(uint8_t argc, sinanbox_t *argv) {
@@ -946,9 +983,9 @@ static sinanbox_t sivmfn_prim_integers_from(uint8_t argc, sinanbox_t *argv) {
 /**
  * Continuation for sivmfn_prim_stream.
  *
- * @param argc 2
- * @param argv <tt>{ array: array, next_index: number }</tt>
- * @return <tt>pair(array[next_index], siheap_intcont_t { array, next_index + 1 })</tt>
+ * @param argc 1 | 2
+ * @param argv <tt>{ array: array, next_index?: number }</tt>
+ * @return <tt>pair(array[next_index], intcont { array, next_index + 1 })</tt>
  */
 static sinanbox_t prim_stream_cont(uint8_t argc, sinanbox_t *argv) {
   (void) argc;

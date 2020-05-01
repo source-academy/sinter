@@ -114,9 +114,6 @@ sinter_fault_t sinter_run(const unsigned char *const code, const size_t code_siz
   siheap_init();
   sistack_init();
 
-  // Create one entry for the return value of the entrypoint
-  sistack_limit++;
-
   const svm_header_t *header = (const svm_header_t *) code;
   validate_header(header);
 

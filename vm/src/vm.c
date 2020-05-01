@@ -855,6 +855,7 @@ sinanbox_t siexec(const svm_function_t *fn, siheap_env_t *parent_env, uint8_t ar
     return NANBOX_OFEMPTY();
   }
 
+  sistack_limit++; // create one entry for the return value
   sistate.env = sienv_new(parent_env, fn->env_size);
   sistack_new(fn->stack_size, NULL, old_env);
   if (argc) {
@@ -867,6 +868,7 @@ sinanbox_t siexec(const svm_function_t *fn, siheap_env_t *parent_env, uint8_t ar
   sinanbox_t ret = sistack_top == sistack_bottom ? NANBOX_OFEMPTY() : *(--sistack_top);
   sistate.env = old_env;
   sistate.pc = old_pc;
+  sistack_limit--;
 
   return ret;
 }

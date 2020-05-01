@@ -25,6 +25,16 @@ extern sinanbox_t *sistack_limit;
 // Index of the next empty entry of the current function's operand stack.
 extern sinanbox_t *sistack_top;
 
+SINTER_INLINE void sistack_push_force(sinanbox_t entry) {
+#if SINTER_DEBUG_LOGLEVEL >= 2
+  SIDEBUG("Pushed onto stack: ");
+  SIDEBUG_NANBOX(entry);
+  SIDEBUG("\n");
+#endif
+
+  *(sistack_top++) = entry;
+}
+
 SINTER_INLINE void sistack_push(sinanbox_t entry) {
 #ifndef SINTER_SEATBELTS_OFF
   if (sistack_top >= sistack_limit) {
@@ -33,13 +43,7 @@ SINTER_INLINE void sistack_push(sinanbox_t entry) {
   }
 #endif
 
-#if SINTER_DEBUG_LOGLEVEL >= 2
-    SIDEBUG("Pushed onto stack: ");
-    SIDEBUG_NANBOX(entry);
-    SIDEBUG("\n");
-#endif
-
-  *(sistack_top++) = entry;
+  sistack_push_force(entry);
 }
 
 SINTER_INLINE __attribute__((warn_unused_result)) sinanbox_t sistack_pop(void) {
@@ -82,7 +86,7 @@ SINTER_INLINE void sistack_new(unsigned int size, const opcode_t *return_address
   frame->saved_stack_limit = sistack_limit;
   frame->saved_stack_top = sistack_top;
 
-  sistack_push(SIHEAP_PTRTONANBOX(frame));
+  sistack_push_force(SIHEAP_PTRTONANBOX(frame));
 
   sistack_bottom = sistack_top;
   sistack_limit = sistack_bottom + size;
