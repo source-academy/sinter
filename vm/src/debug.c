@@ -26,7 +26,7 @@ void debug_nanbox(sinanbox_t v) {
     SIDEBUG("null");
     break;
   case NANBOX_TIFN:
-    SIDEBUG("internal function, type: %d, number: %d", NANBOX_IFN_TYPE(v), NANBOX_IFN_NUMBER(v));
+    SIDEBUG("internal function, type: %s, number: %d", NANBOX_IFN_TYPE(v) ? "VM-internal" : "primitive", NANBOX_IFN_NUMBER(v));
     break;
   NANBOX_CASES_TPTR
     SIDEBUG("pointer to ");
