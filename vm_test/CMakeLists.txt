@@ -69,6 +69,7 @@ add_run_test(prim_stream_length)
 add_run_test(prim_stream_for_each)
 add_run_test(prim_integers_from)
 add_run_test(prim_stream_append)
+add_run_test(prim_stream_filter)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(prim_display)
