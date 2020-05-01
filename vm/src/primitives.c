@@ -10,6 +10,7 @@
 #include <sinter/heap.h>
 #include <sinter/stack.h>
 #include <sinter/debug.h>
+#include <sinter/internal_fn.h>
 #include <sinter/vm.h>
 #include <sinter/display.h>
 

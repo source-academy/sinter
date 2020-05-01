@@ -12,6 +12,7 @@
 #include "opcode.h"
 #include "fault.h"
 #include "../sinter.h"
+#include "internal_fn.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,19 +28,6 @@ struct sistate {
 };
 
 extern struct sistate sistate;
-
-/**
- * The type of a VM-internal function.
- *
- * A VM-internal function should not modify the stack.
- */
-typedef sinanbox_t (*sivmfnptr_t)(uint8_t argc, sinanbox_t *argv);
-
-extern const sivmfnptr_t sivmfn_primitives[];
-#define SIVMFN_PRIMITIVE_COUNT (92)
-
-extern const sivmfnptr_t *sivmfn_vminternals;
-extern size_t sivmfn_vminternal_count;
 
 sinanbox_t __attribute__((warn_unused_result)) siexec(const svm_function_t *fn, siheap_env_t *parent_env, uint8_t argc, sinanbox_t *argv);
 
@@ -78,17 +66,6 @@ bool sivm_equal(sinanbox_t l, sinanbox_t r);
 
 #define SISTATE_CURADDR (sistate.pc - sistate.program)
 #define SISTATE_ADDRTOPC(addr) (sistate.program + (addr))
-
-#ifndef __cplusplus
-#define SIVMFN_PRINTFN(v) (_Generic((v), \
-  char *: sinter_printer_string, \
-  const char *: sinter_printer_string, \
-  float: sinter_printer_float, \
-  int32_t: sinter_printer_integer))
-#define SIVMFN_PRINT(v, is_error) do { \
-  if (SIVMFN_PRINTFN(v)) SIVMFN_PRINTFN(v)((v), (is_error)); \
-} while (0)
-#endif
 
 #ifdef __cplusplus
 }
