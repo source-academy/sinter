@@ -5,6 +5,18 @@
 #include "nanbox.h"
 #include "heap.h"
 #include "heap_obj.h"
+#include "../sinter.h"
+
+#ifndef __cplusplus
+#define SIVMFN_PRINTFN(v) (_Generic((v), \
+  char *: sinter_printer_string, \
+  const char *: sinter_printer_string, \
+  float: sinter_printer_float, \
+  int32_t: sinter_printer_integer))
+#define SIVMFN_PRINT(v, is_error) do { \
+  if (SIVMFN_PRINTFN(v)) SIVMFN_PRINTFN(v)((v), (is_error)); \
+} while (0)
+#endif
 
 SINTER_INLINEIFC void sidisplay_strobj(siheap_header_t *obj, bool is_error);
 #ifndef __cplusplus

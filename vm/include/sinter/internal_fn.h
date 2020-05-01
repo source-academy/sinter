@@ -6,7 +6,6 @@
 #include <stdint.h>
 
 #include "nanbox.h"
-#include "../sinter.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,17 +23,6 @@ extern const sivmfnptr_t sivmfn_primitives[];
 
 extern const sivmfnptr_t *sivmfn_vminternals;
 extern size_t sivmfn_vminternal_count;
-
-#ifndef __cplusplus
-#define SIVMFN_PRINTFN(v) (_Generic((v), \
-  char *: sinter_printer_string, \
-  const char *: sinter_printer_string, \
-  float: sinter_printer_float, \
-  int32_t: sinter_printer_integer))
-#define SIVMFN_PRINT(v, is_error) do { \
-  if (SIVMFN_PRINTFN(v)) SIVMFN_PRINTFN(v)((v), (is_error)); \
-} while (0)
-#endif
 
 #ifdef __cplusplus
 }
