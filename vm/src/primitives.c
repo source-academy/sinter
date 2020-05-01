@@ -73,8 +73,13 @@ static sinanbox_t sivmfn_prim_is_boolean(uint8_t argc, sinanbox_t *argv) {
 static sinanbox_t sivmfn_prim_is_function(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(1);
   sinanbox_t v = *argv;
-  return NANBOX_OFBOOL((NANBOX_ISPTR(v) && ((siheap_header_t *) SIHEAP_NANBOXTOPTR(v))->type == sitype_function)
-    || NANBOX_ISIFN(v));
+
+  if (NANBOX_ISPTR(v)) {
+    siheap_type_t type = ((siheap_header_t *) SIHEAP_NANBOXTOPTR(v))->type;
+    return NANBOX_OFBOOL(type == sitype_function || type == sitype_intcont);
+  }
+
+  return NANBOX_OFBOOL(NANBOX_ISIFN(v));
 }
 
 static sinanbox_t sivmfn_prim_is_null(uint8_t argc, sinanbox_t *argv) {

@@ -29,6 +29,7 @@ add_run_test(array_length)
 add_run_test(force_marksweep)
 
 add_run_test(prim_is_type)
+add_run_test(prim_is_function_stream)
 add_run_test(prim_math)
 add_run_test(prim_display_number)
 add_run_test(prim_display_float)
