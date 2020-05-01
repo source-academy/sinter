@@ -465,9 +465,7 @@ static sinanbox_t sivmfn_prim_accumulate(uint8_t argc, sinanbox_t *argv) {
   sinanbox_t f = argv[0], acc = argv[1];
   const size_t list_length = source_list_length(argv[2]);
   siheap_array_t *flat_list = siarray_new(list_length);
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-  flat_list->header.internal_refcount++;
-#endif
+  siheap_intref(flat_list);
   // flatten the list into the array
   {
     size_t idx = 0;
@@ -494,9 +492,7 @@ static sinanbox_t sivmfn_prim_accumulate(uint8_t argc, sinanbox_t *argv) {
     acc = siexec_nanbox(f, 2, f_args);
   }
 
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-  flat_list->header.internal_refcount--;
-#endif
+  siheap_intderef(flat_list);
   siheap_deref(flat_list);
 
   return acc;
@@ -555,17 +551,12 @@ static sinanbox_t sivmfn_prim_build_list(uint8_t argc, sinanbox_t *argv) {
     }
     if (!new_list) {
       new_list = new_pair;
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-      new_list->header.internal_refcount++;
-#endif
+      siheap_intref(new_list);
     }
     prev_pair = new_pair;
   }
 
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-  new_list->header.internal_refcount--;
-#endif
-
+  siheap_intderef(new_list);
   return SIHEAP_PTRTONANBOX(new_list);
 }
 
@@ -643,17 +634,13 @@ static sinanbox_t sivmfn_prim_filter(uint8_t argc, sinanbox_t *argv) {
     }
     if (!new_list) {
       new_list = new_pair;
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-      new_list->header.internal_refcount++;
-#endif
+      siheap_intref(new_list);
     }
     prev_pair = new_pair;
   }
 
   if (new_list) {
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-    new_list->header.internal_refcount--;
-#endif
+    siheap_intderef(new_list);
     return SIHEAP_PTRTONANBOX(new_list);
   }
 
@@ -752,16 +739,12 @@ static sinanbox_t sivmfn_prim_map(uint8_t argc, sinanbox_t *argv) {
     }
     if (!new_list) {
       new_list = new_pair;
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-      new_list->header.internal_refcount++;
-#endif
+      siheap_intref(new_list);
     }
     prev_pair = new_pair;
   }
 
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-  new_list->header.internal_refcount--;
-#endif
+  siheap_intderef(new_list);
   return SIHEAP_PTRTONANBOX(new_list);
 }
 
@@ -854,17 +837,13 @@ static sinanbox_t sivmfn_prim_remove_all(uint8_t argc, sinanbox_t *argv) {
     }
     if (!new_list) {
       new_list = new_pair;
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-      new_list->header.internal_refcount++;
-#endif
+      siheap_intref(new_list);
     }
     prev_pair = new_pair;
   }
 
   if (new_list) {
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-    new_list->header.internal_refcount--;
-#endif
+    siheap_intderef(new_list);
     return SIHEAP_PTRTONANBOX(new_list);
   }
   return NANBOX_OFNULL();
@@ -1008,11 +987,12 @@ static sinanbox_t sivmfn_prim_eval_stream(uint8_t argc, sinanbox_t *argv) {
     siheap_array_t *stream_pair = nanbox_toarray(stream);
     sinanbox_t new_val = siarray_get(stream_pair, 0);
     sinanbox_t stream_tail = siarray_get(stream_pair, 1);
-    siheap_refbox(new_val);
-    siheap_refbox(stream_tail);
-    siheap_deref(stream_pair);
+    siheap_intref(stream_pair);
     stream = siexec_nanbox(stream_tail, 0, NULL);
-    siheap_derefbox(stream_tail);
+    siheap_intderef(stream_pair);
+
+    siheap_refbox(new_val);
+    siheap_deref(stream_pair);
 
     siheap_array_t *new_pair = source_pair_ptr(new_val, NANBOX_OFNULL());
     if (prev_pair) {
@@ -1020,19 +1000,13 @@ static sinanbox_t sivmfn_prim_eval_stream(uint8_t argc, sinanbox_t *argv) {
     }
     if (!new_list) {
       new_list = new_pair;
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-      new_list->header.internal_refcount++;
-#endif
+      siheap_intref(new_list);
     }
     prev_pair = new_pair;
   }
 
   siheap_derefbox(stream);
-
-#ifdef SINTER_DEBUG_MEMORY_CHECK
-  new_list->header.internal_refcount--;
-#endif
-
+  siheap_intderef(new_list);
   return SIHEAP_PTRTONANBOX(new_list);
 }
 

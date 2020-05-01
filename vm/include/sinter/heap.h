@@ -354,8 +354,39 @@ SINTER_INLINE void siheap_derefbox(sinanbox_t ent) {
 }
 
 #ifdef SINTER_DEBUG_MEMORY_CHECK
+SINTER_INLINE void siheap_intref(void *vent) {
+  assert(vent);
+  siheap_header_t *ent = (siheap_header_t *) vent;
+  assert(ent->type != sitype_free);
+  ent->internal_refcount += 1;
+}
+
+SINTER_INLINE void siheap_intrefbox(sinanbox_t ent) {
+  if (NANBOX_ISPTR(ent)) {
+    siheap_intref(SIHEAP_NANBOXTOPTR(ent));
+  }
+}
+
+SINTER_INLINE void siheap_intderef(void *vent) {
+  assert(vent);
+  siheap_header_t *ent = (siheap_header_t *) vent;
+  assert(ent->type != sitype_free);
+  ent->internal_refcount -= 1;
+}
+
+SINTER_INLINE void siheap_intderefbox(sinanbox_t ent) {
+  if (NANBOX_ISPTR(ent)) {
+    siheap_intderef(SIHEAP_NANBOXTOPTR(ent));
+  }
+}
+
 void debug_memorycheck(void);
 void debug_memorycheck_search(const siheap_header_t *needle);
+#else
+#define siheap_intref(x) ((void) 0)
+#define siheap_intderef(x) ((void) 0)
+#define siheap_intrefbox(x) ((void) 0)
+#define siheap_intderefbox(x) ((void) 0)
 #endif
 
 #ifdef __cplusplus
