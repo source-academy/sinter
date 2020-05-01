@@ -112,6 +112,8 @@ inline int32_t nanbox_int(sinanbox_t val) {
 #endif
 #define NANBOX_PTR(val) ((val).as_u32 & 0x3fffffu)
 #define NANBOX_TOFLOAT(val) (nanbox_tofloat((val)))
+#define NANBOX_TOI32(val) (nanbox_toi32((val)))
+#define NANBOX_TOU32(val) (nanbox_tou32((val)))
 
 #define NANBOX_IFN_TYPE(val) (((val).as_u32 & 0x100) >> 8)
 #define NANBOX_IFN_NUMBER(val) ((val).as_u32 & 0xff)
@@ -169,6 +171,26 @@ SINTER_INLINE float nanbox_tofloat(sinanbox_t v) {
     sifault(sinter_fault_type);
     return 0;
   }
+}
+
+SINTER_INLINE uint32_t nanbox_tou32(sinanbox_t v) {
+  if (NANBOX_ISINT(v)) {
+    return (uint32_t) NANBOX_INT(v);
+  } else if (NANBOX_ISFLOAT(v)) {
+    return (uint32_t) NANBOX_FLOAT(v);
+  }
+  sifault(sinter_fault_type);
+  return 0;
+}
+
+SINTER_INLINE int32_t nanbox_toi32(sinanbox_t v) {
+  if (NANBOX_ISINT(v)) {
+    return NANBOX_INT(v);
+  } else if (NANBOX_ISFLOAT(v)) {
+    return (int32_t) NANBOX_FLOAT(v);
+  }
+  sifault(sinter_fault_type);
+  return 0;
 }
 
 #ifdef __cplusplus

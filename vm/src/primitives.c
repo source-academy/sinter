@@ -144,26 +144,6 @@ static void handle_display(unsigned int argc, sinanbox_t *argv, bool is_error) {
   } \
 } while (0)
 
-static inline uint32_t nanbox_tou32(sinanbox_t v) {
-  if (NANBOX_ISINT(v)) {
-    return (uint32_t) NANBOX_INT(v);
-  } else if (NANBOX_ISFLOAT(v)) {
-    return (uint32_t) NANBOX_FLOAT(v);
-  }
-  sifault(sinter_fault_type);
-  return 0;
-}
-
-static inline int32_t nanbox_toi32(sinanbox_t v) {
-  if (NANBOX_ISINT(v)) {
-    return NANBOX_INT(v);
-  } else if (NANBOX_ISFLOAT(v)) {
-    return (int32_t) NANBOX_FLOAT(v);
-  }
-  sifault(sinter_fault_type);
-  return 0;
-}
-
 /******************************************************************************
  * Basic type-checking primitives
  ******************************************************************************/
@@ -300,7 +280,7 @@ static sinanbox_t sivmfn_prim_math_abs(uint8_t argc, sinanbox_t *argv) {
 
 static sinanbox_t sivmfn_prim_math_clz32(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(1);
-  uint32_t clzarg = nanbox_tou32(*argv);
+  uint32_t clzarg = NANBOX_TOU32(*argv);
 
   if (clzarg == 0) {
     return NANBOX_OFINT(32);
@@ -325,7 +305,7 @@ static sinanbox_t sivmfn_prim_math_fround(uint8_t argc, sinanbox_t *argv) {
 
 static sinanbox_t sivmfn_prim_math_imul(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(2);
-  uint32_t r = nanbox_tou32(argv[0])*nanbox_tou32(argv[1]);
+  uint32_t r = NANBOX_TOU32(argv[0])*NANBOX_TOU32(argv[1]);
   if (r > INT32_MAX) {
     r -= 0x80000000ull;
   }
@@ -641,7 +621,7 @@ static sinanbox_t sivmfn_prim_append(uint8_t argc, sinanbox_t *argv) {
 static sinanbox_t sivmfn_prim_build_list(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(2);
 
-  int32_t limit = nanbox_toi32(argv[0]);
+  int32_t limit = NANBOX_TOI32(argv[0]);
 
   if (limit <= 0) {
     return NANBOX_OFNULL();
@@ -704,7 +684,7 @@ static sinanbox_t sivmfn_prim_enum_list(uint8_t argc, sinanbox_t *argv) {
       } else if (NANBOX_ISFLOAT(argv[1])) {
         float end = NANBOX_FLOAT(argv[1]);
         if (end > INT32_MIN && end < INT32_MAX) {
-          return enum_list_int32_t(nanbox_toi32(argv[0]), (int32_t) end);
+          return enum_list_int32_t(NANBOX_TOI32(argv[0]), (int32_t) end);
         } else {
           return enum_list_float(NANBOX_INT(argv[0]), end);
         }
@@ -816,7 +796,7 @@ static sinanbox_t sivmfn_prim_list_ref(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(2);
 
   sinanbox_t list = argv[0];
-  int32_t count = nanbox_toi32(argv[1]);
+  int32_t count = NANBOX_TOI32(argv[1]);
   for (int32_t i = 0; i < count; ++i) {
     list = source_tail(list);
   }
