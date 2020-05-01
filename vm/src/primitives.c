@@ -963,9 +963,26 @@ static sinanbox_t sivmfn_prim_build_stream(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_enum_stream(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  sinanbox_t start = argv[0], end = argv[1];
+
+  if (NANBOX_ISINT(start) && NANBOX_ISINT(end)) {
+    // n.b. don't merge this into an &&, we don't want to unnecessarily convert to float
+    if (NANBOX_INT(start) > NANBOX_INT(end)) {
+      return NANBOX_OFNULL();
+    }
+  } else if (NANBOX_TOFLOAT(start) > NANBOX_TOFLOAT(end)) {
+    return NANBOX_OFNULL();
+  }
+
+  siheap_intcont_t *ic = siintcont_new(sivmfn_prim_enum_stream, 2);
+  if (NANBOX_ISINT(start)) {
+    ic->argv[0] = NANBOX_WRAP_INT(NANBOX_INT(start) + 1);
+  } else { // note: type checked by the ISINT or TOFLOAT above
+    ic->argv[0] = NANBOX_OFFLOAT(NANBOX_FLOAT(start) + 1);
+  }
+  ic->argv[1] = end;
+  return source_pair(start, SIHEAP_PTRTONANBOX(ic));
 }
 
 static sinanbox_t sivmfn_prim_eval_stream(uint8_t argc, sinanbox_t *argv) {
