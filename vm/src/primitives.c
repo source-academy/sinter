@@ -1257,13 +1257,34 @@ static sinanbox_t sivmfn_prim_stream_map(uint8_t argc, sinanbox_t *argv) {
   ic->argv[0] = fn;
   ic->argv[1] = tail;
   return source_pair(fn_res, SIHEAP_PTRTONANBOX(ic));
-
 }
 
 static sinanbox_t sivmfn_prim_stream_member(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  sinanbox_t needle = argv[0], xs = argv[1];
+
+  if (NANBOX_ISNULL(xs)) {
+    return NANBOX_OFNULL();
+  }
+
+  siheap_refbox(xs);
+  while (!NANBOX_ISNULL(xs)) {
+    siheap_array_t *stream_pair = nanbox_toarray(xs);
+    sinanbox_t head = siarray_get(stream_pair, 0);
+    sinanbox_t tail = siarray_get(stream_pair, 1);
+
+    if (sivm_equal(head, needle)) {
+      return xs;
+    }
+
+    siheap_intref(stream_pair);
+    xs = siexec_nanbox(tail, 0, NULL);
+    siheap_intderef(stream_pair);
+    siheap_deref(stream_pair);
+  }
+
+  siheap_derefbox(xs);
+  return NANBOX_OFNULL();
 }
 
 static sinanbox_t sivmfn_prim_stream_ref(uint8_t argc, sinanbox_t *argv) {
