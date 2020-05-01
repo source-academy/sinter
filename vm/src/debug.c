@@ -179,6 +179,11 @@ void debug_heap_obj(const siheap_header_t *o) {
     SIDEBUG("array; address %p; data address %p; count %d; allocated %d", (void *) a, (void *) a->data, a->count, a->alloc_size);
     break;
   }
+  case sitype_intcont: {
+    const siheap_intcont_t *c = (const siheap_intcont_t *) o;
+    SIDEBUG("function (internal continuation); argc %d", c->argc);
+    break;
+  }
   case sitype_array_data:
   case sitype_empty:
   case sitype_free:

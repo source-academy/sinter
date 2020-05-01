@@ -52,6 +52,7 @@ static void debug_memorycheck_walk_check_nanboxes(sinanbox_t *arr, const size_t 
       case sitype_array:
       case sitype_strconst:
       case sitype_strpair:
+      case sitype_intcont:
         break;
       case sitype_frame:
         // the stack has nanboxes referring to frames (fn return information)
@@ -87,6 +88,20 @@ static void debug_memorycheck_walk_do_object_2(const siheap_header_t *obj) {
 
   case sitype_array_data: {
     // checking done above
+    break;
+  }
+
+  case sitype_intcont: {
+    siheap_intcont_t *c = (siheap_intcont_t *) obj;
+
+    assert(c->header.type == sitype_intcont);
+
+    // check that the size of the allocated argv array and the argc tally
+    // note: >= because the heap allocator could over-allocate (in case it decides not to split the block)
+    assert(c->header.size >= sizeof(siheap_intcont_t) + c->argc*sizeof(sinanbox_t));
+
+    // increase refcount of data referents
+    debug_memorycheck_walk_check_nanboxes(c->argv, c->argc, false);
     break;
   }
 
@@ -278,6 +293,12 @@ static void debug_memorycheck_search_do_object(const siheap_header_t *needle, co
       SIDEBUG("\n");
     }
     debug_memorycheck_search_do_nanboxes(c->data->data, c->count, needle, obj);
+    break;
+  }
+
+  case sitype_intcont: {
+    siheap_intcont_t *c = (siheap_intcont_t *) obj;
+    debug_memorycheck_search_do_nanboxes(c->argv, c->argc, needle, obj);
     break;
   }
 

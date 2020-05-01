@@ -51,6 +51,9 @@ void siheap_mdestroy(siheap_header_t *ent) {
   case sitype_function:
     sifunction_destroy((siheap_function_t *) ent);
     break;
+  case sitype_intcont:
+    siintcont_destroy((siheap_intcont_t *) ent);
+    break;
   case sitype_array_data:
   case sitype_frame:
   case sitype_strconst:
@@ -110,6 +113,13 @@ static void siheap_mark(siheap_header_t *vent) {
         siheap_markbox(a->data->data[i]);
       }
       siheap_mark(&a->data->header);
+      break;
+    }
+    case sitype_intcont: {
+      siheap_intcont_t *a = (siheap_intcont_t *) vent;
+      for (address_t i = 0; i < a->argc; ++i) {
+        siheap_markbox(a->argv[i]);
+      }
       break;
     }
     case sitype_strpair: {
@@ -192,6 +202,7 @@ static address_t sizeof_strobj(siheap_header_t *obj) {
     return v->header.size - sizeof(siheap_string_t) - 1;
   }
 
+  case sitype_intcont:
   case sitype_array_data:
   case sitype_empty:
   case sitype_frame:
@@ -234,6 +245,7 @@ static void write_strobj(siheap_header_t *obj, char **to) {
     return;
   }
 
+  case sitype_intcont:
   case sitype_array_data:
   case sitype_empty:
   case sitype_frame:

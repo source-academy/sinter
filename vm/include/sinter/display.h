@@ -37,6 +37,7 @@ SINTER_INLINEIFC void sidisplay_strobj(siheap_header_t *obj, _Bool is_error) {
       break;
     }
 
+    case sitype_intcont:
     case sitype_array_data:
     case sitype_empty:
     case sitype_frame:
@@ -91,6 +92,9 @@ SINTER_INLINEIFC void sidisplay_nanbox(sinanbox_t v, bool is_error) {
           obj->flag_displayed = false;
           break;
         }
+        case sitype_intcont:
+          SIVMFN_PRINT("<function (internal continuation)>", is_error);
+          break;
         case sitype_function:
           SIVMFN_PRINT("<function>", is_error);
           break;

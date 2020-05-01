@@ -5,6 +5,7 @@
 #include "opcode.h"
 #include "heap.h"
 #include "debug.h"
+#include "internal_fn.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -254,6 +255,7 @@ SINTER_INLINEIFC const char *sistrobj_tocharptr(siheap_header_t *obj) {
   case sitype_function:
   case sitype_frame:
   case sitype_env:
+  case sitype_intcont:
   default:
     SIBUGM("Unknown string type\n");
     sifault(sinter_fault_internal_error);
@@ -278,6 +280,7 @@ SINTER_INLINE _Bool siheap_is_string(siheap_header_t *h) {
   case sitype_function:
   case sitype_frame:
   case sitype_env:
+  case sitype_intcont:
   default:
     return false;
   }
@@ -358,6 +361,26 @@ SINTER_INLINEIFC void siarray_destroy(siheap_array_t *array) {
   siheap_deref(array->data);
 }
 #endif
+
+typedef struct {
+  siheap_header_t header;
+  sivmfnptr_t fn;
+  address_t argc;
+  sinanbox_t argv[];
+} siheap_intcont_t;
+
+SINTER_INLINEIFC siheap_intcont_t *siintcont_new(sivmfnptr_t fn, address_t argc) {
+  siheap_intcont_t *ic = (siheap_intcont_t *) siheap_malloc(sizeof(siheap_intcont_t) + argc*sizeof(sinanbox_t), sitype_intcont);
+  ic->argc = argc;
+  ic->fn = fn;
+  return ic;
+}
+
+SINTER_INLINEIFC void siintcont_destroy(siheap_intcont_t *ic) {
+  for (address_t i = 0; i < ic->argc; ++i) {
+    siheap_derefbox(ic->argv[i]);
+  }
+}
 
 #ifdef __cplusplus
 }

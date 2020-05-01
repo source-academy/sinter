@@ -27,6 +27,7 @@ typedef enum __attribute__((__packed__)) {
   sitype_array = 25,
   sitype_array_data = 26,
   sitype_function = 27,
+  sitype_intcont = 28,
   sitype_free = 0xFF,
 } siheap_type_t;
 _Static_assert(sizeof(siheap_type_t) == 1, "siheap_type_t wider than needed");

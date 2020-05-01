@@ -59,6 +59,7 @@ static void set_result(sinanbox_t exec_result, sinter_value_t *result) {
       result->type = sinter_type_string;
       result->string_value = sistrobj_tocharptr(obj);
       break;
+    case sitype_intcont:
     case sitype_function:
       result->type = sinter_type_function;
       result->object_value = exec_result.as_u32;
