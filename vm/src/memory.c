@@ -325,6 +325,9 @@ siheap_header_t *siheap_mrealloc(siheap_header_t *ent, address_t newsize) {
   // now allocate a new block with the new size and original type
   siheap_header_t *new_alloc = siheap_malloc(newsize, orig_type);
 
+  // move the contents over from the old block
+  memmove(new_alloc + 1, ent + 1, orig_size - sizeof(siheap_header_t));
+
   if (!free_first) {
     siheap_mfree_inner(ent);
   }
@@ -333,9 +336,6 @@ siheap_header_t *siheap_mrealloc(siheap_header_t *ent, address_t newsize) {
 #ifdef SINTER_DEBUG_MEMORY_CHECK
   new_alloc->internal_refcount = orig_internal_refcount;
 #endif
-
-  // move the contents over from the old block
-  memmove(new_alloc + 1, ent + 1, orig_size - sizeof(siheap_header_t));
 
   return new_alloc;
 }
