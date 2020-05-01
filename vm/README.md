@@ -35,7 +35,7 @@ For configuration options, see the README in `vm`.
 
 ## Use it on a device
 
-Sinter is a C library. For examples on how to use Sinter, see [the CLI runner](runner/src/runner.c), [the Arduino sketch example](devices/arduino/arduino.ino), or the [ESP32 example](devices/esp32/src/main.c).
+Sinter is a C library. For examples on how to use Sinter, see [the CLI runner](../runner/src/runner.c), [the Arduino sketch example](../devices/arduino/arduino.ino), or the [ESP32 example](../devices/esp32/src/main.c).
 
 ## Configuration
 
