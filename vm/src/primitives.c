@@ -20,11 +20,6 @@
  * standard library.
  */
 
-static void unimpl(void) {
-  SIBUGV("Unimplemented primitive function %02x at address 0x%tx\n", *(sistate.pc + 1), SISTATE_CURADDR);
-  sifault(sinter_fault_invalid_program);
-}
-
 static void debug_display_argv(unsigned int argc, sinanbox_t *argv) {
   (void) argc; (void) argv;
   for (unsigned int i = 0; i < argc; ++i) {
@@ -90,12 +85,6 @@ static sinanbox_t sivmfn_prim_is_null(uint8_t argc, sinanbox_t *argv) {
 static sinanbox_t sivmfn_prim_is_number(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(1);
   return NANBOX_OFBOOL(NANBOX_ISNUMERIC(*argv));
-}
-
-static sinanbox_t sivmfn_prim_is_stream(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
 }
 
 static sinanbox_t sivmfn_prim_is_string(uint8_t argc, sinanbox_t *argv) {
@@ -707,13 +696,6 @@ static sinanbox_t sivmfn_prim_list_ref(uint8_t argc, sinanbox_t *argv) {
   sinanbox_t retv = source_head(list);
   siheap_refbox(retv);
   return retv;
-}
-
-static sinanbox_t sivmfn_prim_list_to_string(uint8_t argc, sinanbox_t *argv) {
-  // TODO: do we want to implement this?
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
 }
 
 static sinanbox_t sivmfn_prim_map(uint8_t argc, sinanbox_t *argv) {
@@ -1515,6 +1497,37 @@ static sinanbox_t sivmfn_prim_stream_to_list(uint8_t argc, sinanbox_t *argv) {
   return SIHEAP_PTRTONANBOX(new_list);
 }
 
+static sinanbox_t sivmfn_prim_is_stream(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  sinanbox_t xs = argv[0];
+
+  siheap_refbox(xs);
+  while (!NANBOX_ISNULL(xs)) {
+    siheap_header_t *obj = SIHEAP_NANBOXTOPTR(xs);
+    siheap_array_t *pair = (siheap_array_t *) obj;
+    if (!NANBOX_ISPTR(xs) || obj->type != sitype_array || pair->count != 2) {
+      siheap_derefbox(xs);
+      return NANBOX_OFBOOL(false);
+    }
+
+    sinanbox_t tail = siarray_get(pair, 1);
+    siheap_header_t *tailobj = SIHEAP_NANBOXTOPTR(tail);
+
+    if (!NANBOX_ISIFN(tail)
+        && !(NANBOX_ISPTR(tail) && (tailobj->type == sitype_function || tailobj->type == sitype_intcont))) {
+      siheap_deref(pair);
+      return NANBOX_OFBOOL(false);
+    }
+
+    siheap_intref(pair);
+    xs = siexec_nanbox(tail, 0, NULL);
+    siheap_intderef(pair);
+    siheap_deref(pair);
+  }
+
+  return NANBOX_OFBOOL(true);
+}
+
 /******************************************************************************
  * Miscellaneous primitives
  ******************************************************************************/
@@ -1611,7 +1624,7 @@ const sivmfnptr_t sivmfn_primitives[] = {
   sivmfn_prim_list,
   sivmfn_prim_list_ref,
   sivmfn_prim_list_to_stream,
-  sivmfn_prim_list_to_string,
+  /* list_to_string */ sivmfn_prim_unimpl, // do we want to implement this?
   sivmfn_prim_map,
   sivmfn_prim_math_abs,
   sivmfn_prim_math_acos,
