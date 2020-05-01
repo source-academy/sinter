@@ -1056,6 +1056,7 @@ static sinanbox_t sivmfn_prim_stream(uint8_t argc, sinanbox_t *argv) {
   } else if (argc == 1) {
     siheap_intcont_t *ic = siintcont_new(prim_stream_cont, 1);
     ic->argv[0] = NANBOX_OFNULL();
+    siheap_refbox(argv[0]);
     return source_pair(argv[0], SIHEAP_PTRTONANBOX(ic));
   }
 

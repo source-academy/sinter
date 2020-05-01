@@ -46,6 +46,7 @@ static void debug_memorycheck_walk_check_nanboxes(sinanbox_t *arr, const size_t 
       // referred to in a nanbox
       case sitype_string:
       default:
+        SIBUGV("Unexpected pointer to type %d seen in NaNbox\n", refobj->type);
         assert(false);
         break;
       case sitype_function:
