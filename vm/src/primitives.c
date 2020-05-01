@@ -1029,13 +1029,6 @@ static sinanbox_t sivmfn_prim_display(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFUNDEF();
 }
 
-static sinanbox_t sivmfn_prim_draw_data(uint8_t argc, sinanbox_t *argv) {
-  // Not supported on Sinter.
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
 static inline bool structural_equal(sinanbox_t l, sinanbox_t r) {
   if (sivm_equal(l, r)) {
     return true;
@@ -1074,32 +1067,16 @@ static sinanbox_t sivmfn_prim_error(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFEMPTY();
 }
 
-static sinanbox_t sivmfn_prim_parse_int(uint8_t argc, sinanbox_t *argv) {
-  // TODO (Needs prompt for this to make sense)
+static sinanbox_t sivmfn_prim_unimpl(uint8_t argc, sinanbox_t *argv) {
   (void) argc; (void) argv;
-  unimpl();
+  SIBUGV("Unimplemented primitive function %02x at address 0x%tx\n", *(sistate.pc + 1), SISTATE_CURADDR);
+  sifault(sinter_fault_invalid_program);
   return NANBOX_OFEMPTY();
 }
 
-static sinanbox_t sivmfn_prim_runtime(uint8_t argc, sinanbox_t *argv) {
-  // TODO
+static sinanbox_t sivmfn_prim_noop(uint8_t argc, sinanbox_t *argv) {
   (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_stringify(uint8_t argc, sinanbox_t *argv) {
-  // TODO
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
-}
-
-static sinanbox_t sivmfn_prim_prompt(uint8_t argc, sinanbox_t *argv) {
-  // TODO (Needs to call out to the hosting application)
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  return NANBOX_OFUNDEF();
 }
 
 const sivmfnptr_t sivmfn_primitives[] = {
@@ -1109,7 +1086,7 @@ const sivmfnptr_t sivmfn_primitives[] = {
   sivmfn_prim_build_list,
   sivmfn_prim_build_stream,
   sivmfn_prim_display,
-  sivmfn_prim_draw_data,
+  /* draw_data */ sivmfn_prim_noop, // not supported, obviously
   sivmfn_prim_enum_list,
   sivmfn_prim_enum_stream,
   sivmfn_prim_equal,
@@ -1172,11 +1149,11 @@ const sivmfnptr_t sivmfn_primitives[] = {
   sivmfn_prim_math_trunc,
   sivmfn_prim_member,
   sivmfn_prim_pair,
-  sivmfn_prim_parse_int,
+  /* parse_int */ sivmfn_prim_unimpl, // TODO: doesn't make sense without the ability to take input (prompt)
   sivmfn_prim_remove,
   sivmfn_prim_remove_all,
   sivmfn_prim_reverse,
-  sivmfn_prim_runtime,
+  /* runtime */ sivmfn_prim_unimpl, // TODO: need to get time from host
   sivmfn_prim_set_head,
   sivmfn_prim_set_tail,
   sivmfn_prim_stream,
@@ -1193,6 +1170,6 @@ const sivmfnptr_t sivmfn_primitives[] = {
   sivmfn_prim_stream_tail,
   sivmfn_prim_stream_to_list,
   sivmfn_prim_tail,
-  sivmfn_prim_stringify,
-  sivmfn_prim_prompt
+  /* stringify */ sivmfn_prim_unimpl, // TODO: do we want this?
+  /* prompt */ sivmfn_prim_unimpl // TODO: need to call out to host
 };
