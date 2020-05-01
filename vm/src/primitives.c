@@ -892,6 +892,11 @@ static sinanbox_t sivmfn_prim_array_length(uint8_t argc, sinanbox_t *argv) {
  * Stream primitives
  ******************************************************************************/
 
+/**
+ * Applies the tail of stream, and returns the result. Equivalent to stream_tail in Source.
+ *
+ * References: No argument references consumed. Returns return value reference.
+ */
 static inline sinanbox_t source_stream_tail(sinanbox_t stream) {
   sinanbox_t tail = source_tail(stream);
   return siexec_nanbox(tail, 0, NULL);
@@ -1288,9 +1293,23 @@ static sinanbox_t sivmfn_prim_stream_member(uint8_t argc, sinanbox_t *argv) {
 }
 
 static sinanbox_t sivmfn_prim_stream_ref(uint8_t argc, sinanbox_t *argv) {
-  (void) argc; (void) argv;
-  unimpl();
-  return NANBOX_OFEMPTY();
+  CHECK_ARGC(2);
+  sinanbox_t xs = argv[0];
+  int32_t count = NANBOX_TOI32(argv[1]);
+
+  siheap_refbox(xs);
+  for (int32_t i = 0; i < count; ++i) {
+    sinanbox_t old_xs = xs;
+    siheap_intrefbox(old_xs);
+    xs = source_stream_tail(old_xs);
+    siheap_intderefbox(old_xs);
+    siheap_derefbox(old_xs);
+  }
+
+  sinanbox_t head = source_head(xs);
+  siheap_refbox(head);
+  siheap_derefbox(xs);
+  return head;
 }
 
 static sinanbox_t sivmfn_prim_stream_remove(uint8_t argc, sinanbox_t *argv) {
