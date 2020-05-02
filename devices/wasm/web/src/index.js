@@ -159,13 +159,6 @@ sinterwasmFuture.then((module) => {
   sinterwasm = module;
 });
 
-document.addEventListener("keydown", ({ keyCode, shiftKey }) => {
-  if (shiftKey && keyCode == 13) {
-    run();
-    return false;
-  }
-});
-
 export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [follow, setFollow] = useState(scrollOutput);
@@ -209,6 +202,13 @@ export default function App() {
           width="100%"
           fontSize={16}
           value={editorCode}
+          commands={[
+            {
+              name: "run",
+              bindKey: { win: "Shift-Enter", mac: "Shift-Enter" },
+              exec: run,
+            },
+          ]}
         />
       </div>
       <div id="control">
