@@ -40,4 +40,8 @@
 #undef NDEBUG
 #endif
 
+#if defined(SINTER_DEBUG_MEMORY_CHECK) && defined(NDEBUG)
+#warning SINTER_DEBUG_MEMORY_CHECK has no effect if NDEBUG is set
+#endif
+
 #endif

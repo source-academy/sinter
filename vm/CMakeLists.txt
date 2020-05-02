@@ -24,9 +24,9 @@ add_library(sinter
 
 target_compile_options(sinter
   PRIVATE -Wall -Wextra -Wswitch-enum -std=c11 -pedantic -Werror -fwrapv -g
-  PRIVATE $<$<CONFIG:Debug>:-Og>
+  PRIVATE $<$<CONFIG:Debug>:$<IF:$<BOOL:${SINTER_NUMERIC_OPT}>,-O0,-Og>>
   PRIVATE $<$<CONFIG:Release>:-O2 -DNDEBUG>
-  PUBLIC $<$<CONFIG:Debug>:-DSINTER_DEBUG>
+  PUBLIC $<$<OR:$<CONFIG:Debug>,$<BOOL:${SINTER_DEBUG}>>:-DSINTER_DEBUG>
   PUBLIC -DSINTER_STATIC_HEAP
   PUBLIC -DSINTER_DEBUG_LOGLEVEL=${SINTER_DEBUG_LOGLEVEL}
   PUBLIC $<$<BOOL:${SINTER_DEBUG_ABORT_ON_FAULT}>:-DSINTER_DEBUG_ABORT_ON_FAULT>

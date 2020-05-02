@@ -6,7 +6,7 @@
 #include <sinter/debug.h>
 #include <sinter/debug_heap.h>
 
-#ifdef SINTER_DEBUG_MEMORY_CHECK
+#if defined(SINTER_DEBUG_MEMORY_CHECK) && !defined(NDEBUG)
 /**
  * Do basic sanity checks on the heap, and reset the debug refcount.
  */
