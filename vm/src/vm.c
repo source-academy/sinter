@@ -249,7 +249,7 @@ static void main_loop(void) {
           break;
         default:
           SIBUG();
-          assert(false);
+          sifault(sinter_fault_internal_error);
           break;
         }
       } else if (NANBOX_ISPTR(v0) & NANBOX_ISPTR(v1)) {
@@ -398,7 +398,7 @@ static void main_loop(void) {
         break;
       default:
         SIBUG();
-        assert(false);
+        sifault(sinter_fault_internal_error);
         break;
       }
       sistack_push(r);
@@ -454,6 +454,7 @@ static void main_loop(void) {
           r = NANBOX_OFBOOL(NANBOX_FLOAT(v0) op NANBOX_FLOAT(v1)); \
           break; \
         default: \
+          SIBUG(); \
           sifault(sinter_fault_internal_error); \
           break; \
         } \
