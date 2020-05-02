@@ -14,4 +14,8 @@ export default (config, env, helpers) => {
   babelPresetEnvPresets.targets = "Firefox ESR";
   babelPresetEnvPresets.loose = false;
   // console.log(babelPresetEnvPresets);
+
+  if (env.production) {
+    config.output.publicPath = '';
+  }
 };
