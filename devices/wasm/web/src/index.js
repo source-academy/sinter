@@ -9,7 +9,7 @@ import { assemble } from "js-slang/dist/vm/svml-assembler";
 import { stringifyProgram } from "js-slang/dist/vm/util";
 import loadSinterwasm from "./sinterwasm";
 import AceEditor from "react-ace";
-import { saveAs } from 'file-saver';
+import { saveAs } from "file-saver";
 
 import "ace-builds/src-noconflict/mode-javascript";
 import "ace-builds/src-noconflict/theme-monokai";
@@ -54,7 +54,7 @@ function resizeHeap() {
   onStdout(`Resized heap to ${newSize} bytes.\n`);
 }
 
-let editorCode = "";
+let editorCode = `// Shift+Enter to run, just like in Source Academy\n\ndisplay("Hello world!");`;
 let sinterwasm = null;
 
 function formatError(error) {
@@ -108,9 +108,14 @@ function compile() {
 }
 
 function run() {
+  const asm = compile();
+  if (asm === null) {
+    return;
+  }
+
   let bin;
   try {
-    bin = assemble(compile());
+    bin = assemble(asm);
   } catch (e) {
     onStderr(formatError(e));
     return;
@@ -152,6 +157,13 @@ const sinterwasmFuture = loadSinterwasm({
 sinterwasmFuture.then((module) => {
   module.alloc_heap(0x10000);
   sinterwasm = module;
+});
+
+document.addEventListener("keydown", ({ keyCode, shiftKey }) => {
+  if (shiftKey && keyCode == 13) {
+    run();
+    return false;
+  }
 });
 
 export default function App() {
@@ -196,6 +208,7 @@ export default function App() {
           height="100%"
           width="100%"
           fontSize={16}
+          value={editorCode}
         />
       </div>
       <div id="control">
