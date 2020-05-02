@@ -41,6 +41,7 @@ static const char *type_names[] = {
 };
 
 void setup_internals(void);
+void display_object_result(sinter_value_t *res, _Bool is_error);
 
 ssize_t check_posix(ssize_t result, const char *msg) {
   if (result == -1 && errno) {
@@ -118,6 +119,8 @@ int main(int argc, char *argv[]) {
     break;
   case sinter_type_array:
   case sinter_type_function:
+    display_object_result(&result, false);
+    break;
   default:
     printf("(unable to print value)");
     break;
