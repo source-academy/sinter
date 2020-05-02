@@ -6,8 +6,10 @@ import createContext from "js-slang/dist/createContext";
 import { parse } from "js-slang/dist/parser/parser";
 import { compileToIns } from "js-slang/dist/vm/svml-compiler";
 import { assemble } from "js-slang/dist/vm/svml-assembler";
+import { stringifyProgram } from "js-slang/dist/vm/util";
 import loadSinterwasm from "./sinterwasm";
 import AceEditor from "react-ace";
+import { saveAs } from 'file-saver';
 
 import "ace-builds/src-noconflict/mode-javascript";
 import "ace-builds/src-noconflict/theme-monokai";
@@ -62,7 +64,12 @@ function formatError(error) {
   return `${sev}${loc}${exp}\n`;
 }
 
-function run() {
+let clearBeforeRun = true;
+function compile() {
+  if (clearBeforeRun) {
+    clearOutput();
+  }
+
   const context = createContext(3, "default");
   const ast = parse(editorCode, context);
 
@@ -86,12 +93,24 @@ function run() {
   }
 
   if (typeof ast === "undefined") {
-    return;
+    return null;
   }
 
+  let asm;
+  try {
+    asm = compileToIns(ast);
+  } catch (e) {
+    onStderr(formatError(e));
+    return null;
+  }
+
+  return asm;
+}
+
+function run() {
   let bin;
   try {
-    bin = assemble(compileToIns(ast));
+    bin = assemble(compile());
   } catch (e) {
     onStderr(formatError(e));
     return;
@@ -107,9 +126,27 @@ function run() {
   sinterwasm.run(emsMem, bin.byteLength);
 }
 
+function toAsm() {
+  const dump = stringifyProgram(compile());
+  onStdout(dump + "\n");
+}
+
+function save() {
+  let bin;
+  try {
+    bin = assemble(compile());
+  } catch (e) {
+    onStderr(formatError(e));
+    return;
+  }
+
+  const blob = new Blob([bin], { type: "application/octet-stream" });
+  saveAs(blob, "program.svm");
+}
+
 const sinterwasmFuture = loadSinterwasm({
-  print: (str) => onStdout(str + '\n'),
-  printErr: (str) => onStderr(str + '\n'),
+  print: (str) => onStdout(str + "\n"),
+  printErr: (str) => onStderr(str + "\n"),
 });
 
 sinterwasmFuture.then((module) => {
@@ -119,7 +156,8 @@ sinterwasmFuture.then((module) => {
 
 export default function App() {
   const [loaded, setLoaded] = useState(false);
-  const [follow, setFollow] = useState(true);
+  const [follow, setFollow] = useState(scrollOutput);
+  const [clear, setClear] = useState(clearBeforeRun);
   useEffect(() => {
     sinterwasmFuture.then(() => {
       setLoaded(true);
@@ -140,6 +178,11 @@ export default function App() {
     setFollow(newFollow);
     scrollOutput = newFollow;
   }
+  function toggleClear() {
+    const newClear = !clear;
+    setClear(newClear);
+    clearBeforeRun = newClear;
+  }
 
   return (
     <div id="app">
@@ -159,8 +202,11 @@ export default function App() {
         {loaded ? (
           <div id="buttons">
             <button onClick={run}>Run</button>
+            <button onClick={toAsm}>Assembly</button>
+            <button onClick={save}>Save SVM</button>
             <button onClick={clearOutput}>Clear output</button>
             <button onClick={resizeHeap}>Resize heap</button>
+            <button onClick={toggleClear}>{clear ? "☑" : "☐"} Autoclear</button>
             <button onClick={toggleFollow}>{follow ? "☑" : "☐"} Autoscroll</button>
           </div>
         ) : (

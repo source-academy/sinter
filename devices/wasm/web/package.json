@@ -20,6 +20,7 @@
     "preact-cli": "^3.0.0-rc.6"
   },
   "dependencies": {
+    "file-saver": "^2.0.2",
     "js-slang": "^0.4.46",
     "preact": "^10.3.2",
     "react-ace": "^8.1.0"
