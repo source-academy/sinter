@@ -579,7 +579,7 @@ static sinanbox_t sivmfn_prim_enum_list(uint8_t argc, sinanbox_t *argv) {
         return enum_list_int32_t(NANBOX_INT(argv[0]), NANBOX_INT(argv[1]));
       } else if (NANBOX_ISFLOAT(argv[1])) {
         float end = NANBOX_FLOAT(argv[1]);
-        if (end > INT32_MIN && end < INT32_MAX) {
+        if (end > INT32_MIN && end < (float) INT32_MAX) {
           return enum_list_int32_t(NANBOX_TOI32(argv[0]), (int32_t) end);
         } else {
           return enum_list_float(NANBOX_INT(argv[0]), end);
