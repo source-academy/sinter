@@ -30,7 +30,7 @@ jobs:
       run: make -j4
     - name: test
       working-directory: build
-      run: make CTEST_OUTPUT_ON_FAILURE=1 test
+      run: make CTEST_PARALLEL_LEVEL=$(nproc) CTEST_OUTPUT_ON_FAILURE=1 test
     - name: coverage
       working-directory: build
       env:
