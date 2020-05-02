@@ -1,6 +1,8 @@
 #ifndef SINTER_CONFIG_H
 #define SINTER_CONFIG_H
 
+#include "../sinter_config.h"
+
 #ifndef SINTER_DEBUG_LOGLEVEL
 #define SINTER_DEBUG_LOGLEVEL 0
 #endif
@@ -11,6 +13,9 @@
 #define SINTER_HEAP_SIZE 0x10000
 #endif
 #else
+#ifdef SINTER_HEAP_SIZE
+#undef SINTER_HEAP_SIZE
+#endif
 #define SINTER_HEAP_SIZE (siheap_size)
 #endif
 

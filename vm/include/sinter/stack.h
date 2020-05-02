@@ -36,7 +36,7 @@ SINTER_INLINE void sistack_push_force(sinanbox_t entry) {
 }
 
 SINTER_INLINE void sistack_push(sinanbox_t entry) {
-#ifndef SINTER_SEATBELTS_OFF
+#ifndef SINTER_DISABLE_CHECKS
   if (sistack_top >= sistack_limit) {
     sifault(sinter_fault_stack_overflow);
     return;
@@ -47,39 +47,33 @@ SINTER_INLINE void sistack_push(sinanbox_t entry) {
 }
 
 SINTER_INLINE __attribute__((warn_unused_result)) sinanbox_t sistack_pop(void) {
-#ifndef SINTER_SEATBELTS_OFF
+#ifndef SINTER_DISABLE_CHECKS
   if (sistack_top <= sistack_bottom) {
     sifault(sinter_fault_stack_underflow);
-  } else
-#endif
-  {
-#if SINTER_DEBUG_LOGLEVEL >= 2
-    SIDEBUG("Popped from stack: ");
-    SIDEBUG_NANBOX(*(sistack_top - 1));
-    SIDEBUG("\n");
-#endif
-    return *(--sistack_top);
   }
+#endif
+
+#if SINTER_DEBUG_LOGLEVEL >= 2
+  SIDEBUG("Popped from stack: ");
+  SIDEBUG_NANBOX(*(sistack_top - 1));
+  SIDEBUG("\n");
+#endif
+  return *(--sistack_top);
 }
 
 SINTER_INLINE sinanbox_t sistack_peek(unsigned int index) {
   sinanbox_t *v = sistack_top - 1 - index;
-#ifndef SINTER_SEATBELTS_OFF
+#ifndef SINTER_DISABLE_CHECKS
   if (v < sistack_bottom) {
     sifault(sinter_fault_stack_underflow);
-  } else
-#endif
-  {
-    return *v;
   }
+#endif
+
+  return *v;
 }
 
 SINTER_INLINE void sistack_new(unsigned int size, const opcode_t *return_address, siheap_env_t *return_env) {
   siheap_frame_t *frame = siframe_new();
-  if (!frame) {
-    sifault(sinter_fault_out_of_memory);
-    return;
-  }
   frame->return_address = return_address;
   frame->saved_env = return_env;
   frame->saved_stack_bottom = sistack_bottom;

@@ -68,20 +68,16 @@ SINTER_INLINEIFC void sienv_destroy(siheap_env_t *const env) {
  *
  * Note: the caller is responsible for incrementing the reference count, if needed.
  */
-SINTER_INLINEIFC sinanbox_t sienv_get(
-  siheap_env_t *const env,
-  const uint16_t index);
+SINTER_INLINEIFC sinanbox_t sienv_get(siheap_env_t *const env, const uint16_t index);
 #ifndef __cplusplus
-SINTER_INLINEIFC sinanbox_t sienv_get(
-  siheap_env_t *const env,
-  const uint16_t index) {
-
-#ifndef SINTER_SEATBELTS_OFF
+SINTER_INLINEIFC sinanbox_t sienv_get(siheap_env_t *const env, const uint16_t index) {
+#ifndef SINTER_DISABLE_CHECKS
   if (index >= env->entry_count) {
     sifault(sinter_fault_invalid_load);
     return NANBOX_OFEMPTY();
   }
 #endif
+
   return env->entry[index];
 }
 #endif
@@ -94,17 +90,11 @@ SINTER_INLINEIFC sinanbox_t sienv_get(
  * Note: the caller "passes" its reference to the environment. That is, the caller should increment the reference
  * count of the heap object (if the value is a pointer) if it is going to continue holding on to the value.
  */
-SINTER_INLINEIFC void sienv_put(
-  siheap_env_t *const env,
-  const uint16_t index,
-  const sinanbox_t val);
+SINTER_INLINEIFC void sienv_put(siheap_env_t *const env, const uint16_t index, const sinanbox_t val);
 
 #ifndef __cplusplus
-SINTER_INLINEIFC void sienv_put(
-  siheap_env_t *const env,
-  const uint16_t index,
-  const sinanbox_t val) {
-#ifndef SINTER_SEATBELTS_OFF
+SINTER_INLINEIFC void sienv_put(siheap_env_t *const env, const uint16_t index, const sinanbox_t val) {
+#ifndef SINTER_DISABLE_CHECKS
   if (index >= env->entry_count) {
     sifault(sinter_fault_invalid_load);
     return;
@@ -116,13 +106,9 @@ SINTER_INLINEIFC void sienv_put(
 }
 #endif
 
-SINTER_INLINEIFC siheap_env_t *sienv_getparent(
-  siheap_env_t *env,
-  unsigned int index);
+SINTER_INLINEIFC siheap_env_t *sienv_getparent(siheap_env_t *env, unsigned int index);
 #ifndef __cplusplus
-SINTER_INLINEIFC siheap_env_t *sienv_getparent(
-  siheap_env_t *env,
-  unsigned int index) {
+SINTER_INLINEIFC siheap_env_t *sienv_getparent(siheap_env_t *env, unsigned int index) {
   while (env && index--) {
     env = env->parent;
   }

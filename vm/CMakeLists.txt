@@ -8,7 +8,6 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Generated with config types: ${CMAKE_CONFIGURATION_TYPES}")
 
 project(libsinter C)
 
@@ -32,8 +31,19 @@ target_compile_options(sinter
   PUBLIC -DSINTER_DEBUG_LOGLEVEL=${SINTER_DEBUG_LOGLEVEL}
   PUBLIC $<$<BOOL:${SINTER_DEBUG_ABORT_ON_FAULT}>:-DSINTER_DEBUG_ABORT_ON_FAULT>
   PUBLIC $<$<BOOL:${SINTER_DEBUG_MEMORY_CHECK}>:-DSINTER_DEBUG_MEMORY_CHECK>
+  PUBLIC $<$<BOOL:${SINTER_DISABLE_CHECKS}>:-DSINTER_DISABLE_CHECKS>
   PUBLIC $<$<BOOL:${SINTER_COVERAGE}>:--coverage -fno-inline -fno-inline-small-functions -fno-default-inline>
 )
+
+if(DEFINED SINTER_HEAP_SIZE)
+  target_compile_options(sinter PUBLIC -DSINTER_HEAP_SIZE=${SINTER_HEAP_SIZE})
+  message(STATUS "Setting SINTER_HEAP_SIZE to ${SINTER_HEAP_SIZE}")
+endif()
+
+if(DEFINED SINTER_STACK_ENTRIES)
+  target_compile_options(sinter PUBLIC -DSINTER_STACK_ENTRIES=${SINTER_STACK_ENTRIES})
+  message(STATUS "Setting SINTER_STACK_ENTRIES to ${SINTER_STACK_ENTRIES}")
+endif()
 
 target_link_options(sinter
   PUBLIC $<$<BOOL:${SINTER_COVERAGE}>:--coverage>
