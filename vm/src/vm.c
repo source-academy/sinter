@@ -543,6 +543,10 @@ static void main_loop(void) {
     case op_ldl_b: {
       DECLOPSTRUCT(op_oneindex);
       sinanbox_t v = sienv_get(sistate.env, instr->index);
+      if (NANBOX_ISEMPTY(v)) {
+        sifault(sinter_fault_uninitialised_load);
+        return;
+      }
       siheap_refbox(v);
       sistack_push(v);
       ADVANCE_PCI();
@@ -567,6 +571,10 @@ static void main_loop(void) {
         return;
       }
       sinanbox_t v = sienv_get(env, instr->index);
+      if (NANBOX_ISEMPTY(v)) {
+        sifault(sinter_fault_uninitialised_load);
+        return;
+      }
       siheap_refbox(v);
       sistack_push(v);
       ADVANCE_PCI();

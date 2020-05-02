@@ -82,6 +82,7 @@ add_run_test(prim_is_stream)
 add_run_test(value_prim)
 add_run_test(more_tail_calls)
 add_run_test(more_arithmetic)
+add_run_test(no_uninitialised_load)
 
 if(${SINTER_DEBUG_LOGLEVEL} EQUAL 2)
   add_run_stderr_test(prim_display)
