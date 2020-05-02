@@ -194,7 +194,7 @@ static address_t sizeof_strobj(siheap_header_t *obj) {
 
   case sitype_strpair: {
     siheap_strpair_t *v = (siheap_strpair_t *) obj;
-    return sizeof_strobj(v->left) + sizeof_strobj(v->right);
+    return sizeof_strobj(v->left) + (v->right ? sizeof_strobj(v->right) : 0);
   }
 
   case sitype_string: {

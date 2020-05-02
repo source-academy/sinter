@@ -45,3 +45,7 @@ display(NaN === NaN);
 display(NaN !== NaN);
 display(Infinity === Infinity);
 display(Infinity !== Infinity);
+
+display(1 === 2.0 / 2);
+display(2.0 / 2 === 1);
+display(5.5 === 6.5);

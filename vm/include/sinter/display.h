@@ -28,7 +28,9 @@ SINTER_INLINEIFC void sidisplay_strobj(siheap_header_t *obj, _Bool is_error) {
   case sitype_strpair: {
     siheap_strpair_t *pair = (siheap_strpair_t *) obj;
     sidisplay_strobj(pair->left, is_error);
-    sidisplay_strobj(pair->right, is_error);
+    if (pair->right) {
+      sidisplay_strobj(pair->right, is_error);
+    }
     break;
   }
   case sitype_string: {
