@@ -28,8 +28,9 @@ example](../devices/arduino/arduino.ino), or the [ESP32
 example](../devices/esp32/src/main.c).
 
 To create an Arduino library zip, run the script
-[`make_arduino_lib.sh`](../make_arduino_lib.sh). You can configure the
-Arduino library by unzipping the zip and modifying `sinter_config.h`.
+[`make_arduino_lib.sh`](../make_arduino_lib.sh). You can configure the Arduino
+library by unzipping the zip and modifying
+[`sinter_config.h`](include/sinter_config.h).
 
 ## Build locally
 
