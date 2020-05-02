@@ -1,0 +1,51 @@
+html, body {
+  background: #FAFAFA;
+  color: #444;
+  font-family: sans-serif;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+h2 {
+  margin: 0;
+}
+
+button:not(:last-of-type) {
+  margin-right: 0.5em;
+}
+
+#app, #editor, #control {
+  height: 100%;
+  width: 100%;
+}
+
+#app {
+  display: flex;
+}
+
+#control {
+  margin-left: 0.5em;
+  display: flex;
+  flex-direction: column;
+}
+
+#buttons {
+  padding: 0.5em 0;
+}
+
+.output-section {
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.output-container {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+* {
+  box-sizing: border-box;
+}

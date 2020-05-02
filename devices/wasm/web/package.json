@@ -1,0 +1,27 @@
+{
+  "private": true,
+  "name": "sinter-wasm",
+  "version": "0.0.1",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "preact build --no-prerender",
+    "dev": "preact watch",
+    "lint": "eslint src"
+  },
+  "eslintConfig": {
+    "extends": "preact",
+    "ignorePatterns": [
+      "build/"
+    ]
+  },
+  "devDependencies": {
+    "eslint": "^6.0.1",
+    "eslint-config-preact": "^1.1.0",
+    "preact-cli": "^3.0.0-rc.6"
+  },
+  "dependencies": {
+    "js-slang": "^0.4.46",
+    "preact": "^10.3.2",
+    "react-ace": "^8.1.0"
+  }
+}
