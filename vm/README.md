@@ -65,7 +65,6 @@ echo 'display("Hello world");' > myprogram.js
 node svmc.js myprogram.js
 ../../build/runner/runner myprogram.svm
 # (or wherever the test runner binary is)
-
 ```
 
 ### CMake configuration
