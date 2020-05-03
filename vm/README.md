@@ -25,7 +25,7 @@ Usage recommendations:
 Sinter is a C library. For examples on how to use Sinter, see [the CLI
 runner](../runner/src/runner.c), [the Arduino sketch
 example](../devices/arduino/arduino.ino), or the [ESP32
-example](../devices/esp32/src/main.c).
+example](../devices/esp32/src/main.c). There is also a [WASM example](../devices/wasm).
 
 To create an Arduino library zip, run the script
 [`make_arduino_lib.sh`](../make_arduino_lib.sh). You can configure the Arduino
@@ -40,10 +40,32 @@ This excludes MSVC.
 ```
 # cd into the root of the repository, then:
 mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Debug -DSINTER_DEBUG_LOGLEVEL=2 -DSINTER_DEBUG_MEMORY_CHECK=1
+cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j8
 make test
-runner/runner ../test_programs/prim_display.svm
+runner/runner ../test_programs/hello_world.svm
+```
+
+### Compiling your own programs
+
+Use the [SVML compiler CLI utility in js-slang](https://github.com/source-academy/js-slang/blob/master/src/vm/svmc.ts) to compile programs for testing. (A real deployment of Sinter would integrate the compiler in js-slang directly instead.)
+
+Alternatively, you could also try the [web demo](https://angelsl.github.io/sinter/), which uses Sinter compiled to WASM.
+
+For convenience, we have included a NPM package that exposes the CLI utility.
+
+Try it out:
+
+```
+# Make sure you have built the test runner from above.
+# Then, from the root of the repository:
+cd tools/compiler
+yarn install
+echo 'display("Hello world");' > myprogram.js
+node svmc.js myprogram.js
+../../build/runner/runner myprogram.svm
+# (or wherever the test runner binary is)
+
 ```
 
 ### CMake configuration
