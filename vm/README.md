@@ -38,11 +38,12 @@ We use the CMake build system. Note: a compiler that supports C11 is _required_.
 This excludes MSVC.
 
 ```
+# cd into the root of the repository
 mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Debug -DSINTER_DEBUG_LOGLEVEL=2
+cmake .. -DCMAKE_BUILD_TYPE=Debug -DSINTER_DEBUG_LOGLEVEL=2 -DSINTER_DEBUG_MEMORY_CHECK=1
 make -j8
 make test
-runner/runner ../test_programs/display.svm
+runner/runner ../test_programs/prim_display.svm
 ```
 
 ### CMake configuration
