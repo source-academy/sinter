@@ -11,7 +11,7 @@ For implementation details, see [here](vm/docs/impl.md).
 ## Directory layout
 
 - `vm`: The actual VM library.
-- `vm_test`: Some scripts to aid with CI testing.
+- `vm/test`: Some scripts to aid with CI testing.
 - `runner`: A simple runner to run programs from the CLI.
 - `test_programs`: SVML test programs that have been manually verified to be correct, as well as expected output for automated tests.
 - `devices`: Some examples for using Sinter on various embedded platforms.

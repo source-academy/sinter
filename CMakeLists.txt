@@ -6,4 +6,4 @@ enable_testing()
 
 add_subdirectory(vm)
 add_subdirectory(runner)
-add_subdirectory(vm_test)
+add_subdirectory(vm/test)
