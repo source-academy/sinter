@@ -75,7 +75,7 @@ function compile() {
   const intFns = intFnsMatch
     ? intFnsMatch[1]
         .trim()
-        .split("\n")
+        .split(/[,\n]/g)
         .map((entry) => entry.trim())
         .filter((entry) => entry.length > 0)
     : undefined;
