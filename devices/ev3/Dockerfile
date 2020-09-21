@@ -1,0 +1,2 @@
+FROM ev3dev/debian-stretch-cross
+RUN ["sudo", "bash", "-c", "echo deb http://deb.debian.org/debian stretch-backports main > /etc/apt/sources.list.d/backports.list && echo deb http://deb.debian.org/debian stretch-backports-sloppy main >> /etc/apt/sources.list.d/backports.list && apt-get update && apt-get install --yes --no-install-recommends -t stretch-backports-sloppy libarchive13 && apt-get install --yes --no-install-recommends -t stretch-backports cmake"]
