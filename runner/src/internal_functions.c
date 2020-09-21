@@ -28,10 +28,3 @@ void setup_internals(void) {
   sivmfn_vminternals = internals;
   sivmfn_vminternal_count = internals_count;
 }
-
-void display_object_result(sinter_value_t *res, _Bool is_error) {
-  if (res->type == sinter_type_array || res->type == sinter_type_function) {
-    sinanbox_t arr = NANBOX_WITH_I32(res->object_value);
-    sidisplay_nanbox(arr, is_error);
-  }
-}
