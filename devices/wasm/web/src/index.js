@@ -45,6 +45,7 @@ function resizeHeap() {
   if (!newSizeStr) {
     return;
   }
+  // eslint-disable-next-line radix
   const newSize = parseInt(newSizeStr);
   if (newSize < 0 || isNaN(newSize) || !isFinite(newSize)) {
     onStderr(`Invalid heap size!\n`);
@@ -70,6 +71,17 @@ function compile() {
     clearOutput();
   }
 
+  const intFnsMatch = editorCode.match(/\/\*\*!sivmfn(.*?)\*\//s);
+  const intFns = intFnsMatch
+    ? intFnsMatch[1]
+        .trim()
+        .split("\n")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0)
+    : undefined;
+  if (intFns) {
+    onStderr(`Using internal functions:\n${intFns.map((entry, index) => `${index}: ${entry}`).join("\n")}\n`);
+  }
   const context = createContext(3, "default");
   const ast = parse(editorCode, context);
 
@@ -98,7 +110,7 @@ function compile() {
 
   let asm;
   try {
-    asm = compileToIns(ast);
+    asm = compileToIns(ast, undefined, intFns);
   } catch (e) {
     onStderr(formatError(e));
     return null;
@@ -133,7 +145,7 @@ function run() {
 
 function toAsm() {
   const dump = stringifyProgram(compile());
-  onStdout(dump + "\n");
+  onStdout(`${dump}\n`);
 }
 
 function save() {
@@ -150,14 +162,14 @@ function save() {
 }
 
 const sinterwasmFuture = loadSinterwasm({
-  print: (str) => onStdout(str + "\n"),
-  printErr: (str) => onStderr(str + "\n"),
+  print: (str) => onStdout(`${str}\n`),
+  printErr: (str) => onStderr(`${str}\n`),
 });
 
 sinterwasmFuture.then((module) => {
   module.alloc_heap(0x10000);
   sinterwasm = module;
-});
+}, () => {});
 
 export default function App() {
   const [loaded, setLoaded] = useState(false);
@@ -165,6 +177,9 @@ export default function App() {
   const [clear, setClear] = useState(clearBeforeRun);
   useEffect(() => {
     sinterwasmFuture.then(() => {
+      setLoaded(true);
+    }, () => {
+      editorCode = "// NOTE: Error loading Sinter WASM module. Check browser console for errors.";
       setLoaded(true);
     });
   }, []);
@@ -227,11 +242,11 @@ export default function App() {
         )}
         <div class="output-section">
           <h2>Standard output</h2>
-          <div class="output-container" ref={stdoutRef}></div>
+          <div class="output-container" ref={stdoutRef} />
         </div>
         <div class="output-section">
           <h2>Standard error</h2>
-          <div class="output-container" ref={stderrRef}></div>
+          <div class="output-container" ref={stderrRef} />
         </div>
       </div>
     </div>
