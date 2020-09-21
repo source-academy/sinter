@@ -14,11 +14,12 @@ add_subdirectory(../../vm libsinter)
 add_executable(sinter-ev3
   ../../runner/src/runner.c
   ../../runner/src/display_object_result.c
-  src/internal_functions.c
+  src/ev3_functions.c
 )
 
 target_compile_options(sinter-ev3
   PRIVATE -Wall -Wextra -Wswitch-enum -std=c11 -pedantic -Werror -fwrapv -g -O2
+  PRIVATE -D_POSIX_C_SOURCE=200809L -D_GNU_SOURCE
 )
 
 target_link_libraries(sinter-ev3 sinter)
