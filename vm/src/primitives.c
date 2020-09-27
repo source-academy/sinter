@@ -41,6 +41,10 @@ static void handle_display(unsigned int argc, sinanbox_t *argv, bool is_error) {
 
   sidisplay_nanbox(argv[0], is_error);
   SIVMFN_PRINT("\n", is_error);
+
+  if (sinter_printer_flush) {
+    sinter_printer_flush(is_error);
+  }
 }
 
 #define CHECK_ARGC(n) do { \

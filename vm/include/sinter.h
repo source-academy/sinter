@@ -82,9 +82,18 @@ typedef void (*sinter_printfn_integer)(int32_t value, bool is_error);
  */
 typedef void (*sinter_printfn_float)(float value, bool is_error);
 
+/**
+ * The type of a printer flush function.
+ *
+ * This function should flush any prints buffered from previous calls to the
+ * printer functions.
+ */
+typedef void (*sinter_printfn_flush)(bool is_error);
+
 extern sinter_printfn_string sinter_printer_string;
 extern sinter_printfn_integer sinter_printer_integer;
 extern sinter_printfn_float sinter_printer_float;
+extern sinter_printfn_flush sinter_printer_flush;
 
 #ifdef __cplusplus
 }

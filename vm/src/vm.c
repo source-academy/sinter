@@ -25,6 +25,7 @@ size_t sivmfn_vminternal_count = 0;
 sinter_printfn_string sinter_printer_string = NULL;
 sinter_printfn_integer sinter_printer_integer = NULL;
 sinter_printfn_float sinter_printer_float = NULL;
+sinter_printfn_flush sinter_printer_flush = NULL;
 
 #if 0
 static inline void unimpl_instr() {
