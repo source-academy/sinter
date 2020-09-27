@@ -67,6 +67,11 @@ static void print_float(float v, bool is_error) {
   printf("%f", v);
 }
 
+static void print_flush(bool is_error) {
+  (void) is_error;
+  printf("\n");
+}
+
 int main(int argc, char *argv[]) {
   if (argc < 2) {
     eprintf("Usage: %s <program>\n", argv[0]);
@@ -88,6 +93,7 @@ int main(int argc, char *argv[]) {
   sinter_printer_float = print_float;
   sinter_printer_string = print_string;
   sinter_printer_integer = print_integer;
+  sinter_printer_flush = print_flush;
 
   setup_internals();
 

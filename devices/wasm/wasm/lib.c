@@ -58,6 +58,10 @@ static void print_float(float v, bool is_error) {
   fprintf(is_error ? stderr : stdout, "%f", v);
 }
 
+static void print_flush(bool is_error) {
+  fprintf(is_error ? stderr : stdout, "\n");
+}
+
 EMSCRIPTEN_KEEPALIVE
 void siwasm_alloc_heap(size_t size) {
   if (heap) {
@@ -88,6 +92,7 @@ void siwasm_run(unsigned char *code, size_t code_size) {
   sinter_printer_float = print_float;
   sinter_printer_integer = print_integer;
   sinter_printer_string = print_string;
+  sinter_printer_flush = print_flush;
 
   sinter_value_t result;
   sinter_fault_t fault = (uint8_t) sinter_run(code, code_size, &result);

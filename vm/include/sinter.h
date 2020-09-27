@@ -86,7 +86,8 @@ typedef void (*sinter_printfn_float)(float value, bool is_error);
  * The type of a printer flush function.
  *
  * This function should flush any prints buffered from previous calls to the
- * printer functions.
+ * printer functions. If printing to the console, this function might just
+ * print a newline, for example.
  */
 typedef void (*sinter_printfn_flush)(bool is_error);
 
