@@ -64,6 +64,12 @@ static void make_motor_path(int index, const char *const file) {
            file && *file ? "/" : "", file ? file : "");
 }
 
+// Makes the path to the file of the sensor of the given index in ev3_path_buf
+static void make_sensor_path(int index, const char *const file) {
+  snprintf(ev3_path_buf, sizeof(ev3_path_buf), EV3_SENSOR_PATH "/sensor%d%s%s", index,
+           file && *file ? "/" : "", file ? file : "");
+}
+
 // fprintfs to the path in ev3_path_buf
 __attribute__((format(printf, 1, 2))) static void printf_path(const char *format, ...) {
   va_list args;
@@ -99,8 +105,9 @@ __attribute__((format(scanf, 1, 2))) static int scanf_path(const char *format, .
   return retv;
 }
 
-static int find_peripheral(const char *const sysfs_dir, const char *const address) {
-  const size_t address_len = strlen(address);
+static int find_peripheral(const char *const sysfs_dir, const char *const sysfs_file,
+                           const char *const match) {
+  const size_t match_len = strlen(match);
 
   DIR *dir = opendir(sysfs_dir);
   if (!dir) {
@@ -109,7 +116,7 @@ static int find_peripheral(const char *const sysfs_dir, const char *const addres
 
   struct dirent *dirent = NULL;
   while ((dirent = readdir(dir))) {
-    if (snprintf(ev3_path_buf, sizeof(ev3_path_buf), "%s/address", dirent->d_name) >=
+    if (snprintf(ev3_path_buf, sizeof(ev3_path_buf), "%s/%s", dirent->d_name, sysfs_file) >=
         (int)sizeof(ev3_path_buf)) {
       break;
     }
@@ -119,7 +126,7 @@ static int find_peripheral(const char *const sysfs_dir, const char *const addres
     }
     int readv = read(addressfd, ev3_path_buf, sizeof(ev3_path_buf));
     close(addressfd);
-    if (readv >= (int)address_len && memcmp(ev3_path_buf, address, address_len) == 0) {
+    if (readv >= (int)match_len && memcmp(ev3_path_buf, match, match_len) == 0) {
       const char *device_index = dirent->d_name;
       // dirname is "sensorNNN" or "motorNNN"
       // advance to the index at the end
@@ -170,8 +177,13 @@ static int find_peripheral(const char *const sysfs_dir, const char *const addres
   (void)argv
 
 static sinanbox_t find_motor(const char *address) {
-  int index = find_peripheral(EV3_MOTOR_PATH, address);
+  int index = find_peripheral(EV3_MOTOR_PATH, "address", address);
   return index < 0 ? NANBOX_OFUNDEF() : NANBOX_OFINT(EV3_P_ID(ev3_p_motor, index));
+}
+
+static sinanbox_t find_touch_sensor(const char *address) {
+  int index = find_peripheral(EV3_SENSOR_PATH, "address", address);
+  return index < 0 ? NANBOX_OFUNDEF() : NANBOX_OFINT(EV3_P_ID(ev3_p_touch, index));
 }
 
 // ev3_pause(ms)
@@ -211,6 +223,44 @@ static sinanbox_t ev3_motorD(uint8_t argc, sinanbox_t *argv) {
   return find_motor(EV3_OUT("D"));
 }
 
+static sinanbox_t ev3_colorSensor(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  int index = find_peripheral(EV3_SENSOR_PATH, "driver_name", "lego-ev3-color");
+  return index < 0 ? NANBOX_OFUNDEF() : NANBOX_OFINT(EV3_P_ID(ev3_p_color, index));
+}
+
+static sinanbox_t ev3_ultrasonicSensor(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  int index = find_peripheral(EV3_SENSOR_PATH, "driver_name", "lego-ev3-us");
+  return index < 0 ? NANBOX_OFUNDEF() : NANBOX_OFINT(EV3_P_ID(ev3_p_ultrasonic, index));
+}
+
+static sinanbox_t ev3_gyroSensor(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  int index = find_peripheral(EV3_SENSOR_PATH, "driver_name", "lego-ev3-gyro");
+  return index < 0 ? NANBOX_OFUNDEF() : NANBOX_OFINT(EV3_P_ID(ev3_p_gyro, index));
+}
+
+static sinanbox_t ev3_touchSensor1(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  return find_touch_sensor(EV3_IN("1"));
+}
+
+static sinanbox_t ev3_touchSensor2(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  return find_touch_sensor(EV3_IN("2"));
+}
+
+static sinanbox_t ev3_touchSensor3(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  return find_touch_sensor(EV3_IN("3"));
+}
+
+static sinanbox_t ev3_touchSensor4(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  return find_touch_sensor(EV3_IN("4"));
+}
+
 // ev3_connected(peripheral)
 static sinanbox_t ev3_connected(uint8_t argc, sinanbox_t *argv) {
   CHECK_ARGC(1);
@@ -225,13 +275,12 @@ static sinanbox_t ev3_connected(uint8_t argc, sinanbox_t *argv) {
   case ev3_p_motor:
     make_motor_path(index, NULL);
     return NANBOX_OFBOOL(file_exists(ev3_path_buf));
-    break;
   case ev3_p_touch:
   case ev3_p_gyro:
   case ev3_p_color:
   case ev3_p_ultrasonic:
-    // TODO
-    return NANBOX_OFBOOL(false);
+    make_sensor_path(index, NULL);
+    return NANBOX_OFBOOL(file_exists(ev3_path_buf));
   }
 
   return NANBOX_OFBOOL(false);
@@ -291,9 +340,315 @@ static sinanbox_t ev3_motorStop(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFUNDEF();
 }
 
-static const sivmfnptr_t internals[] = {
-    ev3_pause,  ev3_connected,     ev3_motorA,        ev3_motorB,     ev3_motorC,
-    ev3_motorD, ev3_motorGetSpeed, ev3_motorSetSpeed, ev3_motorStart, ev3_motorStop};
+// ev3_motorSetStopAction(motor, stopAction)
+static sinanbox_t ev3_motorSetStopAction(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(2);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  siheap_header_t *p = SIHEAP_NANBOXTOPTR(argv[1]);
+  if (NANBOX_ISPTR(argv[1]) && siheap_is_string(p)) {
+    int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+    const char *s = sistrobj_tocharptr(p);
+    make_motor_path(indx, "stop_action");
+    printf_path("%s", s);
+  }
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_motorGetPosition(motor)
+static sinanbox_t ev3_motorGetPosition(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+  make_motor_path(indx, "position");
+
+  int position = 0;
+  if (scanf_path("%d", &position) == 1) {
+    return NANBOX_WRAP_INT(position);
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_runForTime(motor, time, speed)
+static sinanbox_t ev3_runForTime(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(3);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+
+  if (NANBOX_ISNUMERIC(argv[1]) && NANBOX_ISNUMERIC(argv[2])) {
+    make_motor_path(indx, "time_sp");
+    printf_path("%d", nanbox_toi32(argv[1]));
+    make_motor_path(indx, "speed_sp");
+    printf_path("%d", nanbox_toi32(argv[2]));
+    make_motor_path(indx, "command");
+    put_path("run-timed");
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_runToAbsolutePosition(motor, position, speed)
+static sinanbox_t ev3_runToAbsolutePosition(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(3);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+
+  if (NANBOX_ISNUMERIC(argv[1]) && NANBOX_ISNUMERIC(argv[2])) {
+    make_motor_path(indx, "position_sp");
+    printf_path("%d", nanbox_toi32(argv[1]));
+    make_motor_path(indx, "speed_sp");
+    printf_path("%d", nanbox_toi32(argv[2]));
+    make_motor_path(indx, "command");
+    put_path("run-to-abs-pos");
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_runToRelativePosition(motor, position, speed)
+static sinanbox_t ev3_runToRelativePosition(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(3);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+
+  if (NANBOX_ISNUMERIC(argv[1]) && NANBOX_ISNUMERIC(argv[2])) {
+    make_motor_path(indx, "position_sp");
+    printf_path("%d", nanbox_toi32(argv[1]));
+    make_motor_path(indx, "speed_sp");
+    printf_path("%d", nanbox_toi32(argv[2]));
+    make_motor_path(indx, "command");
+    put_path("run-to-rel-pos");
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_colorSensorRed(colorSensor)
+static sinanbox_t ev3_colorSensorRed(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+  make_sensor_path(indx, "mode");
+  put_path("RGB-RAW");
+
+  make_sensor_path(indx, "value0");
+  int red = 0;
+  if (scanf_path("%d", &red) == 1) {
+    return NANBOX_WRAP_INT(red);
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_colorSensorGreen(colorSensor)
+static sinanbox_t ev3_colorSensorGreen(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+  make_sensor_path(indx, "mode");
+  put_path("RGB-RAW");
+
+  make_sensor_path(indx, "value1");
+  int green = 0;
+  if (scanf_path("%d", &green) == 1) {
+    return NANBOX_WRAP_INT(green);
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_colorSensorBlue(colorSensor)
+static sinanbox_t ev3_colorSensorBlue(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+  make_sensor_path(indx, "mode");
+  put_path("RGB-RAW");
+
+  make_sensor_path(indx, "value2");
+  int blue = 0;
+  if (scanf_path("%d", &blue) == 1) {
+    return NANBOX_WRAP_INT(blue);
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_reflectedLightIntensity(colorSensor)
+static sinanbox_t ev3_reflectedLightIntensity(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+  make_sensor_path(indx, "mode");
+  put_path("COL-REFLECT");
+
+  make_sensor_path(indx, "value0");
+  int reflect = 0;
+  if (scanf_path("%d", &reflect) == 1) {
+    return NANBOX_WRAP_INT(reflect);
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_ambientLightIntensity(colorSensor)
+static sinanbox_t ev3_ambientLightIntensity(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+  make_sensor_path(indx, "mode");
+  put_path("COL-AMBIENT");
+
+  make_sensor_path(indx, "value0");
+  int ambient = 0;
+  if (scanf_path("%d", &ambient) == 1) {
+    return NANBOX_WRAP_INT(ambient);
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_colorSensorGetColor(colorSensor)
+static sinanbox_t ev3_colorSensorGetColor(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+  make_sensor_path(indx, "mode");
+  put_path("COL-COLOR");
+
+  make_sensor_path(indx, "value0");
+  int color = 0;
+  if (scanf_path("%d", &color) == 1) {
+    return NANBOX_WRAP_INT(color);
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_colorSensorGetColor(ultrasonicSensor)
+static sinanbox_t ev3_ultrasonicSensorDistance(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+  make_sensor_path(indx, "mode");
+  put_path("US-DIST-CM");
+
+  make_sensor_path(indx, "value0");
+  int distance = 0;
+  if (scanf_path("%d", &distance) == 1) {
+    return NANBOX_WRAP_INT(distance);
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_gyroSensorAngle(gyroSensor)
+static sinanbox_t ev3_gyroSensorAngle(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+  make_sensor_path(indx, "mode");
+  put_path("GYRO-ANG");
+
+  make_sensor_path(indx, "value0");
+  int angle = 0;
+  if (scanf_path("%d", &angle) == 1) {
+    return NANBOX_WRAP_INT(angle);
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_gyroSensorRate(gyroSensor)
+static sinanbox_t ev3_gyroSensorRate(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+  make_sensor_path(indx, "mode");
+  put_path("GYRO-RATE");
+
+  make_sensor_path(indx, "value0");
+  int rate = 0;
+  if (scanf_path("%d", &rate) == 1) {
+    return NANBOX_WRAP_INT(rate);
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_touchSensorPressed(touchSensor)
+static sinanbox_t ev3_touchSensorPressed(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  int indx = EV3_P_INDEX(NANBOX_INT(argv[0]));
+  make_sensor_path(indx, "mode");
+  put_path("TOUCH");
+
+  make_sensor_path(indx, "value0");
+  int pressed = 0;
+  if (scanf_path("%d", &pressed) == 1) {
+    return NANBOX_OFBOOL(pressed);
+  }
+
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_hello()
+static sinanbox_t ev3_hello(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  // static const char *hello_message_cstr = "Hello there! Welcome to LEGO ev3 (adapted by CS1101S)!";
+  // TO DO
+  return NANBOX_OFUNDEF();
+}
+
+static const sivmfnptr_t internals[] = {ev3_pause,
+                                        ev3_connected,
+                                        ev3_motorA,
+                                        ev3_motorB,
+                                        ev3_motorC,
+                                        ev3_motorD,
+                                        ev3_motorGetSpeed,
+                                        ev3_motorSetSpeed,
+                                        ev3_motorStart,
+                                        ev3_motorStop,
+                                        ev3_motorSetStopAction,
+                                        ev3_motorGetPosition,
+                                        ev3_runForTime,
+                                        ev3_runToAbsolutePosition,
+                                        ev3_runToRelativePosition,
+                                        ev3_colorSensor,
+                                        ev3_colorSensorRed,
+                                        ev3_colorSensorGreen,
+                                        ev3_colorSensorBlue,
+                                        ev3_reflectedLightIntensity,
+                                        ev3_ambientLightIntensity,
+                                        ev3_colorSensorGetColor,
+                                        ev3_ultrasonicSensor,
+                                        ev3_ultrasonicSensorDistance,
+                                        ev3_gyroSensor,
+                                        ev3_gyroSensorAngle,
+                                        ev3_gyroSensorRate,
+                                        ev3_touchSensor1,
+                                        ev3_touchSensor2,
+                                        ev3_touchSensor3,
+                                        ev3_touchSensor4,
+                                        ev3_touchSensorPressed,
+                                        ev3_hello};
 static const size_t internals_count = sizeof(internals) / sizeof(*internals);
 
 void setup_internals(void) {
