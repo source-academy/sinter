@@ -276,8 +276,14 @@ static sinanbox_t ev3_connected(uint8_t argc, sinanbox_t *argv) {
     make_motor_path(index, NULL);
     return NANBOX_OFBOOL(file_exists(ev3_path_buf));
   case ev3_p_touch:
+    make_sensor_path(index, NULL);
+    return NANBOX_OFBOOL(file_exists(ev3_path_buf));
   case ev3_p_gyro:
+    make_sensor_path(index, NULL);
+    return NANBOX_OFBOOL(file_exists(ev3_path_buf));
   case ev3_p_color:
+    make_sensor_path(index, NULL);
+    return NANBOX_OFBOOL(file_exists(ev3_path_buf));
   case ev3_p_ultrasonic:
     make_sensor_path(index, NULL);
     return NANBOX_OFBOOL(file_exists(ev3_path_buf));
@@ -616,6 +622,13 @@ static sinanbox_t ev3_hello(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFUNDEF();
 }
 
+// ev3_waitForButtonPress()
+static sinanbox_t ev3_waitForButtonPress(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  //TO DO
+  return NANBOX_OFUNDEF();
+}
+
 static const sivmfnptr_t internals[] = {ev3_pause,
                                         ev3_connected,
                                         ev3_motorA,
@@ -648,7 +661,8 @@ static const sivmfnptr_t internals[] = {ev3_pause,
                                         ev3_touchSensor3,
                                         ev3_touchSensor4,
                                         ev3_touchSensorPressed,
-                                        ev3_hello};
+                                        ev3_hello,
+                                        ev3_waitForButtonPress};
 static const size_t internals_count = sizeof(internals) / sizeof(*internals);
 
 void setup_internals(void) {
