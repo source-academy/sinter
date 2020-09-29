@@ -105,6 +105,26 @@ __attribute__((format(scanf, 1, 2))) static int scanf_path(const char *format, .
   return retv;
 }
 
+static void reset_motors(void) {
+  DIR *dir = opendir(EV3_MOTOR_PATH);
+  if (!dir) {
+    return;
+  }
+
+  struct dirent *dirent = NULL;
+  while ((dirent = readdir(dir))) {
+    if (snprintf(ev3_path_buf, sizeof(ev3_path_buf), "%s/%s/%s", EV3_MOTOR_PATH, dirent->d_name,
+                 "command") >= (int)sizeof(ev3_path_buf)) {
+      continue;
+    }
+    put_path("reset");
+  }
+
+  if (dir) {
+    closedir(dir);
+  }
+}
+
 static int find_peripheral(const char *const sysfs_dir, const char *const sysfs_file,
                            const char *const match) {
   const size_t match_len = strlen(match);
@@ -666,6 +686,7 @@ static const sivmfnptr_t internals[] = {ev3_pause,
 static const size_t internals_count = sizeof(internals) / sizeof(*internals);
 
 void setup_internals(void) {
+  atexit(reset_motors);
   sivmfn_vminternals = internals;
   sivmfn_vminternal_count = internals_count;
 }
