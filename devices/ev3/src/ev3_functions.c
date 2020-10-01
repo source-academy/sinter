@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <inttypes.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -9,8 +10,10 @@
 
 #include <dirent.h>
 #include <fcntl.h>
+#include <linux/input.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -26,6 +29,7 @@
 // This interface is written for the driver included in ev3dev-stretch, version 2.3.5.
 // (or at least, when this comment was last updated..)
 
+#define EV3_BUTTON_PATH "/dev/input/by-path/platform-gpio_keys-event"
 #define EV3_MOTOR_PATH "/sys/class/tacho-motor"
 #define EV3_SENSOR_PATH "/sys/class/lego-sensor"
 #define EV3_OUT(letter) ("ev3-ports:out" letter)
@@ -634,19 +638,174 @@ static sinanbox_t ev3_touchSensorPressed(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFUNDEF();
 }
 
+static svm_constant_t *hello_world_string = NULL;
+
 // ev3_hello()
 static sinanbox_t ev3_hello(uint8_t argc, sinanbox_t *argv) {
   ARGS_UNUSED;
-  // static const char *hello_message_cstr = "Hello there! Welcome to LEGO ev3 (adapted by CS1101S)!";
-  // TO DO
-  return NANBOX_OFUNDEF();
+  siheap_strconst_t *str = sistrconst_new(hello_world_string);
+  return SIHEAP_PTRTONANBOX(str);
 }
 
 // ev3_waitForButtonPress()
 static sinanbox_t ev3_waitForButtonPress(uint8_t argc, sinanbox_t *argv) {
   ARGS_UNUSED;
-  //TO DO
+  struct input_event e;
+  int ifd = open(EV3_BUTTON_PATH, O_RDONLY);
+  if (ifd < 0) {
+    goto fail;
+  }
+
+  while (true) {
+    if (read(ifd, &e, sizeof(e)) == -1) {
+      goto fail;
+    }
+
+    if (e.type != EV_KEY || e.value != 1) {
+      continue;
+    }
+
+    switch (e.code) {
+    case KEY_ENTER:
+      return NANBOX_OFINT(0);
+    case KEY_BACKSPACE:
+      return NANBOX_OFINT(1);
+    case KEY_LEFT:
+      return NANBOX_OFINT(2);
+    case KEY_RIGHT:
+      return NANBOX_OFINT(3);
+    case KEY_UP:
+      return NANBOX_OFINT(4);
+    case KEY_DOWN:
+      return NANBOX_OFINT(5);
+    }
+  }
+
+fail:
+  if (ifd >= 0) {
+    close(ifd);
+  }
   return NANBOX_OFUNDEF();
+}
+
+// ev3_speak(words)
+static sinanbox_t ev3_speak(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  siheap_header_t *wordsp = SIHEAP_NANBOXTOPTR(argv[0]);
+  const char *words = NULL;
+  if (NANBOX_ISPTR(argv[0]) && siheap_is_string(wordsp)) {
+    words = sistrobj_tocharptr(wordsp);
+  } else {
+    return NANBOX_OFUNDEF();
+  }
+
+  int fd[4] = {-1, -1, -1, -1};
+  pid_t c[2] = {-1, -1};
+  if (pipe2(fd, O_CLOEXEC) == -1) {
+    goto fail;
+  }
+  if (pipe2(fd + 2, O_CLOEXEC) == -1) {
+    goto fail;
+  }
+
+  c[0] = fork();
+  if (c[0] == 0) {
+    dup2(fd[0], 0);
+    dup2(fd[3], 1);
+    if (execl("/usr/bin/espeak", "/usr/bin/espeak", "--stdin", "--stdout", NULL) == -1) {
+      perror("execl espeak");
+    }
+    _Exit(1);
+  } else if (c[0] == -1) {
+    goto fail;
+  }
+
+  c[1] = fork();
+  if (c[1] == 0) {
+    dup2(fd[2], 0);
+    if (execl("/usr/bin/aplay", "/usr/bin/aplay", "-q", NULL) == -1) {
+      perror("execl aplay");
+    }
+    _Exit(1);
+  } else if (c[1] == -1) {
+    goto fail;
+  }
+
+  const ssize_t wordslen = strlen(words);
+  ssize_t written = 0;
+  while (written < wordslen) {
+    ssize_t this_written = write(fd[1], words + written, wordslen - written);
+    if (this_written == -1) {
+      goto fail;
+    }
+    written += this_written;
+  }
+
+fail:
+  for (unsigned int i = 0; i < sizeof(fd) / sizeof(*fd); ++i) {
+    if (fd[i] >= 3) {
+      close(fd[i]);
+    }
+  }
+  for (unsigned int i = 0; i < sizeof(c) / sizeof(*c); ++i) {
+    if (c[i] > 0) {
+      waitpid(c[i], NULL, 0);
+    }
+  }
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_playSequence([frequency, length (ms), delay (ms), ...])
+static sinanbox_t ev3_playSequence(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  pid_t beep_pid = fork();
+  if (beep_pid != 0) {
+    if (beep_pid > 0) {
+      waitpid(beep_pid, NULL, 0);
+    }
+    return NANBOX_OFUNDEF();
+  }
+
+  siheap_header_t *arrayp = SIHEAP_NANBOXTOPTR(argv[0]);
+  siheap_array_t *array = (siheap_array_t *)arrayp;
+  if (!NANBOX_ISPTR(argv[0]) || arrayp->type != sitype_array) {
+    _Exit(1);
+  }
+
+  const size_t num_beeps = array->count / 3;
+  if (!num_beeps) {
+    _Exit(1);
+  }
+  char **exec_argv = calloc(num_beeps * 7 + 1, sizeof(char *));
+  if (!exec_argv) {
+    _Exit(1);
+  }
+
+  for (size_t i = 0; i < num_beeps; ++i) {
+    const size_t arrayv_base = i * 3, argv_base = i * 7;
+    sinanbox_t freqv = siarray_get(array, arrayv_base),
+               lengthv = siarray_get(array, arrayv_base + 1),
+               delayv = siarray_get(array, arrayv_base + 2);
+    if (!NANBOX_ISNUMERIC(freqv) || !NANBOX_ISNUMERIC(lengthv) || !NANBOX_ISNUMERIC(delayv)) {
+      _Exit(1);
+    }
+
+    exec_argv[argv_base + 0] = "-n";
+    exec_argv[argv_base + 1] = "-f";
+    exec_argv[argv_base + 3] = "-l";
+    exec_argv[argv_base + 5] = "-D";
+
+    if (asprintf(&exec_argv[argv_base + 2], "%" PRIu32, nanbox_tou32(freqv)) == -1 ||
+        asprintf(&exec_argv[argv_base + 4], "%" PRIu32, nanbox_tou32(lengthv)) == -1 ||
+        asprintf(&exec_argv[argv_base + 6], "%" PRIu32, nanbox_tou32(delayv)) == -1) {
+      _Exit(1);
+    }
+  }
+
+  exec_argv[0] = "/usr/bin/beep";
+  // don't bother cleaning up, we're gonna exec anyway!
+  execv(exec_argv[0], exec_argv);
+  _Exit(1);
 }
 
 static const sivmfnptr_t internals[] = {ev3_pause,
@@ -682,11 +841,20 @@ static const sivmfnptr_t internals[] = {ev3_pause,
                                         ev3_touchSensor4,
                                         ev3_touchSensorPressed,
                                         ev3_hello,
-                                        ev3_waitForButtonPress};
+                                        ev3_waitForButtonPress,
+                                        ev3_speak,
+                                        ev3_playSequence};
 static const size_t internals_count = sizeof(internals) / sizeof(*internals);
 
 void setup_internals(void) {
   atexit(reset_motors);
+
+  static const char *hello_world_cstr = "Hello there! Welcome to LEGO EV3 (adapted by CS1101S)!";
+  hello_world_string = malloc(sizeof(svm_constant_t) + strlen(hello_world_cstr) + 1);
+  hello_world_string->type = 1;
+  hello_world_string->length = strlen(hello_world_cstr) + 1;
+  strcpy((char *)hello_world_string->data, hello_world_cstr);
+
   sivmfn_vminternals = internals;
   sivmfn_vminternal_count = internals_count;
 }
