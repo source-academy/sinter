@@ -35,6 +35,14 @@
 #define EV3_OUT(letter) ("ev3-ports:out" letter)
 #define EV3_IN(letter) ("ev3-ports:in" letter)
 
+#define EV3_LED_LEFT_GREEN "/sys/class/leds/led0:green:brick-status/brightness"
+#define EV3_LED_LEFT_RED "/sys/class/leds/led0:red:brick-status/brightness"
+#define EV3_LED_RIGHT_GREEN "/sys/class/leds/led1:green:brick-status/brightness"
+#define EV3_LED_RIGHT_RED "/sys/class/leds/led1:red:brick-status/brightness"
+
+static char *ev3_led_paths[] = {EV3_LED_LEFT_GREEN, EV3_LED_LEFT_RED, EV3_LED_RIGHT_GREEN,
+                                EV3_LED_RIGHT_RED};
+
 // EV3 peripheral types
 enum ev3_p_type {
   ev3_p_motor = 0,
@@ -109,7 +117,8 @@ __attribute__((format(scanf, 1, 2))) static int scanf_path(const char *format, .
   return retv;
 }
 
-static void reset_motors(void) {
+static void reset_ev3(void) {
+  // kill motors
   DIR *dir = opendir(EV3_MOTOR_PATH);
   if (!dir) {
     return;
@@ -127,6 +136,16 @@ static void reset_motors(void) {
   if (dir) {
     closedir(dir);
   }
+
+  // reset LEDs
+  strcpy(ev3_path_buf, EV3_LED_LEFT_GREEN);
+  put_path("255");
+  strcpy(ev3_path_buf, EV3_LED_LEFT_RED);
+  put_path("0");
+  strcpy(ev3_path_buf, EV3_LED_RIGHT_GREEN);
+  put_path("255");
+  strcpy(ev3_path_buf, EV3_LED_RIGHT_RED);
+  put_path("0");
 }
 
 static int find_peripheral(const char *const sysfs_dir, const char *const sysfs_file,
@@ -808,6 +827,67 @@ static sinanbox_t ev3_playSequence(uint8_t argc, sinanbox_t *argv) {
   _Exit(1);
 }
 
+static sinanbox_t ev3_ledLeftGreen(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  return NANBOX_OFINT(0);
+}
+
+static sinanbox_t ev3_ledLeftRed(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  return NANBOX_OFINT(1);
+}
+
+static sinanbox_t ev3_ledRightGreen(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  return NANBOX_OFINT(2);
+}
+
+static sinanbox_t ev3_ledRightRed(uint8_t argc, sinanbox_t *argv) {
+  ARGS_UNUSED;
+  return NANBOX_OFINT(3);
+}
+
+// ev3_ledGetBrightness(led)
+static sinanbox_t ev3_ledGetBrightness(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(1);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  unsigned int ledNumber = (unsigned int)NANBOX_INT(argv[0]);
+  if (ledNumber >= sizeof(ev3_led_paths) / sizeof(*ev3_led_paths)) {
+    return NANBOX_OFUNDEF();
+  }
+
+  strcpy(ev3_path_buf, ev3_led_paths[ledNumber]);
+
+  int brightness = -1;
+  if (scanf_path("%d", &brightness) == 1) {
+    return NANBOX_WRAP_INT(brightness);
+  }
+  return NANBOX_OFUNDEF();
+}
+
+// ev3_ledGetBrightness(led, brightness)
+static sinanbox_t ev3_ledSetBrightness(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(2);
+  CHECK_P_ID_NOFAULT(argv[0]);
+
+  unsigned int ledNumber = (unsigned int)NANBOX_INT(argv[0]);
+  if (ledNumber >= sizeof(ev3_led_paths) / sizeof(*ev3_led_paths) || !NANBOX_ISNUMERIC(argv[1])) {
+    return NANBOX_OFUNDEF();
+  }
+
+  strcpy(ev3_path_buf, ev3_led_paths[ledNumber]);
+
+  int brightness = nanbox_tou32(argv[1]);
+  if (brightness > 255) {
+    brightness = 255;
+  } else if (brightness < 0) {
+    brightness = 0;
+  }
+  printf_path("%d", brightness);
+  return NANBOX_OFUNDEF();
+}
+
 static const sivmfnptr_t internals[] = {ev3_pause,
                                         ev3_connected,
                                         ev3_motorA,
@@ -843,11 +923,17 @@ static const sivmfnptr_t internals[] = {ev3_pause,
                                         ev3_hello,
                                         ev3_waitForButtonPress,
                                         ev3_speak,
-                                        ev3_playSequence};
+                                        ev3_playSequence,
+                                        ev3_ledLeftGreen,
+                                        ev3_ledLeftRed,
+                                        ev3_ledRightGreen,
+                                        ev3_ledRightRed,
+                                        ev3_ledGetBrightness,
+                                        ev3_ledSetBrightness};
 static const size_t internals_count = sizeof(internals) / sizeof(*internals);
 
 void setup_internals(void) {
-  atexit(reset_motors);
+  atexit(reset_ev3);
 
   static const char *hello_world_cstr = "Hello there! Welcome to LEGO EV3 (adapted by CS1101S)!";
   hello_world_string = malloc(sizeof(svm_constant_t) + strlen(hello_world_cstr) + 1);
