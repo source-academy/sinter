@@ -12,6 +12,7 @@
 
 #if SINTER_DEBUG_LOGLEVEL >= 1
 void debug_nanbox(sinanbox_t v) {
+  SIDEBUG("%"PRIx32 " ", v.as_u32);
   switch (NANBOX_GETTYPE(v)) {
   NANBOX_CASES_TINT
     SIDEBUG(("integer, value: %" PRId32), NANBOX_INT(v));
