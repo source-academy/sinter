@@ -27,6 +27,7 @@ add_run_test(internal_function)
 add_run_test(equals)
 add_run_test(array_length)
 add_run_test(force_marksweep)
+add_run_test(inf_minus_inf)
 
 add_run_test(prim_is_type)
 add_run_test(prim_is_function_stream)

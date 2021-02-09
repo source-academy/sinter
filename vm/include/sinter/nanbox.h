@@ -4,6 +4,7 @@
 #include "config.h"
 
 #include <stdint.h>
+#include <math.h>
 
 #include "fault.h"
 
@@ -123,7 +124,7 @@ inline int32_t nanbox_int(sinanbox_t val) {
 #define NANBOX_OFFLOAT(f) (sinanbox_t(f))
 #else
 #define NANBOX_WITH_I32(i) ((sinanbox_t) { .as_u32 = (i) })
-#define NANBOX_OFFLOAT(val) ((sinanbox_t) { .as_float = (val) })
+#define NANBOX_OFFLOAT(val) (isnan((float)(val)) ? (NANBOX_CANONICAL_NAN) : ((sinanbox_t) { .as_float = (val) }))
 #endif
 
 #define NANBOX_OFEMPTY() (NANBOX_WITH_I32(NANBOX_TEMPTY))
