@@ -3,6 +3,10 @@
 
 #include "../sinter_config.h"
 
+#if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
+#error Sinter only works on little endian systems
+#endif
+
 #ifndef SINTER_DEBUG_LOGLEVEL
 #define SINTER_DEBUG_LOGLEVEL 0
 #endif
