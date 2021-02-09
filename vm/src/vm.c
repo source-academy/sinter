@@ -191,7 +191,49 @@ static void main_loop(void) {
     case op_ldc_f64:
     case op_lgc_f64: {
       DECLOPSTRUCT(op_f64);
-      sistack_push(NANBOX_OFFLOAT((float) instr->operand));
+#ifdef SINTER_SHORT_DOUBLE_WORKAROUND
+      // for systems (e.g. Arduino AVR) where double is actually an alias of float...
+      // manually convert the double into a float
+      union {
+        float value;
+        uint32_t bits;
+      } float_value;
+      _Static_assert(sizeof(float_value) == 4, "union of float and uint32_t is not 32-bit");
+
+      float_value.bits = 0;
+      // sign bit
+      if (instr->operand_u64 & (((uint64_t)1) << 63)) {
+        float_value.bits |= ((uint32_t)1) << 31;
+      }
+
+      const uint32_t offset_exponent = (instr->operand_u64 >> 52) & 0x7FFu;
+      const int32_t real_exponent = ((int32_t)offset_exponent) - 1023;
+      const uint64_t f64_mantissa = instr->operand_u64 & 0xFFFFFFFFFFFFFu;
+      // lop off the bottom 29 bits..
+      const uint32_t f32_mantissa = (instr->operand_u64 >> 29) & 0x7FFFFFu;
+      if (offset_exponent == 0x7FF) {
+        // NaN or infinity
+        // set all the exponent bits
+        float_value.bits |= 0x7F800000u;
+        if (f64_mantissa) {
+          // NaN, just set this to canonical NaN
+          float_value.bits = 0x7FC00000u;
+        }
+      } else if (offset_exponent == 0) {
+        // zero/subnormal
+        float_value.bits |= f32_mantissa;
+      } else if (real_exponent >= -126 && real_exponent <= 127) {
+        float_value.bits |= (real_exponent + 127) << 23;
+        float_value.bits |= f32_mantissa;
+      } else if (real_exponent < -126) {
+        float_value.value = -INFINITY;
+      } else if (real_exponent > 127) {
+        float_value.value = INFINITY;
+      }
+      sistack_push(NANBOX_OFFLOAT(float_value.value));
+#else
+      sistack_push(NANBOX_OFFLOAT((float)instr->operand));
+#endif
       ADVANCE_PCI();
     }
     case op_ldc_b_0:

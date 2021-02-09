@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 set(SINTER_DEBUG_LOGLEVEL 0 CACHE STRING "Debug level")
 set(SINTER_STATIC_HEAP 1 CACHE STRING "Enable static heap")
+set(SINTER_TEST_SHORT_DOUBLE 0 CACHE STRING "Test short double workaround")
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Defaulting to Debug build.")
@@ -33,6 +34,7 @@ target_compile_options(sinter
   PUBLIC $<$<BOOL:${SINTER_DEBUG_ABORT_ON_FAULT}>:-DSINTER_DEBUG_ABORT_ON_FAULT>
   PUBLIC $<$<BOOL:${SINTER_DEBUG_MEMORY_CHECK}>:-DSINTER_DEBUG_MEMORY_CHECK>
   PUBLIC $<$<BOOL:${SINTER_DISABLE_CHECKS}>:-DSINTER_DISABLE_CHECKS>
+  PUBLIC $<$<BOOL:${SINTER_TEST_SHORT_DOUBLE}>:-DSINTER_TEST_SHORT_DOUBLE>
   PUBLIC $<$<BOOL:${SINTER_COVERAGE}>:--coverage -fno-inline -fno-inline-small-functions -fno-default-inline>
 )
 

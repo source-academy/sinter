@@ -3,6 +3,7 @@
 
 #include "config.h"
 
+#include <float.h>
 #include <stdint.h>
 
 typedef unsigned char opcode_t;
@@ -116,9 +117,19 @@ SINTER_OPSTRUCT(f32, 4,
   float operand;
 )
 
+#if DBL_MANT_DIG == 53 && !defined(SINTER_TEST_SHORT_DOUBLE)
 SINTER_OPSTRUCT(f64, 8,
   double operand;
 )
+_Static_assert(sizeof(double) == 8, "double is not 64-bit");
+#else
+#define SINTER_SHORT_DOUBLE_WORKAROUND
+SINTER_OPSTRUCT(f64, 8,
+  uint64_t operand_u64;
+)
+_Static_assert(sizeof(uint64_t) == 8, "uint64_t is not 64-bit");
+_Static_assert(sizeof(float) == 4, "float is not 32-bit");
+#endif
 
 SINTER_OPSTRUCT(address, 4,
   address_t address;
