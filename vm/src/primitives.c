@@ -1596,7 +1596,7 @@ static sinanbox_t sivmfn_prim_noop(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFUNDEF();
 }
 
-const sivmfnptr_t sivmfn_primitives[] = {
+sivmfnptr_t sivmfn_primitives[] = {
   sivmfn_prim_accumulate,
   sivmfn_prim_append,
   sivmfn_prim_array_length,

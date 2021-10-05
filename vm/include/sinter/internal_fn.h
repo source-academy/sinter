@@ -18,7 +18,7 @@ extern "C" {
  */
 typedef sinanbox_t (*sivmfnptr_t)(uint8_t argc, sinanbox_t *argv);
 
-extern const sivmfnptr_t sivmfn_primitives[];
+extern sivmfnptr_t sivmfn_primitives[];
 #define SIVMFN_PRIMITIVE_COUNT (92)
 
 extern const sivmfnptr_t *sivmfn_vminternals;
