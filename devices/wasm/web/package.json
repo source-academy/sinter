@@ -15,14 +15,14 @@
     ]
   },
   "devDependencies": {
-    "eslint": "^7.10.0",
-    "eslint-config-preact": "^1.1.1",
-    "preact-cli": "=3.0.3"
+    "eslint": "^8.0.0",
+    "eslint-config-preact": "^1.1.4",
+    "preact-cli": "=3.3.0"
   },
   "dependencies": {
-    "file-saver": "^2.0.2",
-    "js-slang": "^0.4.65",
-    "preact": "^10.5.3",
-    "react-ace": "^9.1.4"
+    "file-saver": "^2.0.5",
+    "js-slang": "^0.5.19",
+    "preact": "^10.5.15",
+    "react-ace": "^9.4.4"
   }
 }
