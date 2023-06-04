@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 struct sistate {
-  bool running;
+  volatile bool running;
   sinter_fault_t fault_reason;
   const opcode_t *pc;
   const opcode_t *program;
