@@ -84,6 +84,8 @@ SINTER_INLINEIFC __attribute__((warn_unused_result)) sinanbox_t siexec_nanbox(si
 
 bool sivm_equal(sinanbox_t l, sinanbox_t r);
 
+void sistop(void);
+
 #define SISTATE_CURADDR (sistate.pc - sistate.program)
 #define SISTATE_ADDRTOPC(addr) (sistate.program + (addr))
 

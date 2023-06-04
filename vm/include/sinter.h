@@ -33,7 +33,8 @@ typedef enum {
   sinter_fault_internal_error = 9,
   sinter_fault_function_arity = 10,
   sinter_fault_program_error = 11,
-  sinter_fault_uninitialised_heap = 12
+  sinter_fault_uninitialised_heap = 12,
+  sinter_fault_stopped = 13
 } sinter_fault_t;
 
 typedef struct {
@@ -60,6 +61,14 @@ sinter_fault_t sinter_run(const unsigned char *code, const size_t code_size, sin
  * This function is a no-op if SINTER_STATIC_HEAP is defined.
  */
 void sinter_setup_heap(void *heap, size_t size);
+
+/**
+ * Stops the currently running program.
+ *
+ * This function stops the currently running program.
+*/
+
+void sinter_stop(void);
 
 /**
  * The type of a string printer function.
