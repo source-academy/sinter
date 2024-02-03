@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 struct sistate {
-  bool running;
+  volatile bool running;
   sinter_fault_t fault_reason;
   const opcode_t *pc;
   const opcode_t *program;
@@ -83,6 +83,8 @@ SINTER_INLINEIFC __attribute__((warn_unused_result)) sinanbox_t siexec_nanbox(si
 #endif
 
 bool sivm_equal(sinanbox_t l, sinanbox_t r);
+
+void sistop(void);
 
 #define SISTATE_CURADDR (sistate.pc - sistate.program)
 #define SISTATE_ADDRTOPC(addr) (sistate.program + (addr))

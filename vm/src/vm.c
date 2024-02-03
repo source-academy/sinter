@@ -159,6 +159,12 @@ static void main_loop(void) {
   (void) previous_pc;
 #endif
   while (1) {
+    if (!sistate.running) {
+      SIDEBUG("The program has been stopped by the user.\n");
+      sifault(sinter_fault_stopped);
+      return;
+    }
+
 #ifdef SINTER_DEBUG_MEMORY_CHECK
     debug_memorycheck();
 #endif
@@ -923,4 +929,13 @@ sinanbox_t siexec(const svm_function_t *fn, siheap_env_t *parent_env, uint8_t ar
   sistack_limit--;
 
   return ret;
+}
+
+void sistop(void) {
+  sistate.running = false;
+  sistate.fault_reason = sinter_fault_stopped;
+  sistate.pc = NULL;
+  sistate.program = NULL;
+  sistate.program_end = NULL;
+  sistate.env = NULL;
 }

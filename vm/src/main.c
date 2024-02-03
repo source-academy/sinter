@@ -133,3 +133,7 @@ return;
   siheap_size = size;
 #endif
 }
+
+void sinter_stop(void) {
+  sistop();
+}
