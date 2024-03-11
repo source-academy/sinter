@@ -17,6 +17,7 @@
   "devDependencies": {
     "eslint": "^8.0.0",
     "eslint-config-preact": "^1.1.4",
+    "jest": "^29.7.0",
     "preact-cli": "=3.3.0"
   },
   "dependencies": {
@@ -24,5 +25,8 @@
     "js-slang": "^0.5.19",
     "preact": "^10.5.15",
     "react-ace": "^9.4.4"
+  },
+  "resolutions": {
+    "**/gl": "^6.0.2"
   }
 }
