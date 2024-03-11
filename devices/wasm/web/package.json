@@ -6,7 +6,7 @@
   "scripts": {
     "build": "preact build --no-prerender",
     "dev": "preact watch",
-    "lint": "eslint src"
+    "lint": "eslint --max-warnings=0 src"
   },
   "eslintConfig": {
     "extends": "preact",
