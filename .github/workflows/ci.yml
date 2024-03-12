@@ -2,9 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
 
 jobs:
   build:
@@ -20,32 +22,56 @@ jobs:
           - -DCMAKE_BUILD_TYPE=Release
           - -DCMAKE_BUILD_TYPE=Release -DSINTER_TEST_SHORT_DOUBLE=1
     steps:
-    - uses: actions/checkout@v2
-    - name: install cpp-coveralls
-      run: pip install --user cpp-coveralls
-      if: github.event_name != 'pull_request' && contains(matrix.cmake-args, 'coverage')
-    - name: mkdir
-      run: mkdir build
-    - name: cmake
-      working-directory: build
-      run: cmake .. ${{ matrix.cmake-args }}
-    - name: make
-      working-directory: build
-      run: make -j4
-    - name: test
-      working-directory: build
-      run: make CTEST_PARALLEL_LEVEL=$(nproc) CTEST_OUTPUT_ON_FAILURE=1 test
-    - name: coverage
-      working-directory: build
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        TRAVIS_JOB_ID: ${{ github.run_id }}
-      run: ~/.local/bin/cpp-coveralls -r .. --include vm --include runner --gcov-options '\-lp' -y ../.coveralls.yml
-      if: github.event_name != 'pull_request' && contains(matrix.cmake-args, 'coverage')
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: install cpp-coveralls
+        run: pip install --user cpp-coveralls
+        if: github.event_name != 'pull_request' && contains(matrix.cmake-args, 'coverage')
+      - name: mkdir
+        run: mkdir build
+      - name: cmake
+        working-directory: build
+        run: cmake .. ${{ matrix.cmake-args }}
+      - name: make
+        working-directory: build
+        run: make -j4
+      - name: Run tests
+        working-directory: build
+        run: make CTEST_PARALLEL_LEVEL=$(nproc) CTEST_OUTPUT_ON_FAILURE=1 test
+      - name: Check coverage
+        working-directory: build
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRAVIS_JOB_ID: ${{ github.run_id }}
+        run: ~/.local/bin/cpp-coveralls -r .. --include vm --include runner --gcov-options '\-lp' -y ../.coveralls.yml
+        if: github.event_name != 'pull_request' && contains(matrix.cmake-args, 'coverage')
   check-headers:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: check if headers work in C++
-      working-directory: vm/include
-      run: g++ -std=c++11 -fsyntax-only sinter/*.h sinter.h -I. -Wall -Wextra -pedantic
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Check if headers work in C++
+        working-directory: vm/include
+        run: g++ -std=c++11 -fsyntax-only sinter/*.h sinter.h -I. -Wall -Wextra -pedantic
+  web-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install dependencies (apt)
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y --no-install-recommends \
+          libxi-dev libgl1-mesa-dev
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: ./devices/wasm/web/yarn.lock
+      - name: Install dependencies
+        working-directory: devices/wasm/web
+        run: yarn install --frozen-lockfile
+      - name: Lint
+        working-directory: devices/wasm/web
+        run: yarn lint
