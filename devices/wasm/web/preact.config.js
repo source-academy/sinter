@@ -1,4 +1,14 @@
-export default (config, env, helpers) => {
+// @ts-check
+/**
+ * Function that mutates the original webpack config.
+ * Supports asynchronous changes when a promise is returned (or it's an async function).
+ *
+ * @param {import('preact-cli').Config} config - original webpack config
+ * @param {import('preact-cli').Env} env - current environment and options pass to the CLI
+ * @param {import('preact-cli').Helpers} helpers - object with useful helpers for working with the webpack config
+ * @param {Record<string, unknown>} options - this is mainly relevant for plugins (will always be empty in the config), default to an empty object
+ */
+export default (config, env, helpers, options) => {
   config.module.rules.push({
     test: /\.wasm$/,
     type: "javascript/auto",
@@ -9,13 +19,7 @@ export default (config, env, helpers) => {
   config.node.Buffer = true;
   config.node.process = true;
 
-  let babelConfig = helpers.getLoadersByName(config, 'babel-loader')[0].rule.options;
-  let babelPresetEnvPresets = babelConfig.presets.find(([path]) => path.includes("@babel/preset-env"))[1];
-  babelPresetEnvPresets.targets = "Firefox ESR";
-  babelPresetEnvPresets.loose = false;
-  // console.log(babelPresetEnvPresets);
-
-  if (env.production) {
-    config.output.publicPath = '';
+  if (env.isProd) {
+    config.output.publicPath = "";
   }
 };
