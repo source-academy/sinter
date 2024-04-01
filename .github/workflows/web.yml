@@ -1,0 +1,47 @@
+name: Deploy web demo
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install dependencies (apt)
+        run: |
+          sudo apt-get update && \
+          sudo apt-get install -y --no-install-recommends \
+          libxi-dev libgl1-mesa-dev
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: ./devices/wasm/web/yarn.lock
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+      - name: Install dependencies
+        working-directory: devices/wasm/web
+        run: yarn install --frozen-lockfile
+      - name: Build WASM module
+        working-directory: devices/wasm
+        run: |
+          mkdir -p build
+          cd build
+          emcmake cmake ../wasm
+          make -j$(nproc)
+      - name: Build
+        working-directory: devices/wasm/web
+        run: yarn build
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: devices/wasm/web/build
