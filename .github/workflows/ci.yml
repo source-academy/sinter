@@ -69,9 +69,21 @@ jobs:
           node-version: 20
           cache: yarn
           cache-dependency-path: ./devices/wasm/web/yarn.lock
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
       - name: Install dependencies
         working-directory: devices/wasm/web
         run: yarn install --frozen-lockfile
       - name: Lint
         working-directory: devices/wasm/web
         run: yarn lint
+      - name: Build WASM module
+        working-directory: devices/wasm
+        run: |
+          mkdir -p build
+          cd build
+          emcmake cmake ../wasm
+          make -j$(nproc)
+      - name: Ensure website builds
+        working-directory: devices/wasm/web
+        run: yarn build
