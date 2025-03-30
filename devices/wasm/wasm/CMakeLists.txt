@@ -16,7 +16,7 @@ add_executable(sinterwasm lib.c)
 target_link_options(sinterwasm
   PRIVATE "SHELL:-s WASM=1" "SHELL:-s ALLOW_MEMORY_GROWTH=1"
   PRIVATE "SHELL:-s MODULARIZE=1" "SHELL:-s EXPORT_NAME=sinterwasm"
-  PRIVATE "SHELL:-s EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"
+  PRIVATE "SHELL:-s EXPORTED_RUNTIME_METHODS='[\"ccall\", \"cwrap\"]'"
 )
 
 target_link_libraries(sinterwasm sinter)
