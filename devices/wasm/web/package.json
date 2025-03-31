@@ -14,6 +14,7 @@
       "build/"
     ]
   },
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610",
   "devDependencies": {
     "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
@@ -23,11 +24,8 @@
   },
   "dependencies": {
     "file-saver": "^2.0.5",
-    "js-slang": "^0.5.19",
-    "preact": "^10.19.6",
-    "react-ace": "^10.1.0"
-  },
-  "resolutions": {
-    "**/gl": "^6.0.2"
+    "js-slang": "^1.0.81",
+    "preact": "^10.26.4",
+    "react-ace": "^14.0.1"
   }
 }
