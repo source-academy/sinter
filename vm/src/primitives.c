@@ -5,6 +5,7 @@
 #include <string.h>
 #include <limits.h>
 #include <math.h>
+#include <errno.h>
 
 #include <sinter/nanbox.h>
 #include <sinter/fault.h>
@@ -1628,10 +1629,16 @@ static sinanbox_t sivmfn_prim_parse_int(uint8_t argc, sinanbox_t *argv) {
 
   const char *str = sistrobj_tocharptr(SIHEAP_NANBOXTOPTR(argv[0]));
   char *endptr = NULL;
+  errno = 0; 
   long result = strtol(str, &endptr, radix);
 
   if (endptr == str) {
     return NANBOX_CANONICAL_NAN;
+  }
+
+  if (errno == ERANGE) {
+    // strtol overflowed, return as float instead
+    return NANBOX_OFFLOAT((float) result);
   }
 
   if (result >= NANBOX_INTMIN && result <= NANBOX_INTMAX) {

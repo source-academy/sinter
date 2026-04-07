@@ -106,6 +106,10 @@ int main(int argc, char *argv[]) {
   setup_internals();
 
   void *heap = malloc(0x100000); // 1MB
+  if (!heap) {
+	eprintf("Failed to allocate heap\n");
+	return 1;
+  }
   sinter_setup_heap(heap, 0x100000);
 
   sinter_value_t result = { 0 };
