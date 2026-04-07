@@ -8,9 +8,16 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include <time.h>
 #include <sinter.h>
 
 #define eprintf(...) fprintf(stderr, __VA_ARGS__)
+
+static uint64_t get_time_ms(void) {
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (uint64_t) ts.tv_sec * 1000u + (uint64_t) ts.tv_nsec / 1000000u;
+}
 
 static const char *fault_names[] = {
   "no fault",
@@ -94,8 +101,12 @@ int main(int argc, char *argv[]) {
   sinter_printer_string = print_string;
   sinter_printer_integer = print_integer;
   sinter_printer_flush = print_flush;
+  sinter_get_time_ms = get_time_ms;
 
   setup_internals();
+
+  void *heap = malloc(0x100000); // 1MB
+  sinter_setup_heap(heap, 0x100000);
 
   sinter_value_t result = { 0 };
   sinter_fault_t fault = sinter_run(program, size, &result);

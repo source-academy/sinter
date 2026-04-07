@@ -105,6 +105,8 @@ extern sinter_printfn_integer sinter_printer_integer;
 extern sinter_printfn_float sinter_printer_float;
 extern sinter_printfn_flush sinter_printer_flush;
 
+extern uint64_t (*sinter_get_time_ms)(void);
+
 #ifdef __cplusplus
 }
 #endif
