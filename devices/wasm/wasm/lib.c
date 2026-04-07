@@ -62,6 +62,11 @@ static void print_flush(bool is_error) {
   fprintf(is_error ? stderr : stdout, "\n");
 }
 
+/** Browser only: EV3/desktop use runner.c’s get_time_ms + clock_gettime. */
+static uint64_t wasm_get_time_ms(void) {
+  return (uint64_t)emscripten_get_now();
+}
+
 EMSCRIPTEN_KEEPALIVE
 void siwasm_alloc_heap(size_t size) {
   if (heap) {
@@ -93,6 +98,7 @@ void siwasm_run(unsigned char *code, size_t code_size) {
   sinter_printer_integer = print_integer;
   sinter_printer_string = print_string;
   sinter_printer_flush = print_flush;
+  sinter_get_time_ms = wasm_get_time_ms;
 
   sinter_value_t result;
   sinter_fault_t fault = (uint8_t) sinter_run(code, code_size, &result);
