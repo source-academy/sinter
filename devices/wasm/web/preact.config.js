@@ -19,6 +19,19 @@ export default (config, env, helpers, options) => {
   config.node.Buffer = true;
   config.node.process = true;
 
+  // Webpack 4 doesn't recognise the `node:` prefix for built-in modules.
+  // Alias them to the bare specifiers so webpack can polyfill/stub them.
+  config.resolve.alias = Object.assign(config.resolve.alias || {}, {
+    "node:fs": "fs",
+    "node:path": "path",
+    "node:os": "os",
+    "node:crypto": "crypto",
+    "node:buffer": "buffer",
+    "node:stream": "stream",
+    "node:util": "util",
+    "node:child_process": "child_process",
+  });
+
   if (env.isProd) {
     config.output.publicPath = "";
   }
