@@ -5,6 +5,7 @@
 #include <string.h>
 #include <limits.h>
 #include <math.h>
+#include <errno.h>
 
 #include <sinter/nanbox.h>
 #include <sinter/fault.h>
@@ -1596,6 +1597,70 @@ static sinanbox_t sivmfn_prim_noop(uint8_t argc, sinanbox_t *argv) {
   return NANBOX_OFUNDEF();
 }
 
+uint64_t (*sinter_get_time_ms)(void) = NULL;
+
+static sinanbox_t sivmfn_prim_parse_int(uint8_t argc, sinanbox_t *argv) {
+  CHECK_ARGC(2);
+
+  if (!NANBOX_ISPTR(argv[0]) || !siheap_is_string(SIHEAP_NANBOXTOPTR(argv[0]))) {
+    sifault(sinter_fault_type);
+    return NANBOX_OFEMPTY();
+  }
+
+  int32_t radix = 0;
+  if (NANBOX_ISINT(argv[1])) {
+    radix = NANBOX_INT(argv[1]);
+  } else if (NANBOX_ISFLOAT(argv[1])) {
+    float fv = NANBOX_FLOAT(argv[1]);
+    if (!isfinite(fv) || truncf(fv) != fv) {
+      sifault(sinter_fault_type);
+      return NANBOX_OFEMPTY();
+    }
+    radix = (int32_t) fv;
+  } else {
+    sifault(sinter_fault_type);
+    return NANBOX_OFEMPTY();
+  }
+
+  if (radix < 2 || radix > 36) {
+    sifault(sinter_fault_type);
+    return NANBOX_OFEMPTY();
+  }
+
+  const char *str = sistrobj_tocharptr(SIHEAP_NANBOXTOPTR(argv[0]));
+  char *endptr = NULL;
+  errno = 0; 
+  long result = strtol(str, &endptr, radix);
+
+  if (endptr == str) {
+    return NANBOX_CANONICAL_NAN;
+  }
+
+  if (errno == ERANGE) {
+    // strtol overflowed, return as float instead
+    return NANBOX_OFFLOAT((float) result);
+  }
+
+  if (result >= NANBOX_INTMIN && result <= NANBOX_INTMAX) {
+    return NANBOX_OFINT((int32_t) result);
+  } else {
+    return NANBOX_OFFLOAT((float) result);
+  }
+}
+
+static sinanbox_t sivmfn_prim_runtime(uint8_t argc, sinanbox_t *argv) {
+  (void) argc; (void) argv;
+  if (sinter_get_time_ms) {
+    uint64_t t = sinter_get_time_ms();
+    if (t <= (uint64_t) NANBOX_INTMAX) {
+      return NANBOX_OFINT((int32_t) t);
+    }
+    return NANBOX_OFFLOAT((float) t);
+  }
+  return NANBOX_OFINT(0);
+}
+
+
 sivmfnptr_t sivmfn_primitives[] = {
   sivmfn_prim_accumulate,
   sivmfn_prim_append,
@@ -1666,11 +1731,11 @@ sivmfnptr_t sivmfn_primitives[] = {
   sivmfn_prim_math_trunc,
   sivmfn_prim_member,
   sivmfn_prim_pair,
-  /* parse_int */ sivmfn_prim_unimpl, // TODO: doesn't make sense without the ability to take input (prompt)
+  /* parse_int */ sivmfn_prim_parse_int,
   sivmfn_prim_remove,
   sivmfn_prim_remove_all,
   sivmfn_prim_reverse,
-  /* runtime */ sivmfn_prim_unimpl, // TODO: need to get time from host
+  /* runtime */ sivmfn_prim_runtime,
   sivmfn_prim_set_head,
   sivmfn_prim_set_tail,
   sivmfn_prim_stream,
